@@ -1,0 +1,147 @@
+{
+  "id": "messy-downloads",
+  "title": "Messy Downloads folder",
+  "description": "A Downloads folder full of photos, documents, music, videos, archives and code, with extensions in mixed case and a couple of files without any extension. Try sorting the files into folders by type.",
+  "suggestedComposite": "sortByType",
+  "tree": {
+    "root": {
+      "type": "folder",
+      "name": "",
+      "modified": 1766012400,
+      "children": [
+        {
+          "type": "file",
+          "name": "backup.tar.gz",
+          "modified": 1765407600,
+          "binarySize": 10485760
+        },
+        {
+          "type": "file",
+          "name": "Birthday.MOV",
+          "modified": 1765317600,
+          "binarySize": 52428800
+        },
+        {
+          "type": "file",
+          "name": "budget.xlsx",
+          "modified": 1765713600,
+          "binarySize": 23552
+        },
+        {
+          "type": "file",
+          "name": "clip.mp4",
+          "modified": 1765227600,
+          "binarySize": 15728640
+        },
+        {
+          "type": "file",
+          "name": "data.csv",
+          "modified": 1765627200,
+          "content": "date,amount\n2025-12-01,12.50\n2025-12-02,8.00\n"
+        },
+        {
+          "type": "file",
+          "name": "draft.md",
+          "modified": 1765886400,
+          "content": "# Draft\n\nSome thoughts about the trip.\n"
+        },
+        {
+          "type": "file",
+          "name": "font.TTF",
+          "modified": 1765972800,
+          "binarySize": 120004
+        },
+        {
+          "type": "file",
+          "name": "holiday.JPG",
+          "modified": 1764698400,
+          "binarySize": 2457600
+        },
+        {
+          "type": "file",
+          "name": "IMG_2231.jpeg",
+          "modified": 1764698400,
+          "binarySize": 1980212
+        },
+        {
+          "type": "file",
+          "name": "index.html",
+          "modified": 1765548000,
+          "content": "<!doctype html>\n<title>Saved page</title>\n<p>Hello</p>\n"
+        },
+        {
+          "type": "file",
+          "name": "Invoice_2025-11.pdf",
+          "modified": 1764579600,
+          "binarySize": 84211
+        },
+        {
+          "type": "file",
+          "name": "LICENSE",
+          "modified": 1764939600,
+          "content": "Permission is hereby granted, free of charge, to any person...\n"
+        },
+        {
+          "type": "file",
+          "name": "logo.png",
+          "modified": 1764763200,
+          "binarySize": 18342
+        },
+        {
+          "type": "file",
+          "name": "notes.txt",
+          "modified": 1764936000,
+          "content": "Buy milk\nCall the plumber\nBook train tickets\n"
+        },
+        {
+          "type": "file",
+          "name": "photos.7z",
+          "modified": 1765454400,
+          "binarySize": 20971520
+        },
+        {
+          "type": "file",
+          "name": "Podcast Episode 12.MP3",
+          "modified": 1765090800,
+          "binarySize": 31457280
+        },
+        {
+          "type": "file",
+          "name": "README",
+          "modified": 1764939600,
+          "content": "Installer instructions:\n1. Unzip setup.zip\n2. Run setup\n"
+        },
+        {
+          "type": "file",
+          "name": "Report.DOCX",
+          "modified": 1765792800,
+          "binarySize": 45120
+        },
+        {
+          "type": "file",
+          "name": "Screenshot 2025-12-04.PNG",
+          "modified": 1764864000,
+          "binarySize": 402113
+        },
+        {
+          "type": "file",
+          "name": "script.py",
+          "modified": 1765540800,
+          "content": "print('hello from a downloaded script')\n"
+        },
+        {
+          "type": "file",
+          "name": "setup.zip",
+          "modified": 1765368000,
+          "binarySize": 7340032
+        },
+        {
+          "type": "file",
+          "name": "song.mp3",
+          "modified": 1765051200,
+          "binarySize": 4194304
+        }
+      ]
+    }
+  }
+}

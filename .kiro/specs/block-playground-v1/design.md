@@ -542,7 +542,9 @@ export type OutputLine = { kind: 'print'; text: string } | { kind: 'action'; tex
 ```
 
 - `formatAction(action)` in `timeline.ts` produces the §7.4 line; both sides must use the same format.
-- `rename` and `move` preserve the item's modified time (like the OS); `copy`, `writeText`, and `makeFolder` set it to the simulation clock.
+- `rename`, `move`, and `copy` preserve modified times (copy is deep, like `shutil.copy2`/`copytree`); `writeText` and `makeFolder` set it to the simulation clock (§5.3).
+- Wildcard `*` and `?` match any character **including newlines** (Python side: compile with `re.DOTALL` for wildcards only; user regexes use `re.ASCII` alone).
+- Floats can become `inf`/`nan` (e.g. `1e308 * 10`); they print as Python does (`inf`, `nan`). `math.floor` of a non-finite float is a known divergence (§12).
 
 - `comparisons` counts every evaluated `== != < <= > >=`.
 - `reads` counts FS ops with `counter: 'read'`.
@@ -741,6 +743,7 @@ Coverage requirement: every op, every error code except `STEP_LIMIT`/`RECURSION_
 | Folder modified times | unchanged by content changes | OS updates them | folder times never compared |
 | Names differing only in case on a case-sensitive disk (e.g. `a.txt` and `A.txt` on Linux) | impossible (sandbox forbids it) | `_RealFS` raises `INVALID_NAME` ("ambiguous name") when resolving such a segment | documented in the script header |
 | Partial failure | stops, sandbox resettable | earlier changes remain on disk | header warning; dry-run default |
+| Non-finite / out-of-range numbers (`math.floor(inf)`, `text.date` of a huge time, `list.range` > 1,000,000 items) | `INT_OVERFLOW` / `INVALID_NUMBER` / `STEP_LIMIT` | Python raises its own exception (exit 2) | rare; excluded from conformance |
 
 ## 13. Persistence
 

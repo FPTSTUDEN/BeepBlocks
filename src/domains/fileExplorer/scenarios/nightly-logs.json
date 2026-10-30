@@ -1,0 +1,399 @@
+{
+  "id": "nightly-logs",
+  "title": "Nightly build logs",
+  "description": "64 nightly build logs, one per day. Every log ends with a status line. Early builds say \"status: OK\", but at some point they started to say \"status: ERROR\" and never recovered. Try finding the first failing night without opening every file.",
+  "suggestedComposite": "findFirst",
+  "tree": {
+    "root": {
+      "type": "folder",
+      "name": "",
+      "modified": 1772755200,
+      "children": [
+        {
+          "type": "file",
+          "name": "nightly-2026-01-01.log",
+          "modified": 1767234600,
+          "content": "nightly build #1000\ndate: 2026-01-01\ntests: 412 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-01-02.log",
+          "modified": 1767321000,
+          "content": "nightly build #1001\ndate: 2026-01-02\ntests: 412 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-01-03.log",
+          "modified": 1767407400,
+          "content": "nightly build #1002\ndate: 2026-01-03\ntests: 412 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-01-04.log",
+          "modified": 1767493800,
+          "content": "nightly build #1003\ndate: 2026-01-04\ntests: 412 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-01-05.log",
+          "modified": 1767580200,
+          "content": "nightly build #1004\ndate: 2026-01-05\ntests: 412 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-01-06.log",
+          "modified": 1767666600,
+          "content": "nightly build #1005\ndate: 2026-01-06\ntests: 412 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-01-07.log",
+          "modified": 1767753000,
+          "content": "nightly build #1006\ndate: 2026-01-07\ntests: 412 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-01-08.log",
+          "modified": 1767839400,
+          "content": "nightly build #1007\ndate: 2026-01-08\ntests: 413 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-01-09.log",
+          "modified": 1767925800,
+          "content": "nightly build #1008\ndate: 2026-01-09\ntests: 413 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-01-10.log",
+          "modified": 1768012200,
+          "content": "nightly build #1009\ndate: 2026-01-10\ntests: 413 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-01-11.log",
+          "modified": 1768098600,
+          "content": "nightly build #1010\ndate: 2026-01-11\ntests: 413 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-01-12.log",
+          "modified": 1768185000,
+          "content": "nightly build #1011\ndate: 2026-01-12\ntests: 413 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-01-13.log",
+          "modified": 1768271400,
+          "content": "nightly build #1012\ndate: 2026-01-13\ntests: 413 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-01-14.log",
+          "modified": 1768357800,
+          "content": "nightly build #1013\ndate: 2026-01-14\ntests: 413 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-01-15.log",
+          "modified": 1768444200,
+          "content": "nightly build #1014\ndate: 2026-01-15\ntests: 414 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-01-16.log",
+          "modified": 1768530600,
+          "content": "nightly build #1015\ndate: 2026-01-16\ntests: 414 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-01-17.log",
+          "modified": 1768617000,
+          "content": "nightly build #1016\ndate: 2026-01-17\ntests: 414 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-01-18.log",
+          "modified": 1768703400,
+          "content": "nightly build #1017\ndate: 2026-01-18\ntests: 414 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-01-19.log",
+          "modified": 1768789800,
+          "content": "nightly build #1018\ndate: 2026-01-19\ntests: 414 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-01-20.log",
+          "modified": 1768876200,
+          "content": "nightly build #1019\ndate: 2026-01-20\ntests: 414 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-01-21.log",
+          "modified": 1768962600,
+          "content": "nightly build #1020\ndate: 2026-01-21\ntests: 414 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-01-22.log",
+          "modified": 1769049000,
+          "content": "nightly build #1021\ndate: 2026-01-22\ntests: 415 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-01-23.log",
+          "modified": 1769135400,
+          "content": "nightly build #1022\ndate: 2026-01-23\ntests: 415 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-01-24.log",
+          "modified": 1769221800,
+          "content": "nightly build #1023\ndate: 2026-01-24\ntests: 415 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-01-25.log",
+          "modified": 1769308200,
+          "content": "nightly build #1024\ndate: 2026-01-25\ntests: 415 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-01-26.log",
+          "modified": 1769394600,
+          "content": "nightly build #1025\ndate: 2026-01-26\ntests: 415 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-01-27.log",
+          "modified": 1769481000,
+          "content": "nightly build #1026\ndate: 2026-01-27\ntests: 415 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-01-28.log",
+          "modified": 1769567400,
+          "content": "nightly build #1027\ndate: 2026-01-28\ntests: 415 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-01-29.log",
+          "modified": 1769653800,
+          "content": "nightly build #1028\ndate: 2026-01-29\ntests: 416 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-01-30.log",
+          "modified": 1769740200,
+          "content": "nightly build #1029\ndate: 2026-01-30\ntests: 416 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-01-31.log",
+          "modified": 1769826600,
+          "content": "nightly build #1030\ndate: 2026-01-31\ntests: 416 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-02-01.log",
+          "modified": 1769913000,
+          "content": "nightly build #1031\ndate: 2026-02-01\ntests: 416 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-02-02.log",
+          "modified": 1769999400,
+          "content": "nightly build #1032\ndate: 2026-02-02\ntests: 416 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-02-03.log",
+          "modified": 1770085800,
+          "content": "nightly build #1033\ndate: 2026-02-03\ntests: 416 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-02-04.log",
+          "modified": 1770172200,
+          "content": "nightly build #1034\ndate: 2026-02-04\ntests: 416 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-02-05.log",
+          "modified": 1770258600,
+          "content": "nightly build #1035\ndate: 2026-02-05\ntests: 417 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-02-06.log",
+          "modified": 1770345000,
+          "content": "nightly build #1036\ndate: 2026-02-06\ntests: 417 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-02-07.log",
+          "modified": 1770431400,
+          "content": "nightly build #1037\ndate: 2026-02-07\ntests: 417 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-02-08.log",
+          "modified": 1770517800,
+          "content": "nightly build #1038\ndate: 2026-02-08\ntests: 417 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-02-09.log",
+          "modified": 1770604200,
+          "content": "nightly build #1039\ndate: 2026-02-09\ntests: 417 run\nstatus: OK\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-02-10.log",
+          "modified": 1770690600,
+          "content": "nightly build #1040\ndate: 2026-02-10\ntests: 417 run\nstatus: ERROR\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-02-11.log",
+          "modified": 1770777000,
+          "content": "nightly build #1041\ndate: 2026-02-11\ntests: 417 run\nstatus: ERROR\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-02-12.log",
+          "modified": 1770863400,
+          "content": "nightly build #1042\ndate: 2026-02-12\ntests: 418 run\nstatus: ERROR\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-02-13.log",
+          "modified": 1770949800,
+          "content": "nightly build #1043\ndate: 2026-02-13\ntests: 418 run\nstatus: ERROR\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-02-14.log",
+          "modified": 1771036200,
+          "content": "nightly build #1044\ndate: 2026-02-14\ntests: 418 run\nstatus: ERROR\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-02-15.log",
+          "modified": 1771122600,
+          "content": "nightly build #1045\ndate: 2026-02-15\ntests: 418 run\nstatus: ERROR\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-02-16.log",
+          "modified": 1771209000,
+          "content": "nightly build #1046\ndate: 2026-02-16\ntests: 418 run\nstatus: ERROR\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-02-17.log",
+          "modified": 1771295400,
+          "content": "nightly build #1047\ndate: 2026-02-17\ntests: 418 run\nstatus: ERROR\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-02-18.log",
+          "modified": 1771381800,
+          "content": "nightly build #1048\ndate: 2026-02-18\ntests: 418 run\nstatus: ERROR\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-02-19.log",
+          "modified": 1771468200,
+          "content": "nightly build #1049\ndate: 2026-02-19\ntests: 419 run\nstatus: ERROR\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-02-20.log",
+          "modified": 1771554600,
+          "content": "nightly build #1050\ndate: 2026-02-20\ntests: 419 run\nstatus: ERROR\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-02-21.log",
+          "modified": 1771641000,
+          "content": "nightly build #1051\ndate: 2026-02-21\ntests: 419 run\nstatus: ERROR\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-02-22.log",
+          "modified": 1771727400,
+          "content": "nightly build #1052\ndate: 2026-02-22\ntests: 419 run\nstatus: ERROR\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-02-23.log",
+          "modified": 1771813800,
+          "content": "nightly build #1053\ndate: 2026-02-23\ntests: 419 run\nstatus: ERROR\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-02-24.log",
+          "modified": 1771900200,
+          "content": "nightly build #1054\ndate: 2026-02-24\ntests: 419 run\nstatus: ERROR\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-02-25.log",
+          "modified": 1771986600,
+          "content": "nightly build #1055\ndate: 2026-02-25\ntests: 419 run\nstatus: ERROR\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-02-26.log",
+          "modified": 1772073000,
+          "content": "nightly build #1056\ndate: 2026-02-26\ntests: 420 run\nstatus: ERROR\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-02-27.log",
+          "modified": 1772159400,
+          "content": "nightly build #1057\ndate: 2026-02-27\ntests: 420 run\nstatus: ERROR\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-02-28.log",
+          "modified": 1772245800,
+          "content": "nightly build #1058\ndate: 2026-02-28\ntests: 420 run\nstatus: ERROR\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-03-01.log",
+          "modified": 1772332200,
+          "content": "nightly build #1059\ndate: 2026-03-01\ntests: 420 run\nstatus: ERROR\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-03-02.log",
+          "modified": 1772418600,
+          "content": "nightly build #1060\ndate: 2026-03-02\ntests: 420 run\nstatus: ERROR\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-03-03.log",
+          "modified": 1772505000,
+          "content": "nightly build #1061\ndate: 2026-03-03\ntests: 420 run\nstatus: ERROR\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-03-04.log",
+          "modified": 1772591400,
+          "content": "nightly build #1062\ndate: 2026-03-04\ntests: 420 run\nstatus: ERROR\n"
+        },
+        {
+          "type": "file",
+          "name": "nightly-2026-03-05.log",
+          "modified": 1772677800,
+          "content": "nightly build #1063\ndate: 2026-03-05\ntests: 421 run\nstatus: ERROR\n"
+        }
+      ]
+    }
+  }
+}
