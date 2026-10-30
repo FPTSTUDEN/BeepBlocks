@@ -1,0 +1,24 @@
+{
+  "format": "block-playground-ir",
+  "version": 1,
+  "functions": [],
+  "body": [
+    { "id": "ff1", "kind": "composite", "name": "findFirst", "fields": { "sortBy": "name" }, "inputs": {
+      "folder": { "id": "ff1f", "kind": "op", "op": "fs.join", "args": [ { "id": "ff1r", "kind": "op", "op": "fs.root", "args": [] }, { "id": "ff1n", "kind": "lit", "value": "byName" } ] },
+      "condition": { "id": "ff1c", "kind": "binary", "op": ">=", "left": { "id": "ff1cn", "kind": "op", "op": "fs.name", "args": [ { "id": "ff1v", "kind": "var", "name": "candidate" } ] }, "right": { "id": "ff1cl", "kind": "lit", "value": "m" } }
+    }, "bodies": { "found": [ { "id": "ff1p", "kind": "print", "value": { "id": "ff1ps", "kind": "op", "op": "text.from", "args": [ { "id": "ff1m", "kind": "op", "op": "fs.name", "args": [ { "id": "ff1mv", "kind": "var", "name": "match" } ] } ] } } ], "notFound": [ { "id": "ff1nfp", "kind": "print", "value": { "id": "ff1nfs", "kind": "lit", "value": "none" } } ] }, "binds": { "candidate": "candidate", "match": "match" } },
+    { "id": "ff2", "kind": "composite", "name": "findFirst", "fields": { "sortBy": "modified" }, "inputs": {
+      "folder": { "id": "ff2f", "kind": "op", "op": "fs.join", "args": [ { "id": "ff2r", "kind": "op", "op": "fs.root", "args": [] }, { "id": "ff2n", "kind": "lit", "value": "byModified" } ] },
+      "condition": { "id": "ff2c", "kind": "binary", "op": ">=", "left": { "id": "ff2cm", "kind": "op", "op": "fs.modified", "args": [ { "id": "ff2v", "kind": "var", "name": "candidate" } ] }, "right": { "id": "ff2d", "kind": "date", "iso": "2026-01-02" } }
+    }, "bodies": { "found": [ { "id": "ff2p", "kind": "print", "value": { "id": "ff2ps", "kind": "op", "op": "text.from", "args": [ { "id": "ff2m", "kind": "op", "op": "fs.name", "args": [ { "id": "ff2mv", "kind": "var", "name": "match" } ] } ] } } ], "notFound": [ { "id": "ff2nfp", "kind": "print", "value": { "id": "ff2nfs", "kind": "lit", "value": "none" } } ] }, "binds": { "candidate": "candidate", "match": "match" } },
+    { "id": "ff3", "kind": "composite", "name": "findFirst", "fields": { "sortBy": "size" },
+      "inputs": {
+        "folder": { "id": "ff3f", "kind": "op", "op": "fs.join", "args": [ { "id": "ff3r", "kind": "op", "op": "fs.root", "args": [] }, { "id": "ff3n", "kind": "lit", "value": "bySize" } ] },
+        "condition": { "id": "ff3c", "kind": "binary", "op": ">=", "left": { "id": "ff3cs", "kind": "op", "op": "fs.size", "args": [ { "id": "ff3v", "kind": "var", "name": "candidate" } ] }, "right": { "id": "ff3l", "kind": "lit", "value": 4 } }
+      }, "bodies": { "found": [ { "id": "ff3p", "kind": "print", "value": { "id": "ff3ps", "kind": "op", "op": "text.from", "args": [ { "id": "ff3m", "kind": "op", "op": "fs.name", "args": [ { "id": "ff3mv", "kind": "var", "name": "match" } ] } ] } } ], "notFound": [ { "id": "ff3nfp", "kind": "print", "value": { "id": "ff3nfs", "kind": "lit", "value": "none" } } ] }, "binds": { "candidate": "candidate", "match": "match" } },
+    { "id": "ff4", "kind": "composite", "name": "findFirst", "fields": { "sortBy": "name" }, "inputs": {
+      "folder": { "id": "ff4f", "kind": "op", "op": "fs.join", "args": [ { "id": "ff4r", "kind": "op", "op": "fs.root", "args": [] }, { "id": "ff4n", "kind": "lit", "value": "notFound" } ] },
+      "condition": { "id": "ff4c", "kind": "binary", "op": ">", "left": { "id": "ff4cn", "kind": "op", "op": "fs.name", "args": [ { "id": "ff4v", "kind": "var", "name": "candidate" } ] }, "right": { "id": "ff4cl", "kind": "lit", "value": "z" } }
+    }, "bodies": { "found": [ { "id": "ff4p", "kind": "print", "value": { "id": "ff4ps", "kind": "op", "op": "text.from", "args": [ { "id": "ff4m", "kind": "op", "op": "fs.name", "args": [ { "id": "ff4mv", "kind": "var", "name": "match" } ] } ] } } ], "notFound": [ { "id": "ff4nfp", "kind": "print", "value": { "id": "ff4nfs", "kind": "lit", "value": "none" } } ] }, "binds": { "candidate": "candidate", "match": "match" } }
+  ]
+}

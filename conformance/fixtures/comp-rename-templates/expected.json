@@ -1,0 +1,11 @@
+{
+  "output": ["RENAME alpha.txt -> alpha-renamed.txt", "RENAME b.txt -> 1.txt", "RENAME c.txt -> 001.txt", "RENAME d.txt -> 2026-01-02.txt", "RENAME e.tar.gz -> .gz"],
+  "error": null,
+  "tree": { "root": { "type": "folder", "name": "", "modified": 0, "children": [
+    { "type": "file", "name": ".gz", "modified": 0, "content": "e" },
+    { "type": "file", "name": "001.txt", "modified": 0, "content": "c" },
+    { "type": "file", "name": "1.txt", "modified": 0, "content": "b" },
+    { "type": "file", "name": "2026-01-02.txt", "modified": 0, "content": "d" },
+    { "type": "file", "name": "alpha-renamed.txt", "modified": 0, "content": "a" }
+  ] } }
+}

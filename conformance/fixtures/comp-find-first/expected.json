@@ -1,0 +1,23 @@
+{
+  "output": ["middle.txt", "new.txt", "big.txt", "none"],
+  "error": null,
+  "tree": { "root": { "type": "folder", "name": "", "modified": 0, "children": [
+    { "type": "folder", "name": "byName", "modified": 0, "children": [
+      { "type": "file", "name": "apple.txt", "modified": 0, "content": "a" },
+      { "type": "file", "name": "middle.txt", "modified": 0, "content": "m" },
+      { "type": "file", "name": "zebra.txt", "modified": 0, "content": "z" }
+    ] },
+    { "type": "folder", "name": "byModified", "modified": 0, "children": [
+      { "type": "file", "name": "new.txt", "modified": 0, "content": "n" },
+      { "type": "file", "name": "old.txt", "modified": 0, "content": "o" }
+    ] },
+    { "type": "folder", "name": "bySize", "modified": 0, "children": [
+      { "type": "file", "name": "big.txt", "modified": 0, "content": "big!" },
+      { "type": "file", "name": "small.txt", "modified": 0, "content": "s" }
+    ] },
+    { "type": "folder", "name": "notFound", "modified": 0, "children": [
+      { "type": "file", "name": "alpha.txt", "modified": 0, "content": "a" },
+      { "type": "file", "name": "beta.txt", "modified": 0, "content": "b" }
+    ] }
+  ] } }
+}

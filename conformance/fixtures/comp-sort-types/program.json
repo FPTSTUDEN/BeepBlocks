@@ -1,0 +1,9 @@
+{
+  "format": "block-playground-ir",
+  "version": 1,
+  "functions": [],
+  "body": [
+    { "id": "s1", "kind": "composite", "name": "sortByType", "fields": { "grouping": "category" }, "inputs": { "folder": { "id": "s1f", "kind": "op", "op": "fs.join", "args": [ { "id": "s1r", "kind": "op", "op": "fs.root", "args": [] }, { "id": "s1n", "kind": "lit", "value": "cat" } ] } }, "bodies": {}, "binds": {} },
+    { "id": "s2", "kind": "composite", "name": "sortByType", "fields": { "grouping": "extension" }, "inputs": { "folder": { "id": "s2f", "kind": "op", "op": "fs.join", "args": [ { "id": "s2r", "kind": "op", "op": "fs.root", "args": [] }, { "id": "s2n", "kind": "lit", "value": "ext" } ] } }, "bodies": {}, "binds": {} }
+  ]
+}

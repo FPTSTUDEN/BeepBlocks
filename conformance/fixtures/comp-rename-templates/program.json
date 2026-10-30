@@ -1,0 +1,12 @@
+{
+  "format": "block-playground-ir",
+  "version": 1,
+  "functions": [],
+  "body": [
+    { "id": "rn1", "kind": "composite", "name": "renameByPattern", "fields": { "match": "alpha.txt", "template": "{name}-renamed{ext}" }, "inputs": { "folder": { "id": "r1", "kind": "op", "op": "fs.root", "args": [] } }, "bodies": {}, "binds": {} },
+    { "id": "rn2", "kind": "composite", "name": "renameByPattern", "fields": { "match": "b.txt", "template": "{n}.txt" }, "inputs": { "folder": { "id": "r2", "kind": "op", "op": "fs.root", "args": [] } }, "bodies": {}, "binds": {} },
+    { "id": "rn3", "kind": "composite", "name": "renameByPattern", "fields": { "match": "c.txt", "template": "{n:3}.txt" }, "inputs": { "folder": { "id": "r3", "kind": "op", "op": "fs.root", "args": [] } }, "bodies": {}, "binds": {} },
+    { "id": "rn4", "kind": "composite", "name": "renameByPattern", "fields": { "match": "d.txt", "template": "{date}.txt" }, "inputs": { "folder": { "id": "r4", "kind": "op", "op": "fs.root", "args": [] } }, "bodies": {}, "binds": {} },
+    { "id": "rn5", "kind": "composite", "name": "renameByPattern", "fields": { "match": "e.tar.gz", "template": "{ext}" }, "inputs": { "folder": { "id": "r5", "kind": "op", "op": "fs.root", "args": [] } }, "bodies": {}, "binds": {} }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "root": { "type": "folder", "name": "", "modified": 1767225600, "children": [
+    { "type": "folder", "name": "byName", "modified": 1767225600, "children": [
+      { "type": "file", "name": "apple.txt", "modified": 1767225600, "content": "a" },
+      { "type": "file", "name": "middle.txt", "modified": 1767225600, "content": "m" },
+      { "type": "file", "name": "zebra.txt", "modified": 1767225600, "content": "z" }
+    ] },
+    { "type": "folder", "name": "byModified", "modified": 1767225600, "children": [
+      { "type": "file", "name": "old.txt", "modified": 1767225600, "content": "o" },
+      { "type": "file", "name": "new.txt", "modified": 1767312000, "content": "n" }
+    ] },
+    { "type": "folder", "name": "bySize", "modified": 1767225600, "children": [
+      { "type": "file", "name": "small.txt", "modified": 1767225600, "content": "s" },
+      { "type": "file", "name": "big.txt", "modified": 1767225600, "content": "big!" }
+    ] },
+    { "type": "folder", "name": "notFound", "modified": 1767225600, "children": [
+      { "type": "file", "name": "alpha.txt", "modified": 1767225600, "content": "a" },
+      { "type": "file", "name": "beta.txt", "modified": 1767225600, "content": "b" }
+    ] }
+  ] }
+}

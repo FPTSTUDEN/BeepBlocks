@@ -1,0 +1,9 @@
+{
+  "root": { "type": "folder", "name": "", "modified": 1767225600, "children": [
+    { "type": "file", "name": "alpha.txt", "modified": 1767225600, "content": "a" },
+    { "type": "file", "name": "b.txt", "modified": 1767225600, "content": "b" },
+    { "type": "file", "name": "c.txt", "modified": 1767225600, "content": "c" },
+    { "type": "file", "name": "d.txt", "modified": 1767312000, "content": "d" },
+    { "type": "file", "name": "e.tar.gz", "modified": 1767225600, "content": "e" }
+  ] }
+}

@@ -1,0 +1,21 @@
+{
+  "format": "block-playground-ir",
+  "version": 1,
+  "functions": [],
+  "body": [
+    { "id": "fa1", "kind": "composite", "name": "findAndAct", "fields": { "recursive": true, "namePattern": "*.txt", "extension": ".txt", "minSize": 1, "maxSize": 10, "modifiedAfter": "2025-12-31", "modifiedBefore": "2026-01-03", "action": "move" }, "inputs": {
+      "folder": { "id": "fa1f", "kind": "op", "op": "fs.join", "args": [ { "id": "fa1r", "kind": "op", "op": "fs.root", "args": [] }, { "id": "fa1n", "kind": "lit", "value": "moveSrc" } ] },
+      "destination": { "id": "fa1d", "kind": "op", "op": "fs.join", "args": [ { "id": "fa1dr", "kind": "op", "op": "fs.root", "args": [] }, { "id": "fa1dn", "kind": "lit", "value": "moved" } ] }
+    }, "bodies": {}, "binds": {} },
+    { "id": "fa2", "kind": "composite", "name": "findAndAct", "fields": { "recursive": false, "action": "copy" }, "inputs": {
+      "folder": { "id": "fa2f", "kind": "op", "op": "fs.join", "args": [ { "id": "fa2r", "kind": "op", "op": "fs.root", "args": [] }, { "id": "fa2n", "kind": "lit", "value": "copySrc" } ] },
+      "destination": { "id": "fa2d", "kind": "op", "op": "fs.join", "args": [ { "id": "fa2dr", "kind": "op", "op": "fs.root", "args": [] }, { "id": "fa2dn", "kind": "lit", "value": "copied" } ] }
+    }, "bodies": {}, "binds": {} },
+    { "id": "fa3", "kind": "composite", "name": "findAndAct", "fields": { "recursive": false, "action": "delete", "namePattern": "*.bin" }, "inputs": {
+      "folder": { "id": "fa3f", "kind": "op", "op": "fs.join", "args": [ { "id": "fa3r", "kind": "op", "op": "fs.root", "args": [] }, { "id": "fa3n", "kind": "lit", "value": "deleteSrc" } ] }
+    }, "bodies": {}, "binds": {} },
+    { "id": "fa4", "kind": "composite", "name": "findAndAct", "fields": { "recursive": true, "action": "rename", "renameTemplate": "renamed-{n}.txt" }, "inputs": {
+      "folder": { "id": "fa4f", "kind": "op", "op": "fs.join", "args": [ { "id": "fa4r", "kind": "op", "op": "fs.root", "args": [] }, { "id": "fa4n", "kind": "lit", "value": "renameSrc" } ] }
+    }, "bodies": {}, "binds": {} }
+  ]
+}
