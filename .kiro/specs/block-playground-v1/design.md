@@ -257,8 +257,10 @@ All paths are relative to the root folder the script runs on. A path is only bui
 - Must not be a reserved name (`CON`, `PRN`, `AUX`, `NUL`, `COM1–9`, `LPT1–9`), case-insensitive, with or without an extension.
 
 **Modified times.**
-- Writes, copies, and new folders set the modified time to a **simulation clock**. The clock starts at `max(mtime in scenario) + 60` and advances 1 second per file op.
-- The Python runtime uses the real clock instead. Comparisons involving times written *during* the run are a known divergence (§12) and are excluded from conformance comparisons.
+- `writeText` and `makeFolder` set the modified time to a **simulation clock**. The clock starts at `max(mtime in scenario) + 60` and advances 1 second per file op.
+- `rename`, `move`, and `copy` **preserve** modified times (copy behaves like Python `shutil.copy2` / `copytree`, including every item inside a copied folder).
+- The simulator does not update a folder's own modified time when its contents change.
+- The Python runtime uses the real clock. Times written *during* the run, and folder times, are a known divergence (§12) and are excluded from conformance comparisons.
 
 **File content model.**
 - A sandbox file has either `content: string` (a text file) or `binarySize: number` (opaque bytes, e.g. a photo).
@@ -280,11 +282,69 @@ Anything else (lookarounds, backreferences in patterns, named groups, flags) fai
 
 ### 5.5 Error codes
 
-`NOT_FOUND, ALREADY_EXISTS, NOT_EMPTY, INVALID_NAME, NOT_A_FOLDER, NOT_A_FILE, NOT_TEXT, INVALID_MOVE, OUTSIDE_ROOT, INDEX_OUT_OF_RANGE, DIVISION_BY_ZERO, INVALID_NUMBER, INT_OVERFLOW, STEP_LIMIT, RECURSION_LIMIT`
+`NOT_FOUND, ALREADY_EXISTS, NOT_EMPTY, INVALID_NAME, NOT_A_FOLDER, NOT_A_FILE, NOT_TEXT, INVALID_MOVE, ROOT_PROTECTED, OUTSIDE_ROOT, INDEX_OUT_OF_RANGE, DIVISION_BY_ZERO, INVALID_NUMBER, INT_OVERFLOW, STEP_LIMIT, RECURSION_LIMIT`
 
 (Invalid regex patterns are caught at validation time because patterns must be literals, so there is no runtime pattern error.)
 
+Error messages are free text and are **not** compared by conformance; `code` and `nodeId` are.
+
 Each error carries `{ code, nodeId, message }`. **`nodeId` is the id of the innermost node that raised the error** — normally the `op` / `binary` / `call` expression, not its enclosing statement. The Python runtime raises `_BPError(code, node_id, message)`. Its entry point prints exactly `Error at block <nodeId> (<CODE>): <message>` as the first stderr line and exits with code 1. `STEP_LIMIT` and `RECURSION_LIMIT` are simulator-only, and `INT_OVERFLOW` cannot happen in Python (§12).
+
+### 5.6 Precise semantics (contract-v1 addendum)
+
+The simulator and the Python runtime are written independently, so every rule below is **normative**. Where §5.1–§5.3 are less specific, this section wins.
+
+**Values and lists**
+- Lists have **reference semantics**, as in Python. `b = a` makes both names refer to the same list, and `list.append(a, x)` is visible through `b`. `ListLit`, `+` on lists, `list.range`, `list.sort`, `list.sortBy`, `fs.list`, and `fs.walk` create new lists. Snapshots store deep copies of values, so later mutations don't rewrite history.
+- `forEach` iterates over a **snapshot copy** of the list taken before the first iteration. Appending during the loop does not add iterations. The exporter emits `for x in list(xs):`.
+- `==`/`!=` on lists compare element-wise (Python `==`), with path elements compared case-insensitively.
+- An int result outside the safe-integer range raises `INT_OVERFLOW` (simulator only).
+- Negating int `0` gives `0`, never `-0`. Float `-0.0` prints as `-0.0`.
+- Ordering of text (`<`, `list.sort`, sort keys) is by **Unicode code point**, as in Python, not UTF-16.
+
+**Number ops**
+- `math.floor` returns an **int** (Python `math.floor`). `math.abs` keeps the int/float type.
+- `math.min(a, b)` / `math.max(a, b)` return the **first** argument when the two are equal, as Python does (`min(1, 1.0)` is `1`).
+- `list.get`, `list.range`, and `text.padNumber` require **int** arguments. A float, even `2.0`, raises `INVALID_NUMBER`. `list.get` with a negative index or one ≥ length raises `INDEX_OUT_OF_RANGE`.
+- `text.padNumber(n, w)` is Python `str(n).zfill(w)`, so `-5` padded to 3 gives `-05`.
+- `text.toNumber(s)`: if `s` matches `^[+-]?\d+$` the result is an int. Otherwise, if it matches `^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$` the result is a float. Otherwise it raises `INVALID_NUMBER`. There's no whitespace trimming, no `_`, no `inf`/`nan`, and only ASCII digits.
+- `text.date(t)` is the UTC date `YYYY-MM-DD` of epoch seconds `t` (int or float), i.e. `datetime.fromtimestamp(t, timezone.utc).strftime('%Y-%m-%d')`.
+
+**Text ops**
+- `text.wildcard(s, p)`: `*` matches any run of characters (including an empty one), `?` matches exactly one code point, and every other character matches itself. The match covers the whole string and compares `lower()` of both sides. Implement it by translating the pattern to an escaped regex on both sides, not with `fnmatch`, which treats `[` specially.
+- `text.regexMatch` uses search semantics (`re.search` / `RegExp.test`). `text.regexReplace` replaces all matches. In the replacement, `\1`–`\9` is the group text, with an unmatched group giving `''`, and `\\` is a backslash.
+
+**Paths**
+- A path value keeps the case the program produced it with. Equality ignores case. Lookups on disk resolve each segment case-insensitively.
+- `fs.join(p, name)` validates `name` with the name rules and returns `p + '/' + name` (or just `name` when `p` is the root). It does not check existence.
+- `fs.list(p)` and `fs.walk(p)` return `p` joined with each **stored** child name.
+- The paths returned by `fs.rename` / `fs.move` / `fs.copy` are, respectively: the parent of `p` joined with `newName`; the destination folder path as given joined with the item's **stored** name; and the same for copy.
+- `fs.name`, `fs.stem`, and `fs.ext` look only at the last segment of the path string and never touch the disk. On the root, `fs.name` and `fs.stem` return `''`. `fs.parent` of a top-level item returns the root.
+- `fs.walk` is pre-order. Within a folder, children are visited in `fs.list` order: a file is yielded when it's reached, and a subfolder is descended into at its position. Folders themselves are never yielded. A whole walk counts as **one** read.
+- Resolving a path in which some earlier segment is a file behaves as "does not exist".
+
+**Check order.** The first failing check determines the error code. Every name check happens before any disk check.
+
+| Op | Checks in order |
+|---|---|
+| `fs.join` | name valid → `INVALID_NAME` |
+| `fs.parent` | path is root → `OUTSIDE_ROOT` |
+| `fs.isFolder`, `fs.modified` | exists → `NOT_FOUND` |
+| `fs.list`, `fs.walk` | exists → `NOT_FOUND`; is folder → `NOT_A_FOLDER` |
+| `fs.size`, `fs.readText` | exists → `NOT_FOUND`; is file → `NOT_A_FILE`; (readText) opaque / invalid UTF-8 / contains NUL → `NOT_TEXT` |
+| `fs.writeText` | path is root → `ROOT_PROTECTED`; parent exists and is a folder → `NOT_FOUND`; target is a folder → `NOT_A_FILE` |
+| `fs.makeFolder` | path is root → `ALREADY_EXISTS`; parent exists and is a folder → `NOT_FOUND`; target exists (any type) → `ALREADY_EXISTS` |
+| `fs.rename` | new name valid → `INVALID_NAME`; source exists → `NOT_FOUND`; source is root → `ROOT_PROTECTED`; a sibling (other than the source itself) has the same lowercase name → `ALREADY_EXISTS` |
+| `fs.move`, `fs.copy` | source exists → `NOT_FOUND`; source is root → `ROOT_PROTECTED`; destination exists → `NOT_FOUND`; destination is a folder → `NOT_A_FOLDER`; destination is the source or inside it → `INVALID_MOVE`; `destination/name` exists (including the source itself) → `ALREADY_EXISTS` |
+| `fs.delete` | exists → `NOT_FOUND`; is root → `ROOT_PROTECTED`; folder is empty → `NOT_EMPTY` |
+| `list.sortBy` | for keys `size`: every item exists → `NOT_FOUND` and is a file → `NOT_A_FILE`; for `modified`: every item exists → `NOT_FOUND` (checked in list order; `name`/`ext` never touch the disk) |
+
+- `list.sortBy` sort keys are `name`: `(lower(name), name)`; `ext`: `(lower(ext), ext)`; `size` / `modified`: the number. Sorting is stable. Ties keep their input order, and `descending` reverses the comparison without breaking stability (Python `sorted(..., reverse=True)` is also stable).
+- `list.sortBy` with key `size` or `modified` counts as one read.
+
+**Output**
+- `print` text containing `\n` produces one output line per `\n`-separated segment. Conformance compares Python stdout split on `\r?\n`.
+- The exported script reconfigures stdout and stderr to UTF-8 (`errors="replace"`) so that names print the same on any console.
 
 ## 6. Composites
 
@@ -319,6 +379,19 @@ export interface DesugarCtx {
 ```
 
 `desugarProgram(program)` replaces composites recursively, innermost first, and is pure and deterministic. Hygiene works like this: the temporaries a composite introduces (`n`, `items`, `low`…) get names from `freshName`, which avoids every name already used in the enclosing scope. `binds` names are chosen by the user, so the user can reference them.
+
+Further desugaring rules (contract-v1):
+- **Each input expression is emitted exactly once.** If the desugaring needs an input value in more than one place (e.g. `folder` in both `fs.list(folder)` and `fs.join(folder, group)`), it first assigns it to a fresh temporary and uses the temporary everywhere. Copying an expression subtree would duplicate node IDs (`DUPLICATE_ID`) and evaluate it more than once. Inputs that are evaluated repeatedly *by design* (the `findFirst` condition, evaluated once per probe) are placed once inside the loop body.
+- Every node a desugaring creates gets a derived ID `ctx.id(local)`, with `local` unique within the composite. User-supplied subtrees (inputs, bodies) keep their own IDs.
+- The output must pass `validateProgram(p, { primitiveOnly: true })` with no errors.
+- `findAndAct` criteria (all inclusive):
+  - `extension`: compares `lower(fs.ext(item))` to the lowercase field value, with any leading `.` stripped.
+  - `minSize` / `maxSize`: `size ≥ min` / `size ≤ max`.
+  - `modifiedAfter D`: `modified ≥ midnight UTC of D`.
+  - `modifiedBefore D`: `modified < midnight UTC of D`.
+  - `namePattern`: `text.wildcard(fs.name(item), pattern)`.
+- `findAndAct` with `recursive = false` acts only on files (not folders) directly in `folder`.
+- `findAndAct` with `action = rename` uses the same template language as `renameByPattern`, and its `{n}` counts matched files in iteration order. It skips the rename when the new name equals the current name.
 
 ### 6.2 Desugarings
 
@@ -547,7 +620,7 @@ The program comes first so users read their logic before the runtime.
 
 ### 8.3 Python runtime (`export/python/runtime.py`)
 
-This is a real `.py` file, imported into the emitter with Vite `?raw`, so it can be linted and unit-tested with Python directly.
+This is a real `.py` file, so it can be linted and unit-tested with Python directly. Because `?raw` imports work only under Vite (the conformance runner uses Node via `tsx`), `pnpm gen:runtime` regenerates `export/python/runtime.gen.ts`, which exports the file's text as a string constant. The emitter imports only `runtime.gen.ts`, and a unit test fails if the generated file is out of date.
 
 - `_BPPath`: an immutable relative path. Its `__eq__`/`__hash__` are case-insensitive, and `__str__` returns the relative POSIX form (`.` for root).
 - `_RealFS(root)` implements every `fs.*` op from §5.3 on the real disk:
@@ -665,6 +738,8 @@ Coverage requirement: every op, every error code except `STEP_LIMIT`/`RECURSION_
 | Integers beyond 2^53 | `INT_OVERFLOW` error | arbitrary precision | validator warns on large literals |
 | Times of items written during the run | simulation clock | wall clock | excluded from comparisons |
 | External interference | none | other processes may change files | dry-run preview, precondition checks |
+| Folder modified times | unchanged by content changes | OS updates them | folder times never compared |
+| Names differing only in case on a case-sensitive disk (e.g. `a.txt` and `A.txt` on Linux) | impossible (sandbox forbids it) | `_RealFS` raises `INVALID_NAME` ("ambiguous name") when resolving such a segment | documented in the script header |
 | Partial failure | stops, sandbox resettable | earlier changes remain on disk | header warning; dry-run default |
 
 ## 13. Persistence

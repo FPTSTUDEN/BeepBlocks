@@ -7,7 +7,7 @@ Legend:
 
 Environment verified: Node 22.20, pnpm 10.33, Python 3.13.5.
 
-**Status (paused):** Phase 0 tasks 0.1–0.6 are done; `typecheck`, `lint`, `test` (100 tests) and `build` pass. `pnpm conformance` runs end to end and fails only because sim/export/composites are still stubs. Next: 0.7. It needs a git repo to tag `contract-v1`, and the user's go-ahead to create the repo and commit.
+**Status:** Phase 0 complete. The contract is frozen at tag `contract-v1`, with design.md §5.6 added as the semantics addendum. Phase 1 is in progress.
 
 ---
 
@@ -52,7 +52,7 @@ Environment verified: Node 22.20, pnpm 10.33, Python 3.13.5.
 - [x] 0.6 Mock timeline fixture for UI work
   - `src/playground/__mocks__/timelines.ts`: hand-written `Timeline` objects for a rename run, a sort-into-folders run, a bisect run (with hints), and an error run. Playground builds against these and doesn't need the simulator.
 
-- [ ] 0.7 Checkpoint: `pnpm typecheck`, `lint`, and `test` all pass. Freeze the contract, tag it `contract-v1`, and announce to the workstreams.
+- [x] 0.7 Checkpoint: `pnpm typecheck`, `lint`, and `test` all pass. Freeze the contract, tag it `contract-v1`, and announce to the workstreams.
 
 ---
 

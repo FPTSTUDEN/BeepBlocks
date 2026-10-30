@@ -43,7 +43,7 @@ export function materialize(fs: SandboxFS, dir: string): void {
   write(fs.root, dir);
 }
 
-const decoder = new TextDecoder('utf-8', { fatal: true });
+const decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
 
 export function readTree(dir: string): SandboxFS {
   const read = (at: string, name: string): FsNode => {

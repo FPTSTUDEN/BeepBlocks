@@ -10,6 +10,8 @@ export const RUNTIME_ERROR_CODES = [
   'NOT_A_FILE',
   'NOT_TEXT',
   'INVALID_MOVE',
+  /** Rename/move/copy/delete/write targeting the root folder itself. */
+  'ROOT_PROTECTED',
   'OUTSIDE_ROOT',
   'INDEX_OUT_OF_RANGE',
   'DIVISION_BY_ZERO',

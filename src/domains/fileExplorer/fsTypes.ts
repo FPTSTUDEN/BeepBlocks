@@ -86,3 +86,35 @@ export function getNode(fs: SandboxFS, path: string): FsNode | undefined {
   }
   return node;
 }
+
+// ---------------------------------------------------------------- Name rules
+
+const RESERVED_NAMES = new Set([
+  'CON', 'PRN', 'AUX', 'NUL',
+  ...Array.from({ length: 9 }, (_, i) => `COM${i + 1}`),
+  ...Array.from({ length: 9 }, (_, i) => `LPT${i + 1}`),
+]);
+// eslint-disable-next-line no-control-regex
+const FORBIDDEN_CHARS = /[<>:"/\\|?*\u0000-\u001f]/;
+
+/**
+ * Windows-strict file/folder name rules, applied on every OS (design.md §5.3).
+ * Returns a plain-language problem, or null if the name is valid.
+ * The Python runtime implements the same rules in `_bp_check_name`.
+ */
+export function checkName(name: string): string | null {
+  const length = [...name].length;
+  if (length === 0) return 'A name cannot be empty.';
+  if (length > 255) return 'A name can be at most 255 characters.';
+  if (name === '.' || name === '..') return `"${name}" is not allowed as a name.`;
+  const bad = FORBIDDEN_CHARS.exec(name);
+  if (bad) {
+    const c = bad[0];
+    const shown = c.charCodeAt(0) < 0x20 ? 'a control character' : `"${c}"`;
+    return `"${name}" contains ${shown}, which is not allowed in names (< > : " / \\ | ? *).`;
+  }
+  if (name.endsWith(' ') || name.endsWith('.')) return `"${name}" cannot end with a space or a dot.`;
+  const stem = name.split('.')[0]!.toUpperCase();
+  if (RESERVED_NAMES.has(stem)) return `"${name}" is reserved by Windows; please choose another name.`;
+  return null;
+}

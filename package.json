@@ -16,7 +16,8 @@
     "format": "prettier --write .",
     "test": "vitest --run",
     "test:py": "python -m unittest discover -s src/export/python -p \"test_*.py\"",
-    "conformance": "tsx conformance/run.ts"
+    "conformance": "tsx conformance/run.ts",
+    "gen:runtime": "tsx src/export/python/gen-runtime.ts"
   },
   "dependencies": {
     "@blockly/keyboard-navigation": "3.0.5",
