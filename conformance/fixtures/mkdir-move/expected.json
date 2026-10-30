@@ -1,0 +1,20 @@
+{
+  "error": null,
+  "output": ["MKDIR  docs/", "MOVE   a.txt -> docs/", "docs/a.txt", "2", "13"],
+  "tree": {
+    "root": {
+      "type": "folder",
+      "name": "",
+      "modified": 0,
+      "children": [
+        { "type": "file", "name": "b.jpg", "modified": 0, "binarySize": 100 },
+        {
+          "type": "folder",
+          "name": "docs",
+          "modified": 0,
+          "children": [{ "type": "file", "name": "a.txt", "modified": 0, "content": "hello\r\nworld\n" }]
+        }
+      ]
+    }
+  }
+}

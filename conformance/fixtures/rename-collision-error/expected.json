@@ -1,0 +1,15 @@
+{
+  "error": { "code": "ALREADY_EXISTS", "nodeId": "rn" },
+  "output": ["start"],
+  "tree": {
+    "root": {
+      "type": "folder",
+      "name": "",
+      "modified": 0,
+      "children": [
+        { "type": "file", "name": "x.txt", "modified": 0, "content": "x" },
+        { "type": "file", "name": "y.txt", "modified": 0, "content": "y" }
+      ]
+    }
+  }
+}

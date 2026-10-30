@@ -1,0 +1,12 @@
+{
+  "format": "block-playground-ir",
+  "version": 1,
+  "functions": [],
+  "body": [
+    { "id": "s", "kind": "print", "value": { "id": "sl", "kind": "lit", "value": "start" } },
+    { "id": "as1", "kind": "assign", "name": "renamed", "value": { "id": "rn", "kind": "op", "op": "fs.rename", "args": [
+      { "id": "rnj", "kind": "op", "op": "fs.join", "args": [ { "id": "rnr", "kind": "op", "op": "fs.root", "args": [] }, { "id": "rnn", "kind": "lit", "value": "x.txt" } ] },
+      { "id": "rnt", "kind": "lit", "value": "Y.TXT" } ] } },
+    { "id": "e", "kind": "print", "value": { "id": "el", "kind": "lit", "value": "never" } }
+  ]
+}

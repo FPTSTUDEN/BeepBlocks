@@ -1,0 +1,11 @@
+{
+  "root": {
+    "type": "folder",
+    "name": "",
+    "modified": 1767225600,
+    "children": [
+      { "type": "file", "name": "a.txt", "modified": 1767225600, "content": "hello\r\nworld\n" },
+      { "type": "file", "name": "b.jpg", "modified": 1767139200, "binarySize": 100 }
+    ]
+  }
+}

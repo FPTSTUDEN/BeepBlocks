@@ -1,0 +1,17 @@
+{
+  "format": "block-playground-ir",
+  "version": 1,
+  "functions": [],
+  "body": [
+    { "id": "mk", "kind": "do", "expr": { "id": "mkop", "kind": "op", "op": "fs.makeFolder", "args": [
+      { "id": "mkj", "kind": "op", "op": "fs.join", "args": [ { "id": "mkr", "kind": "op", "op": "fs.root", "args": [] }, { "id": "mkn", "kind": "lit", "value": "docs" } ] } ] } },
+    { "id": "mv", "kind": "assign", "name": "moved", "value": { "id": "mvop", "kind": "op", "op": "fs.move", "args": [
+      { "id": "mvf", "kind": "op", "op": "fs.join", "args": [ { "id": "mvr1", "kind": "op", "op": "fs.root", "args": [] }, { "id": "mvn1", "kind": "lit", "value": "a.txt" } ] },
+      { "id": "mvd", "kind": "op", "op": "fs.join", "args": [ { "id": "mvr2", "kind": "op", "op": "fs.root", "args": [] }, { "id": "mvn2", "kind": "lit", "value": "docs" } ] } ] } },
+    { "id": "pr1", "kind": "print", "value": { "id": "pr1s", "kind": "op", "op": "text.from", "args": [ { "id": "pr1v", "kind": "var", "name": "moved" } ] } },
+    { "id": "pr2", "kind": "print", "value": { "id": "pr2s", "kind": "op", "op": "text.from", "args": [
+      { "id": "pr2l", "kind": "op", "op": "list.length", "args": [ { "id": "pr2f", "kind": "op", "op": "fs.list", "args": [ { "id": "pr2r", "kind": "op", "op": "fs.root", "args": [] } ] } ] } ] } },
+    { "id": "pr3", "kind": "print", "value": { "id": "pr3s", "kind": "op", "op": "text.from", "args": [
+      { "id": "pr3l", "kind": "op", "op": "text.length", "args": [ { "id": "pr3t", "kind": "op", "op": "fs.readText", "args": [ { "id": "pr3v", "kind": "var", "name": "moved" } ] } ] } ] } }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "format": "block-playground-ir",
+  "version": 1,
+  "functions": [],
+  "body": [
+    { "id": "p1", "kind": "print", "value": { "id": "p1s", "kind": "op", "op": "text.from", "args": [
+      { "id": "p1e", "kind": "binary", "op": "//", "left": { "id": "p1a", "kind": "lit", "value": 7 }, "right": { "id": "p1b", "kind": "lit", "value": 2 } } ] } },
+    { "id": "p2", "kind": "print", "value": { "id": "p2s", "kind": "op", "op": "text.from", "args": [
+      { "id": "p2e", "kind": "binary", "op": "//", "left": { "id": "p2n", "kind": "unary", "op": "neg", "arg": { "id": "p2a", "kind": "lit", "value": 7 } }, "right": { "id": "p2b", "kind": "lit", "value": 2 } } ] } },
+    { "id": "p3", "kind": "print", "value": { "id": "p3s", "kind": "op", "op": "text.from", "args": [
+      { "id": "p3e", "kind": "binary", "op": "%", "left": { "id": "p3a", "kind": "lit", "value": 7 }, "right": { "id": "p3n", "kind": "unary", "op": "neg", "arg": { "id": "p3b", "kind": "lit", "value": 3 } } } ] } },
+    { "id": "p4", "kind": "print", "value": { "id": "p4s", "kind": "op", "op": "text.from", "args": [
+      { "id": "p4e", "kind": "binary", "op": "/", "left": { "id": "p4a", "kind": "lit", "value": 1 }, "right": { "id": "p4b", "kind": "lit", "value": 3 } } ] } },
+    { "id": "p5", "kind": "print", "value": { "id": "p5s", "kind": "op", "op": "text.from", "args": [
+      { "id": "p5e", "kind": "binary", "op": "*", "left": { "id": "p5a", "kind": "lit", "value": 2, "float": true }, "right": { "id": "p5b", "kind": "lit", "value": 3 } } ] } },
+    { "id": "p6", "kind": "print", "value": { "id": "p6s", "kind": "op", "op": "text.from", "args": [
+      { "id": "p6e", "kind": "binary", "op": "+", "left": { "id": "p6a", "kind": "lit", "value": 0.1 }, "right": { "id": "p6b", "kind": "lit", "value": 0.2 } } ] } },
+    { "id": "p7", "kind": "print", "value": { "id": "p7e", "kind": "binary", "op": "+", "left": { "id": "p7a", "kind": "lit", "value": "a" }, "right": { "id": "p7b", "kind": "lit", "value": "b" } } },
+    { "id": "p8", "kind": "print", "value": { "id": "p8s", "kind": "op", "op": "text.from", "args": [ { "id": "p8a", "kind": "lit", "value": true } ] } },
+    { "id": "p9", "kind": "print", "value": { "id": "p9s", "kind": "op", "op": "text.from", "args": [
+      { "id": "p9e", "kind": "binary", "op": "/", "left": { "id": "p9a", "kind": "lit", "value": 10 }, "right": { "id": "p9b", "kind": "lit", "value": 2 } } ] } },
+    { "id": "p10", "kind": "print", "value": { "id": "p10s", "kind": "op", "op": "text.from", "args": [ { "id": "p10a", "kind": "lit", "value": 1e16, "float": true } ] } },
+    { "id": "p11", "kind": "print", "value": { "id": "p11s", "kind": "op", "op": "text.from", "args": [ { "id": "p11a", "kind": "lit", "value": 0.00001 } ] } }
+  ]
+}
