@@ -1,0 +1,29 @@
+{
+  "output": ["MOVE   moveSrc/nested/deep.txt -> moved/", "COPY   copySrc/copy.txt -> copied/", "DELETE deleteSrc/remove.bin", "RENAME renameSrc/nested/old.txt -> renamed-1.txt"],
+  "error": null,
+  "tree": { "root": { "type": "folder", "name": "", "modified": 0, "children": [
+    { "type": "folder", "name": "copySrc", "modified": 0, "children": [
+      { "type": "file", "name": "copy.txt", "modified": 0, "content": "copy" },
+      { "type": "folder", "name": "nested", "modified": 0, "children": [
+        { "type": "file", "name": "skip.txt", "modified": 0, "content": "skip" }
+      ] }
+    ] },
+    { "type": "folder", "name": "copied", "modified": 0, "children": [
+      { "type": "file", "name": "copy.txt", "modified": 0, "content": "copy" }
+    ] },
+    { "type": "folder", "name": "deleteSrc", "modified": 0, "children": [
+      { "type": "file", "name": "keep.txt", "modified": 0, "content": "keep" }
+    ] },
+    { "type": "folder", "name": "moveSrc", "modified": 0, "children": [
+      { "type": "folder", "name": "nested", "modified": 0, "children": [] }
+    ] },
+    { "type": "folder", "name": "moved", "modified": 0, "children": [
+      { "type": "file", "name": "deep.txt", "modified": 0, "content": "deep" }
+    ] },
+    { "type": "folder", "name": "renameSrc", "modified": 0, "children": [
+      { "type": "folder", "name": "nested", "modified": 0, "children": [
+        { "type": "file", "name": "renamed-1.txt", "modified": 0, "content": "old" }
+      ] }
+    ] }
+  ] } }
+}

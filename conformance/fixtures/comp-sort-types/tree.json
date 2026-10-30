@@ -1,0 +1,13 @@
+{
+  "root": { "type": "folder", "name": "", "modified": 1767225600, "children": [
+    { "type": "folder", "name": "cat", "modified": 1767225600, "children": [
+      { "type": "file", "name": "photo.JPG", "modified": 1767225600, "content": "p" },
+      { "type": "file", "name": "readme.txt", "modified": 1767225600, "content": "r" },
+      { "type": "file", "name": "mystery.xyz", "modified": 1767225600, "content": "m" }
+    ] },
+    { "type": "folder", "name": "ext", "modified": 1767225600, "children": [
+      { "type": "file", "name": "a.TXT", "modified": 1767225600, "content": "a" },
+      { "type": "file", "name": "b", "modified": 1767225600, "content": "b" }
+    ] }
+  ] }
+}
