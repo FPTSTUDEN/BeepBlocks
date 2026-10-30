@@ -108,7 +108,7 @@ const STMT_KINDS = ['assign', 'if', 'while', 'forEach', 'return', 'do', 'print',
 const EXPR_KINDS = ['lit', 'date', 'list', 'var', 'binary', 'unary', 'op', 'call'];
 const BIN_OPS = [...ARITH_OPS, ...COMPARE_OPS, 'and', 'or'];
 
-function checkStructure(p: unknown, r: Reporter, primitiveOnly: boolean): void {
+function checkStructure(p: unknown, r: Reporter, primitiveOnly: boolean, allowHoles = false): void {
   const ids = new Set<string>();
   const nodeId = (n: Record<string, unknown>, where: string): string | null => {
     if (typeof n.id !== 'string' || n.id.length === 0) {
@@ -130,6 +130,7 @@ function checkStructure(p: unknown, r: Reporter, primitiveOnly: boolean): void {
     v.forEach(stmt);
   };
   const expr = (v: unknown, owner: string, what: string): void => {
+    if (v === null && allowHoles) return;
     if (!isObj(v) || typeof v.kind !== 'string' || !EXPR_KINDS.includes(v.kind)) {
       r.error(owner, 'STRUCTURE', `Expected a value for ${what}.`);
       return;
@@ -841,6 +842,17 @@ export function typecheck(program: Program, opts: ValidateOptions = {}): Typeche
 /** Validates a program. Returns errors and warnings (empty = valid). Never throws. */
 export function validateProgram(program: Program, opts: ValidateOptions = {}): ValidationError[] {
   return typecheck(program, opts).issues;
+}
+
+/**
+ * Structure-only check for programs that are still being edited (saved projects): the same
+ * shape rules as `validateProgram`'s first phase, except that empty sockets (`null` where a
+ * value belongs, as produced by the editor) are allowed. Never throws.
+ */
+export function validateStructure(program: unknown): ValidationError[] {
+  const r = new Reporter();
+  checkStructure(program, r, false, true);
+  return r.issues;
 }
 
 export function hasErrors(issues: ValidationError[]): boolean {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { b } from './build.ts';
 import { T, type Program, type Stmt } from './types.ts';
-import { validateProgram, hasErrors, isoDateToEpoch, checkIdentifier, typecheck } from './validate.ts';
+import { validateProgram, validateStructure, hasErrors, isoDateToEpoch, checkIdentifier, typecheck } from './validate.ts';
 import { parseProgram, serializeProgram } from './serialize.ts';
 import type { ValidationCode } from './errors.ts';
 
@@ -26,6 +26,18 @@ describe('structure', () => {
 
   it('reserves the editor run-block id', () => {
     bad(body(b.print(b.lit('a'), 'when-run')), 'DUPLICATE_ID');
+  });
+
+  it('validateStructure allows empty sockets but not malformed nodes', () => {
+    const holes = body(
+      b.print(null as unknown as ReturnType<typeof b.lit>, 'p'),
+      b.assign('x', b.op('math.max', [b.lit(1), null as unknown as ReturnType<typeof b.lit>], 'm'), 'a'),
+    );
+    expect(hasErrors(validateProgram(holes))).toBe(true);
+    expect(validateStructure(holes)).toEqual([]);
+    expect(hasErrors(validateStructure(body(b.print({ kind: 'nope' } as never, 'p'))))).toBe(true);
+    expect(hasErrors(validateStructure({ body: [] }))).toBe(true);
+    expect(() => validateStructure(null)).not.toThrow();
   });
 
   it('rejects unknown ops', () => {
