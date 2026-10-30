@@ -17,6 +17,7 @@
     "test": "vitest --run",
     "test:py": "python -m unittest discover -s src/export/python -p \"test_*.py\"",
     "conformance": "tsx conformance/run.ts",
+    "smoke": "vite build && node scripts/browser-smoke.mjs",
     "gen:runtime": "tsx src/export/python/gen-runtime.ts"
   },
   "dependencies": {
