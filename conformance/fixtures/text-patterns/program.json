@@ -1,0 +1,13 @@
+{
+  "format": "block-playground-ir",
+  "version": 1,
+  "functions": [],
+  "body": [
+    { "id": "p1", "kind": "print", "value": { "id": "e1", "kind": "op", "op": "text.from", "args": [{ "id": "x1", "kind": "op", "op": "text.wildcard", "args": [{ "id": "s1", "kind": "lit", "value": "Report.TXT" }, { "id": "q1", "kind": "lit", "value": "report.*" }] }] } },
+    { "id": "p2", "kind": "print", "value": { "id": "e2", "kind": "op", "op": "text.from", "args": [{ "id": "x2", "kind": "op", "op": "text.wildcard", "args": [{ "id": "s2", "kind": "lit", "value": "a\nb" }, { "id": "q2", "kind": "lit", "value": "a?b" }] }] } },
+    { "id": "p3", "kind": "print", "value": { "id": "e3", "kind": "op", "op": "text.from", "args": [{ "id": "x3", "kind": "op", "op": "text.wildcard", "args": [{ "id": "s3", "kind": "lit", "value": "prefix-middle-suffix" }, { "id": "q3", "kind": "lit", "value": "prefix*suffix" }] }] } },
+    { "id": "p4", "kind": "print", "value": { "id": "e4", "kind": "op", "op": "text.from", "args": [{ "id": "x4", "kind": "op", "op": "text.regexMatch", "args": [{ "id": "s4", "kind": "lit", "value": "id=ABC-123" }, { "id": "q4", "kind": "lit", "value": "[A-Z]{3}-[0-9]{3}" }] }] } },
+    { "id": "p5", "kind": "print", "value": { "id": "e5", "kind": "op", "op": "text.regexReplace", "args": [{ "id": "s5", "kind": "lit", "value": "item-42 and item-7" }, { "id": "q5", "kind": "lit", "value": "(item)-(\\d+)" }, { "id": "r5", "kind": "lit", "value": "\\2/\\1" }] } },
+    { "id": "p6", "kind": "print", "value": { "id": "e6", "kind": "op", "op": "text.regexReplace", "args": [{ "id": "s6", "kind": "lit", "value": "ab ac" }, { "id": "q6", "kind": "lit", "value": "a(b)" }, { "id": "r6", "kind": "lit", "value": "\\1" }] } }
+  ]
+}

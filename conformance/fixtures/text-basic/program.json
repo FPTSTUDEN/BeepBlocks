@@ -1,0 +1,23 @@
+{
+  "format": "block-playground-ir",
+  "version": 1,
+  "functions": [],
+  "body": [
+    { "id": "p1", "kind": "print", "value": { "id": "e1", "kind": "op", "op": "text.from", "args": [{ "id": "n1", "kind": "op", "op": "text.toNumber", "args": [{ "id": "s1", "kind": "lit", "value": "-42" }] }] } },
+    { "id": "p2", "kind": "print", "value": { "id": "e2", "kind": "op", "op": "text.from", "args": [{ "id": "n2", "kind": "op", "op": "text.toNumber", "args": [{ "id": "s2", "kind": "lit", "value": "1.25e2" }] }] } },
+    { "id": "p3", "kind": "print", "value": { "id": "e3", "kind": "op", "op": "text.lower", "args": [{ "id": "s3", "kind": "lit", "value": "MiXeD" }] } },
+    { "id": "p4", "kind": "print", "value": { "id": "e4", "kind": "op", "op": "text.upper", "args": [{ "id": "s4", "kind": "lit", "value": "MiXeD" }] } },
+    { "id": "p5", "kind": "print", "value": { "id": "e5", "kind": "op", "op": "text.from", "args": [{ "id": "b5", "kind": "op", "op": "text.contains", "args": [{ "id": "s5a", "kind": "lit", "value": "alphabet" }, { "id": "s5b", "kind": "lit", "value": "pha" }] }] } },
+    { "id": "p6", "kind": "print", "value": { "id": "e6", "kind": "op", "op": "text.from", "args": [{ "id": "b6", "kind": "op", "op": "text.startsWith", "args": [{ "id": "s6a", "kind": "lit", "value": "alphabet" }, { "id": "s6b", "kind": "lit", "value": "alp" }] }] } },
+    { "id": "p7", "kind": "print", "value": { "id": "e7", "kind": "op", "op": "text.from", "args": [{ "id": "b7", "kind": "op", "op": "text.endsWith", "args": [{ "id": "s7a", "kind": "lit", "value": "alphabet" }, { "id": "s7b", "kind": "lit", "value": "bet" }] }] } },
+    { "id": "p8", "kind": "print", "value": { "id": "e8", "kind": "op", "op": "text.replace", "args": [{ "id": "s8a", "kind": "lit", "value": "one two one" }, { "id": "s8b", "kind": "lit", "value": "one" }, { "id": "s8c", "kind": "lit", "value": "1" }] } },
+    { "id": "p9", "kind": "print", "value": { "id": "e9", "kind": "op", "op": "text.padNumber", "args": [{ "id": "n9", "kind": "lit", "value": -5 }, { "id": "w9", "kind": "lit", "value": 3 }] } },
+    { "id": "p10", "kind": "print", "value": { "id": "e10", "kind": "op", "op": "text.padNumber", "args": [{ "id": "n10", "kind": "lit", "value": 42 }, { "id": "w10", "kind": "lit", "value": 5 }] } },
+    { "id": "p11", "kind": "print", "value": { "id": "e11", "kind": "op", "op": "text.date", "args": [{ "id": "d11", "kind": "lit", "value": 1767225600 }] } },
+    { "id": "p12", "kind": "print", "value": { "id": "e12", "kind": "op", "op": "text.from", "args": [{ "id": "f12", "kind": "lit", "value": 0.00001, "float": true }] } },
+    { "id": "p13", "kind": "print", "value": { "id": "e13", "kind": "op", "op": "text.from", "args": [{ "id": "f13", "kind": "op", "op": "math.floor", "args": [{ "id": "x13", "kind": "lit", "value": -1.2, "float": true }] }] } },
+    { "id": "p14", "kind": "print", "value": { "id": "e14", "kind": "op", "op": "text.from", "args": [{ "id": "f14", "kind": "op", "op": "math.abs", "args": [{ "id": "x14", "kind": "unary", "op": "neg", "arg": { "id": "a14", "kind": "lit", "value": 7 } }] }] } },
+    { "id": "p15", "kind": "print", "value": { "id": "e15", "kind": "op", "op": "text.from", "args": [{ "id": "f15", "kind": "op", "op": "math.min", "args": [{ "id": "a15", "kind": "lit", "value": 3 }, { "id": "b15", "kind": "lit", "value": 8 }] }] } },
+    { "id": "p16", "kind": "print", "value": { "id": "e16", "kind": "op", "op": "text.from", "args": [{ "id": "f16", "kind": "op", "op": "math.max", "args": [{ "id": "a16", "kind": "lit", "value": 3 }, { "id": "b16", "kind": "lit", "value": 8 }] }] } }
+  ]
+}

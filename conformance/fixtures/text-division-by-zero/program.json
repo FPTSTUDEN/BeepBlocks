@@ -1,0 +1,9 @@
+{
+  "format": "block-playground-ir",
+  "version": 1,
+  "functions": [],
+  "body": [
+    { "id": "before", "kind": "print", "value": { "id": "bs", "kind": "lit", "value": "before" } },
+    { "id": "bad", "kind": "print", "value": { "id": "badop", "kind": "op", "op": "text.from", "args": [{ "id": "div", "kind": "binary", "op": "/", "left": { "id": "one", "kind": "lit", "value": 1 }, "right": { "id": "zero", "kind": "lit", "value": 0 } }] } }
+  ]
+}

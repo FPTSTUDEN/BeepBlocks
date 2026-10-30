@@ -1,0 +1,9 @@
+{
+  "format": "block-playground-ir",
+  "version": 1,
+  "functions": [],
+  "body": [
+    { "id": "before", "kind": "print", "value": { "id": "bs", "kind": "lit", "value": "before" } },
+    { "id": "bad", "kind": "print", "value": { "id": "badop", "kind": "op", "op": "text.from", "args": [{ "id": "to", "kind": "op", "op": "text.toNumber", "args": [{ "id": "raw", "kind": "lit", "value": " 12" }] }] } }
+  ]
+}
