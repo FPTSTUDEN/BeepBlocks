@@ -1,0 +1,4 @@
+{
+  "error": { "code": "INDEX_OUT_OF_RANGE", "nodeId": "g" }, "output": ["start"],
+  "tree": { "root": { "type": "folder", "name": "", "modified": 0, "children": [] } }
+}

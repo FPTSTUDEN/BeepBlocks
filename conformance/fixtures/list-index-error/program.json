@@ -1,0 +1,12 @@
+{
+  "format": "block-playground-ir", "version": 1, "functions": [],
+  "body": [
+    { "id": "s", "kind": "print", "value": { "id": "sl", "kind": "lit", "value": "start" } },
+    { "id": "e", "kind": "print", "value": { "id": "el", "kind": "op", "op": "text.from", "args": [
+      { "id": "g", "kind": "op", "op": "list.get", "args": [
+        { "id": "xs", "kind": "list", "itemType": { "t": "text" }, "items": [ { "id": "x", "kind": "lit", "value": "only" } ] },
+        { "id": "i", "kind": "lit", "value": 1 }
+      ] }
+    ] } }
+  ]
+}

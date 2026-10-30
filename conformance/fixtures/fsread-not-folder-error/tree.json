@@ -1,0 +1,3 @@
+{ "root": { "type": "folder", "name": "", "modified": 1767225600, "children": [
+  { "type": "file", "name": "file.txt", "modified": 1767225601, "content": "x" }
+] } }

@@ -1,0 +1,20 @@
+{
+  "root": {
+    "type": "folder", "name": "", "modified": 1767225600,
+    "children": [
+      { "type": "file", "name": "z.TXT", "modified": 1767225601, "content": "hello" },
+      { "type": "file", "name": ".bashrc", "modified": 1767225602, "content": "cfg" },
+      { "type": "file", "name": "README", "modified": 1767225603, "content": "readme" },
+      { "type": "file", "name": "report.final.PDF", "modified": 1767225604, "content": "pdf" },
+      { "type": "folder", "name": "B", "modified": 1767225605, "children": [
+        { "type": "file", "name": "same.txt", "modified": 1767225606, "content": "same" }
+      ] },
+      { "type": "folder", "name": "a", "modified": 1767225607, "children": [
+        { "type": "file", "name": "deep.txt", "modified": 1767225608, "content": "deep" },
+        { "type": "folder", "name": "inner", "modified": 1767225609, "children": [
+          { "type": "file", "name": "leaf.bin", "modified": 1767225610, "binarySize": 4 }
+        ] }
+      ] }
+    ]
+  }
+}
