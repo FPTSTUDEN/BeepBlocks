@@ -1,0 +1,1 @@
+{"error":{"code":"ALREADY_EXISTS","nodeId":"cop"},"output":["before"],"tree":{"root":{"type":"folder","name":"","modified":0,"children":[{"type":"file","name":"a.txt","modified":0,"content":"source"},{"type":"folder","name":"dest","modified":0,"children":[{"type":"file","name":"a.txt","modified":0,"content":"existing"}]}]}}}

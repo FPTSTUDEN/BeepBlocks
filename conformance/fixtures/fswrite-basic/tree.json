@@ -1,0 +1,13 @@
+{
+  "root": {
+    "type": "folder", "name": "", "modified": 1767225600,
+    "children": [
+      { "type": "folder", "name": "src", "modified": 1767225600, "children": [
+        { "type": "file", "name": "a.txt", "modified": 1767225600, "content": "old" }
+      ] },
+      { "type": "folder", "name": "dest", "modified": 1767225600, "children": [] },
+      { "type": "folder", "name": "folder", "modified": 1767225600, "children": [] },
+      { "type": "folder", "name": "empty", "modified": 1767225600, "children": [] }
+    ]
+  }
+}

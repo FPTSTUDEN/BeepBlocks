@@ -1,0 +1,69 @@
+{
+  "format": "block-playground-ir",
+  "version": 1,
+  "functions": [],
+  "body": [
+    { "id": "w1", "kind": "do", "expr": { "id": "w1op", "kind": "op", "op": "fs.writeText", "args": [
+      { "id": "w1p", "kind": "op", "op": "fs.join", "args": [
+        { "id": "w1r", "kind": "op", "op": "fs.join", "args": [
+          { "id": "w1rr", "kind": "op", "op": "fs.root", "args": [] },
+          { "id": "w1rn", "kind": "lit", "value": "src" }
+        ] },
+        { "id": "w1n", "kind": "lit", "value": "a.txt" }
+      ] },
+      { "id": "w1t", "kind": "lit", "value": "replaced" }
+    ] } },
+    { "id": "w2", "kind": "do", "expr": { "id": "w2op", "kind": "op", "op": "fs.writeText", "args": [
+      { "id": "w2p", "kind": "op", "op": "fs.join", "args": [
+        { "id": "w2r", "kind": "op", "op": "fs.join", "args": [
+          { "id": "w2rr", "kind": "op", "op": "fs.root", "args": [] },
+          { "id": "w2rn", "kind": "lit", "value": "src" }
+        ] },
+        { "id": "w2n", "kind": "lit", "value": "new.txt" }
+      ] },
+      { "id": "w2t", "kind": "lit", "value": "created" }
+    ] } },
+    { "id": "c1", "kind": "do", "expr": { "id": "c1op", "kind": "op", "op": "fs.copy", "args": [
+      { "id": "c1p", "kind": "op", "op": "fs.join", "args": [
+        { "id": "c1r", "kind": "op", "op": "fs.join", "args": [
+          { "id": "c1rr", "kind": "op", "op": "fs.root", "args": [] },
+          { "id": "c1rn", "kind": "lit", "value": "src" }
+        ] },
+        { "id": "c1n", "kind": "lit", "value": "a.txt" }
+      ] },
+      { "id": "c1d", "kind": "op", "op": "fs.join", "args": [
+        { "id": "c1dr", "kind": "op", "op": "fs.root", "args": [] },
+        { "id": "c1dn", "kind": "lit", "value": "dest" }
+      ] }
+    ] } },
+    { "id": "c2", "kind": "do", "expr": { "id": "c2op", "kind": "op", "op": "fs.copy", "args": [
+      { "id": "c2p", "kind": "op", "op": "fs.join", "args": [
+        { "id": "c2r", "kind": "op", "op": "fs.root", "args": [] },
+        { "id": "c2n", "kind": "lit", "value": "folder" }
+      ] },
+      { "id": "c2d", "kind": "op", "op": "fs.join", "args": [
+        { "id": "c2dr", "kind": "op", "op": "fs.root", "args": [] },
+        { "id": "c2dn", "kind": "lit", "value": "dest" }
+      ] }
+    ] } },
+    { "id": "d1", "kind": "do", "expr": { "id": "d1op", "kind": "op", "op": "fs.delete", "args": [
+      { "id": "d1p", "kind": "op", "op": "fs.join", "args": [
+        { "id": "d1r", "kind": "op", "op": "fs.root", "args": [] },
+        { "id": "d1n", "kind": "lit", "value": "empty" }
+      ] }
+    ] } },
+    { "id": "r1", "kind": "assign", "name": "renamed", "value": { "id": "r1op", "kind": "op", "op": "fs.rename", "args": [
+      { "id": "r1p", "kind": "op", "op": "fs.join", "args": [
+        { "id": "r1pr", "kind": "op", "op": "fs.join", "args": [
+          { "id": "r1rr", "kind": "op", "op": "fs.root", "args": [] },
+          { "id": "r1rn", "kind": "lit", "value": "src" }
+        ] },
+        { "id": "r1n", "kind": "lit", "value": "a.txt" }
+      ] },
+      { "id": "r1new", "kind": "lit", "value": "A.TXT" }
+    ] } },
+    { "id": "p1", "kind": "print", "value": { "id": "p1op", "kind": "op", "op": "text.from", "args": [
+      { "id": "p1v", "kind": "var", "name": "renamed" }
+    ] } }
+  ]
+}

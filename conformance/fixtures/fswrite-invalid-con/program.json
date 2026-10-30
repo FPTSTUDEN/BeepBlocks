@@ -1,0 +1,10 @@
+{
+  "format": "block-playground-ir", "version": 1, "functions": [],
+  "body": [
+    { "id": "s", "kind": "print", "value": { "id": "sv", "kind": "lit", "value": "before" } },
+    { "id": "j", "kind": "assign", "name": "bad", "value": { "id": "jop", "kind": "op", "op": "fs.join", "args": [
+      { "id": "jr", "kind": "op", "op": "fs.root", "args": [] },
+      { "id": "jn", "kind": "lit", "value": "CON" }
+    ] } }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "error": null,
+  "output": [
+    "WRITE  src/a.txt",
+    "WRITE  src/new.txt",
+    "COPY   src/a.txt -> dest/",
+    "COPY   folder -> dest/",
+    "DELETE empty",
+    "RENAME src/a.txt -> A.TXT",
+    "src/A.TXT"
+  ],
+  "tree": {
+    "root": {
+      "type": "folder", "name": "", "modified": 0,
+      "children": [
+        { "type": "folder", "name": "dest", "modified": 0, "children": [
+          { "type": "file", "name": "a.txt", "modified": 0, "content": "replaced" },
+          { "type": "folder", "name": "folder", "modified": 0, "children": [] }
+        ] },
+        { "type": "folder", "name": "folder", "modified": 0, "children": [] },
+        { "type": "folder", "name": "src", "modified": 0, "children": [
+          { "type": "file", "name": "A.TXT", "modified": 0, "content": "replaced" },
+          { "type": "file", "name": "new.txt", "modified": 0, "content": "created" }
+        ] }
+      ]
+    }
+  }
+}
