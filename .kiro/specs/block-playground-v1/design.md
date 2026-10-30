@@ -164,7 +164,7 @@ export interface OpSignature {
 - `print` requires `text`. Use `text.from` to convert.
 - Ordering comparisons (`<` etc.) require both sides to be `number` or both `text`. `==` and `!=` require equal types.
 - `+` accepts number+number, text+text, or list+list of the same element type.
-- Variable and function names must be valid Python identifiers. They must not be Python keywords or builtins we use (`print`, `len`, `str`, `int`, `float`, `range`, `sorted`, `min`, `max`, `abs`), and must not start with `_bp`.
+- Variable and function names must be valid Python identifiers. They must not be Python keywords, builtins we use (`print`, `len`, `str`, `int`, `float`, `range`, `sorted`, `min`, `max`, `abs`, …), or module-level names of the exported script (`fs`, `main`, `re`, `os`, `sys`, `Path`, `_RealFS`, `_PlanFS`, …), and must not start with `_bp` in any letter case (which covers `_BPError` and friends). User names are emitted verbatim, so a clash would overwrite the runtime; a unit test extracts every module-level name from `runtime.py` and checks that `checkIdentifier` rejects it.
 - Every `function` with `returns ≠ null` must return a value on all paths. The validator checks this conservatively.
 - The validator reports `{ nodeId, code, message }`. Messages are plain language, e.g. "This 'if' needs a yes/no condition, but got a number."
 
@@ -173,6 +173,7 @@ export interface OpSignature {
 - IDs coming from the editor are Blockly block IDs.
 - Desugared nodes get deterministic IDs: `${compositeId}/${localName}`, e.g. `abc12/loop`, `abc12/rename`.
 - To map a snapshot's active node to an editor block, strip `/…` suffixes until an ID exists in the workspace. That way a collapsed composite still lights up while its internals run.
+- `when-run` (`RUN_BLOCK_ID` in `ir/ids.ts`) is the editor's fixed id for the "when run" hat block and is reserved: no program node may use it.
 
 ## 5. Primitive Semantics
 
@@ -278,7 +279,7 @@ Allowed:
 - groups `(...)` and `(?:...)`
 - `|`, `^`, `$`
 
-Anything else (lookarounds, backreferences in patterns, named groups, flags) fails validation. The simulator uses JS `RegExp` with the `u` flag. Python uses `re` with `re.ASCII`, so `\d`/`\w`/`\s` mean the same in both. Replacement strings use `\1`–`\9` and `\\`. The simulator translates them for JS.
+Anything else (lookarounds, backreferences in patterns, named groups, flags) fails validation. A group that can repeat more than once (`*`, `+`, `{m,}`, `{m,n}` with n > 1, `{m}` with m > 1) must not contain a capturing group: JS clears inner captures on every repetition while Python keeps the last one, so `\1` would differ. `?`, `{0,1}` and `{1}` are allowed, and so is capturing the whole repeat, e.g. `((?:a|b)+)`. The simulator uses JS `RegExp` with the `u` flag. Python uses `re` with `re.ASCII`, so `\d`/`\w`/`\s` mean the same in both. Replacement strings use `\1`–`\9` and `\\`. The simulator translates them for JS.
 
 ### 5.5 Error codes
 
@@ -343,7 +344,7 @@ The simulator and the Python runtime are written independently, so every rule be
 - `list.sortBy` with key `size` or `modified` counts as one read.
 
 **Output**
-- `print` text containing `\n` produces one output line per `\n`-separated segment. Conformance compares Python stdout split on `\r?\n`.
+- `print` text containing `\n` produces one output line per `\n`-separated segment. Conformance splits both sides on `\n` only, after undoing Python's `\n` → `\r\n` stdout translation on Windows, so a `\r` inside printed text compares the same on every OS.
 - The exported script reconfigures stdout and stderr to UTF-8 (`errors="replace"`) so that names print the same on any console.
 
 ## 6. Composites
@@ -356,7 +357,7 @@ export interface CompositeStmt {
   id: NodeId;
   kind: 'composite';
   name: CompositeName;                       // 'renameByPattern' | 'sortByType' | 'findAndAct' | 'findFirst'
-  fields: Record<string, string | number | boolean>;  // literal config (patterns, enums)
+  fields: Record<string, string | number | boolean | null>;  // literal config (patterns, enums); null = unset optional field
   inputs: Record<string, Expr>;              // expression sockets (e.g. folder)
   bodies: Record<string, Stmt[]>;            // statement slots (e.g. found / notFound)
   binds: Record<string, string>;             // user-visible names it introduces (e.g. { candidate: 'log' })
@@ -383,6 +384,7 @@ export interface DesugarCtx {
 Further desugaring rules (contract-v1):
 - **Each input expression is emitted exactly once.** If the desugaring needs an input value in more than one place (e.g. `folder` in both `fs.list(folder)` and `fs.join(folder, group)`), it first assigns it to a fresh temporary and uses the temporary everywhere. Copying an expression subtree would duplicate node IDs (`DUPLICATE_ID`) and evaluate it more than once. Inputs that are evaluated repeatedly *by design* (the `findFirst` condition, evaluated once per probe) are placed once inside the loop body.
 - Every node a desugaring creates gets a derived ID `ctx.id(local)`, with `local` unique within the composite. User-supplied subtrees (inputs, bodies) keep their own IDs.
+- Inputs that the chosen variant does not use (e.g. `destination` when `findAndAct` has `action = delete`) are not emitted by the desugaring, even if the socket is filled, so they are never evaluated.
 - The output must pass `validateProgram(p, { primitiveOnly: true })` with no errors.
 - `findAndAct` criteria (all inclusive):
   - `extension`: compares `lower(fs.ext(item))` to the lowercase field value, with any leading `.` stripped.
@@ -625,6 +627,7 @@ The program comes first so users read their logic before the runtime.
 This is a real `.py` file, so it can be linted and unit-tested with Python directly. Because `?raw` imports work only under Vite (the conformance runner uses Node via `tsx`), `pnpm gen:runtime` regenerates `export/python/runtime.gen.ts`, which exports the file's text as a string constant. The emitter imports only `runtime.gen.ts`, and a unit test fails if the generated file is out of date.
 
 - `_BPPath`: an immutable relative path. Its `__eq__`/`__hash__` are case-insensitive, and `__str__` returns the relative POSIX form (`.` for root).
+- Runtime FS methods use snake_case names (`read_text`, `write_text`, `make_folder`, `is_folder`, …); the emitter maps each IR op (`fs.writeText`) to its method (`fs.write_text`).
 - `_RealFS(root)` implements every `fs.*` op from §5.3 on the real disk:
   - It **checks preconditions explicitly before acting**. For example, `Path.rename` silently overwrites on POSIX but raises on Windows, so the runtime checks first.
   - It reads and writes with `encoding="utf-8", newline=""`, so line endings are never translated.
@@ -666,7 +669,7 @@ Layout, left to right: **Editor | Playground**. Below the playground sits the ti
   - renamed/moved (→ "moved"/"renamed")
   - modified (✎ "changed")
   - deleted (shown faded with strike-through and "deleted" for one step)
-- **Position gutter:** whenever the file list is showing a list variable (bisect `items`, or the list of the active `forEach`), each row shows its 0-based position, with a final "end = length" marker row. This makes half-open ranges (`low ≤ i < high`, `range(0, n)`) visible instead of abstract.
+- **Position gutter:** whenever the file list is showing a list variable that has a `VarHint` (bisect `items`, or a hinted list being iterated by the active `forEach`), each row shows its 0-based position, with a final "end = length" marker row. Unhinted lists get no gutter. This makes half-open ranges (`low ≤ i < high`, `range(0, n)`) visible instead of abstract.
 - **Variable tags:**
   - A `path` variable becomes a pill tag on that item.
   - A `number` variable with a `VarHint` becomes a tag on `items[value]`. If the value equals the list length, it shows as "end" after the last row.
@@ -679,6 +682,7 @@ Layout, left to right: **Editor | Playground**. Below the playground sits the ti
   - Run, Pause, Step back, Step forward, and Reset.
   - A scrubber (range input) and a speed selector (0.25×–8×).
   - Keyboard shortcuts: Space = run/pause, ←/→ = step, Home = reset.
+  - There is a single Run button, in this timeline bar (not duplicated in the top bar). While the program is invalid, the app passes `runBlockedReason`: Run and Space are disabled and the reason is shown as visible text next to the button, since a disabled button can't take focus to reveal a tooltip.
 - **Click-to-trace.** Clicking an item highlights every block whose snapshot touched that path. The trace comes from `action.from/to` and from `fsRead` events tagged with their path.
 - **Stale marker.** Editing the program after a run greys the timeline and shows "Program changed — run again" (Req 8.4).
 - **Scenario editor.** An "Edit scenario" mode makes the explorer editable: add, rename, and delete items, and set size, date, and content. Reset restores the scenario's saved tree.
@@ -703,7 +707,8 @@ v1 registers one theme, `fileExplorer`. The IR core, interpreter loop, and expor
 ### 10.2 Visual themes
 
 - CSS custom properties hold the light and dark presets.
-- The accent color is user-chosen. Foreground-on-accent switches automatically between black and white to keep a 4.5:1 contrast ratio.
+- The accent color is user-chosen. It is used for text, tags and focus rings, so the applied accent is the user's color blended toward the preset foreground just enough to reach 4.5:1 against the background (the settings menu shows the adjusted color when that happens). Foreground-on-accent is black or white, whichever contrasts more, which is always at least 4.58:1.
+- Preset text colors reach 4.5:1 and borders 3:1 on both background and surface (unit-tested).
 - The Blockly theme is derived from the same variables.
 - Settings persist in `localStorage` under the key `bp.settings`.
 
@@ -758,15 +763,16 @@ interface ProjectFile {
 }
 ```
 
-- Autosave goes to `localStorage` (`bp.project`), debounced at 1 s.
+- Autosave goes to `localStorage` (`bp.project`), debounced at 1 s, and is flushed on `beforeunload`. If storage refuses the write, a banner suggests "Save file".
 - Import/export uses `.bpproj.json` files.
-- An import is fully validated (format, version, IR, scenario) before it replaces the current project. On failure, the errors are shown and nothing changes (Req 12.3).
+- An import is fully validated (format, version, IR structure, scenario) before it replaces the current project. On failure, the errors are shown and nothing changes (Req 12.3).
+- A saved program may be work in progress: the editor emits `null` for empty sockets. Loading therefore checks the program with `validateStructure` (the structural phase of the validator, with empty sockets allowed) rather than the full validator; Run and Export still require a fully valid program. Scenario trees are checked with the same name rules as the scenario editor (unique case-insensitive names, exactly one of `content`/`binarySize`, integer mtimes), and folder children are re-sorted into §5.3 order on load.
 
 ## 14. Error Handling Summary
 
 | Layer | Behavior |
 |---|---|
-| Editor | Blocks with validation errors are marked; Run and Export are disabled while the IR is invalid, with a tooltip explaining why |
+| Editor | Blocks with validation errors are marked; Run and Export are disabled while the IR is invalid, with a visible explanation. The app validates again before desugaring, because the editor's IR can contain empty sockets |
 | Simulator | Runtime errors end the timeline with an `error` snapshot; the playground shows a banner and the responsible block is highlighted |
 | Worker crash | Caught on main thread; "The simulator stopped unexpectedly" banner; the app stays usable |
 | Exporter | Refuses invalid IR; lists the errors (Req 9.8) |

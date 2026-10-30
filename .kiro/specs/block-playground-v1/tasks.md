@@ -5,9 +5,9 @@ Legend:
 - **[PAR-x]** — belongs to parallel workstream *x*. It may run concurrently with other workstreams once Phase 0 is complete. Each workstream writes **only** inside its listed folders. `src/ir/` and `src/domains/fileExplorer/fsTypes.ts` are read-only to workstreams.
 - `_Req: n.m_` points to requirements.md. `§n` points to design.md.
 
-Environment verified: Node 22.20, pnpm 10.33, Python 3.13.5.
+Environment verified: Node 22.20, pnpm 10.33, Python 3.9.0 on PATH (the runtime targets 3.9+), Edge for `pnpm smoke`.
 
-**Status:** Phases 0 and 1 complete (contract tag `contract-v1`). Full suite green: 3,547 unit tests, 65 Python tests, lint, typecheck, build; conformance 3/3 seed fixtures. Next: Phase 2, starting with 2.0.
+**Status:** Phases 0–2 complete. Full suite green: 3,771 unit tests, 65 Python tests, lint, typecheck, build, browser smoke test (headless Edge); conformance 25/25 with complete coverage (44/44 ops, 13/13 error codes, 22/22 composite variants). Next: Phase 3, starting with 3.2 (starter projects), which also delivers the scenario × composite fixtures carried over from 2.6.
 
 ---
 
@@ -186,7 +186,7 @@ Builds against `__mocks__/timelines.ts`.
 
 ## Phase 2 — Integration [SEQ]
 
-- [ ] 2.0 Resolve contract issues raised by the Phase 1 workstreams
+- [x] 2.0 Resolve contract issues raised by the Phase 1 workstreams (all resolved; design.md synced)
   - **Validator (bug):** reserve the runtime's module-level names (`_BP*`, `_RealFS`, `_PlanFS`, and similar). Today a user function with one of those names would be overwritten by the runtime in the exported script.
   - **Validator (drift):** reject capturing groups inside a repeated group, e.g. `(?:(a)|b)+`. JS clears the capture on each repetition but Python keeps the last one, so `\1` differs.
   - **Conformance runner:**
@@ -204,36 +204,42 @@ Builds against `__mocks__/timelines.ts`.
     - Inputs a chosen composite variant doesn't use are not emitted.
     - The exporter uses snake_case runtime methods.
 
-- [ ] 2.1 App store (`src/app/store.ts`, Zustand)
+- [x] 2.1 App store (`src/app/store.ts`, Zustand)
   - Holds the project, the current timeline and index, stale flag, playback state, and settings.
   - Injects `desugarProgram`/`desugarOne` into the editor and exporter.
+  - Done: dependencies (simulate, desugar, storage) are injected; staleness deep-compares the program and tree a run used; Run validates before desugaring; out-of-order run results are dropped.
 
-- [ ] 2.2 App shell
+- [x] 2.2 App shell
   - Editor | Playground split, top bar (title, scenario picker, Run, Export, settings), and the timeline bar.
   - Active node → `resolveToExisting` → editor highlight.
   - Click-to-trace → editor highlight.
+  - Done, with one change: Run lives only in the timeline bar (two "Run" buttons confused screen readers); the playground got an optional `runBlockedReason` prop (§10).
   - _Req: 7.2, 7.7_
 
-- [ ] 2.3 Export dialog: script preview, download `.py`, copy to clipboard, and the validation error list when the program is invalid. _Req: 9.7, 9.8_
+- [x] 2.3 Export dialog: script preview, download `.py`, copy to clipboard, and the validation error list when the program is invalid. _Req: 9.7, 9.8_
 
-- [ ] 2.4 Persistence
+- [x] 2.4 Persistence
   - Autosave to `localStorage`.
   - Import/export of `.bpproj.json` with full validation before replacing anything.
+  - Done: work-in-progress programs load via `validateStructure` (§13).
   - _Req: 12.1–12.3_
 
-- [ ] 2.5 Visual themes
+- [x] 2.5 Visual themes
   - Light and dark presets plus an accent picker with automatic contrast-safe foreground.
   - Persisted in `bp.settings`.
+  - Done: the accent itself is also nudged to 4.5:1 against the background (§10.2).
   - _Req: 11.3, 11.4_
 
-- [ ] 2.6 Full conformance fixture set
+- [x] 2.6 Full conformance fixture set
   - Fill every gap reported by `coverage.ts`: all ops, all error codes, and every composite × field variant.
-  - Each built-in scenario × its composite.
+  - Done: 22 fixtures written by 4 parallel Copilot CLI agents in separate worktrees, reviewed and merged; `pnpm conformance --strict` passes.
+  - Carried over to 3.2: each built-in scenario × its composite (the starter projects define those programs).
   - _Req: 10.1_
 
-- [ ] 2.7 Run conformance and fix drift. Fixes go into the owning module. Contract changes are documented in design.md. _Req: 10.2, 10.3_
+- [x] 2.7 Run conformance and fix drift. Fixes go into the owning module. Contract changes are documented in design.md. _Req: 10.2, 10.3_
+  - No simulator/Python drift found by the new fixtures; the runner itself was fixed (case-insensitive touched paths, OS-independent line splitting).
 
-- [ ] 2.8 Checkpoint: `build`, `lint`, `typecheck`, `test`, `test:py`, and `conformance` all green.
+- [x] 2.8 Checkpoint: `build`, `lint`, `typecheck`, `test`, `test:py`, and `conformance` all green. Added `pnpm smoke` (headless Edge: load, run in a real Worker, export, dark mode).
 
 ---
 
@@ -245,7 +251,7 @@ Builds against `__mocks__/timelines.ts`.
   - Non-color diff cues.
   - _Req: 13.4, 13.5_
 
-- [ ] 3.2 Starter projects: one ready-made project per scenario, showing its composite, so the first-run experience demonstrates each task in one click.
+- [ ] 3.2 Starter projects: one ready-made project per scenario, showing its composite, so the first-run experience demonstrates each task in one click. Also add each as a conformance fixture (scenario tree × its composite, carried over from 2.6), with a hand-checked golden where practical (e.g. bisect on `nightly-logs` finds `nightly-2026-02-10.log`).
 
 - [ ] 3.3 End-to-end manual verification in Chrome, Edge, and Firefox. For each starter project:
   - run it, step it, scrub it;
