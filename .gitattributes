@@ -1,0 +1,4 @@
+# Golden files, fixtures and the exported Python must be byte-identical on every OS.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
