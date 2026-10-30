@@ -1,0 +1,6 @@
+{
+  "error": { "code": "NOT_TEXT", "nodeId": "el" }, "output": ["start"],
+  "tree": { "root": { "type": "folder", "name": "", "modified": 0, "children": [
+    { "type": "file", "name": "blob.bin", "modified": 0, "binarySize": 3 }
+  ] } }
+}

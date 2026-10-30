@@ -1,0 +1,6 @@
+{
+  "error": { "code": "NOT_A_FILE", "nodeId": "nf" }, "output": ["start"],
+  "tree": { "root": { "type": "folder", "name": "", "modified": 0, "children": [
+    { "type": "folder", "name": "folder", "modified": 0, "children": [] }
+  ] } }
+}

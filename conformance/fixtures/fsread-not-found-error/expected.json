@@ -1,0 +1,4 @@
+{
+  "error": { "code": "NOT_FOUND", "nodeId": "nf" }, "output": ["start"],
+  "tree": { "root": { "type": "folder", "name": "", "modified": 0, "children": [] } }
+}

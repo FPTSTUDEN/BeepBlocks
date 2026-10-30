@@ -1,0 +1,28 @@
+{
+  "error": null,
+  "output": [
+    "6", ".bashrc", "True", "4", "1", "b", ".bashrc", "deep.txt", "leaf.bin", "README", "report.final.PDF", "same.txt", "z.TXT",
+    ".bashrc", "README", "leaf.bin", "report.final.PDF", "z.TXT", "deep.txt", "same.txt",
+    "5", "4", "report.final", "", ".bashrc", "True", "True", "", "1767225601"
+  ],
+  "tree": {
+    "root": {
+      "type": "folder", "name": "", "modified": 0,
+      "children": [
+        { "type": "file", "name": "z.TXT", "modified": 0, "content": "hello" },
+        { "type": "file", "name": ".bashrc", "modified": 0, "content": "cfg" },
+        { "type": "file", "name": "README", "modified": 0, "content": "readme" },
+        { "type": "file", "name": "report.final.PDF", "modified": 0, "content": "pdf" },
+        { "type": "folder", "name": "B", "modified": 0, "children": [
+          { "type": "file", "name": "same.txt", "modified": 0, "content": "same" }
+        ] },
+        { "type": "folder", "name": "a", "modified": 0, "children": [
+          { "type": "file", "name": "deep.txt", "modified": 0, "content": "deep" },
+          { "type": "folder", "name": "inner", "modified": 0, "children": [
+            { "type": "file", "name": "leaf.bin", "modified": 0, "binarySize": 4 }
+          ] }
+        ] }
+      ]
+    }
+  }
+}

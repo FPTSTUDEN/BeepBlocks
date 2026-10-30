@@ -1,0 +1,13 @@
+{
+  "format": "block-playground-ir", "version": 1, "functions": [],
+  "body": [
+    { "id": "s", "kind": "print", "value": { "id": "sl", "kind": "lit", "value": "start" } },
+    { "id": "e", "kind": "print", "value": { "id": "el", "kind": "op", "op": "text.from", "args": [
+      { "id": "nf", "kind": "op", "op": "fs.isFolder", "args": [
+        { "id": "j", "kind": "op", "op": "fs.join", "args": [
+          { "id": "r", "kind": "op", "op": "fs.root", "args": [] }, { "id": "n", "kind": "lit", "value": "missing" }
+        ] }
+      ] }
+    ] } }
+  ]
+}
