@@ -1,0 +1,1 @@
+{"error":{"code":"INVALID_MOVE","nodeId":"mop"},"output":["before"],"tree":{"root":{"type":"folder","name":"","modified":0,"children":[{"type":"folder","name":"folder","modified":0,"children":[{"type":"file","name":"inside.txt","modified":0,"content":"x"}]}]}}}

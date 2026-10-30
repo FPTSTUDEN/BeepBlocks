@@ -1,0 +1,9 @@
+{
+  "format": "block-playground-ir", "version": 1, "functions": [],
+  "body": [
+    { "id": "s", "kind": "print", "value": { "id": "sv", "kind": "lit", "value": "before" } },
+    { "id": "p", "kind": "assign", "name": "outside", "value": { "id": "pop", "kind": "op", "op": "fs.parent", "args": [
+      { "id": "r", "kind": "op", "op": "fs.root", "args": [] }
+    ] } }
+  ]
+}
