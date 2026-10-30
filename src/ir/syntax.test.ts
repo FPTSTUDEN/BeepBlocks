@@ -39,9 +39,22 @@ describe('regex subset', () => {
     ['[^\\s]*', 0],
     ['a{2,}', 0],
     ['.\\.', 0],
+    // A capture inside a group that repeats at most once behaves the same in JS and Python.
+    ['((\\d+)-)?x', 2],
+    ['(?:(a)|b){0,1}', 1],
+    ['(?:(a)|b){1}', 1],
+    ['((?:a|b)+)c', 1],
   ])('accepts %j', (p, groups) => expect(checkRegex(p)).toEqual({ error: null, groups }));
 
   it.each([
+    // JS resets inner captures on each repetition; Python keeps the last one.
+    '(?:(a)|b)+',
+    '((a)|b)*',
+    '(?:x(?:(a)))+',
+    '(?:(a)b){2}',
+    '(?:(a)b){1,3}',
+    '(?:(a)b){2,}',
+    '(?:(a)b)+?',
     '(?=a)',
     '(?<n>a)',
     '(?i)a',

@@ -3,6 +3,9 @@ import type { NodeId } from './types.ts';
 
 export const ID_SEPARATOR = '/';
 
+/** Fixed id of the editor's single "when run" hat block; no program node may use it. */
+export const RUN_BLOCK_ID = 'when-run';
+
 /** Derived id for a node produced by desugaring composite `compositeId`. */
 export function derivedId(compositeId: NodeId, local: string): NodeId {
   return `${compositeId}${ID_SEPARATOR}${local}`;

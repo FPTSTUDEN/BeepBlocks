@@ -14,7 +14,7 @@ import { join, resolve } from 'node:path';
 import { parseProgram, type Program } from '../src/ir/index.ts';
 import { DRY_RUN_PREFIX, type OutputLine, type Timeline } from '../src/ir/timeline.ts';
 import type { ErrorCode } from '../src/ir/errors.ts';
-import type { SandboxFS } from '../src/domains/fileExplorer/fsTypes.ts';
+import type { FsFolder, SandboxFS } from '../src/domains/fileExplorer/fsTypes.ts';
 import { desugarProgram } from '../src/composites/index.ts';
 import { simulateSync } from '../src/sim/index.ts';
 import { exportPython } from '../src/export/index.ts';
@@ -42,7 +42,14 @@ interface Outcome {
 }
 
 function lines(out: OutputLine[]): string[] {
-  return out.map((l) => l.text);
+  return splitOutput(out.map((l) => l.text + '\n').join(''));
+}
+
+/** Splits printed text on "\n" only, so a "\r" inside a line is kept on every OS. */
+function splitOutput(text: string): string[] {
+  const out = text.split('\n');
+  if (out[out.length - 1] === '') out.pop();
+  return out;
 }
 
 function runPython(script: string, dir: string, apply: boolean) {
@@ -53,8 +60,8 @@ function runPython(script: string, dir: string, apply: boolean) {
     timeout: 60_000,
   });
   if (res.error) throw new Error(`Could not run ${PYTHON}: ${res.error.message}`);
-  const stdout = res.stdout.split(/\r?\n/);
-  if (stdout[stdout.length - 1] === '') stdout.pop();
+  // Python's text-mode stdout writes "\n" as "\r\n" on Windows; undo exactly that translation.
+  const stdout = splitOutput(process.platform === 'win32' ? res.stdout.replace(/\r\n/g, '\n') : res.stdout);
   const m = PY_ERROR.exec(res.stderr);
   const error = m ? { nodeId: m[1]!, code: m[2]! } : null;
   if (res.status !== 0 && !m) {
@@ -83,16 +90,38 @@ function diffLines(label: string, expected: string[], actual: string[]): string[
   return out;
 }
 
-/** Paths touched by any action (excluded from mtime comparison). */
+/** Paths touched by any action (excluded from mtime comparison), lower-cased: paths are case-insensitive. */
 function touchedPaths(timeline: Timeline<SandboxFS>): Set<string> {
   const s = new Set<string>();
   for (const snap of timeline.snapshots) {
     if (snap.action) {
-      s.add(snap.action.from);
-      if (snap.action.to) s.add(snap.action.to);
+      s.add(snap.action.from.toLowerCase());
+      if (snap.action.to) s.add(snap.action.to.toLowerCase());
     }
   }
   return s;
+}
+
+/** NUL, or a lone UTF-16 surrogate. */
+const UNPORTABLE_TEXT = /\0|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/;
+
+/**
+ * Text content that cannot round-trip through a real disk: NUL reads back as binary and
+ * lone surrogates are written as U+FFFD.
+ */
+function unportableContent(fs: SandboxFS): string[] {
+  const out: string[] = [];
+  const walk = (folder: FsFolder, path: string) => {
+    for (const c of folder.children) {
+      const p = path === '' ? c.name : `${path}/${c.name}`;
+      if (c.type === 'folder') walk(c, p);
+      else if (c.content !== undefined && UNPORTABLE_TEXT.test(c.content)) {
+        out.push(`tree.json: ${p} has NUL or lone-surrogate content, which cannot be compared on disk`);
+      }
+    }
+  };
+  walk(fs.root, '');
+  return out;
 }
 
 function runFixture(name: string, records: FixtureRecord[]): string[] {
@@ -100,6 +129,8 @@ function runFixture(name: string, records: FixtureRecord[]): string[] {
   const parsed = parseProgram(readFileSync(join(dir, 'program.json'), 'utf8'));
   if (!parsed.ok) return parsed.errors.map((e) => `invalid program: [${e.nodeId}] ${e.message}`);
   const tree = normalizeTree(JSON.parse(readFileSync(join(dir, 'tree.json'), 'utf8')) as SandboxFS);
+  const unportable = unportableContent(tree);
+  if (unportable.length > 0) return unportable;
   const expectedPath = join(dir, 'expected.json');
   const expected: Expected | null = existsSync(expectedPath)
     ? (JSON.parse(readFileSync(expectedPath, 'utf8')) as Expected)
@@ -154,7 +185,9 @@ function runFixture(name: string, records: FixtureRecord[]): string[] {
   if (!sameError(simOut.error, dry.error)) {
     problems.push(`dry-run error: simulator ${JSON.stringify(simOut.error)}, python ${JSON.stringify(dry.error)}`);
   }
-  const expectedDry = sim.timeline.output.map((l) => (l.kind === 'action' ? DRY_RUN_PREFIX + l.text : l.text));
+  const expectedDry = lines(
+    sim.timeline.output.map((l) => (l.kind === 'action' ? { ...l, text: DRY_RUN_PREFIX + l.text } : l)),
+  );
   problems.push(...diffLines('dry-run output', expectedDry, dry.stdout));
 
   // 7. Golden expectations (catch both sides being wrong the same way).

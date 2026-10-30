@@ -24,6 +24,10 @@ describe('structure', () => {
     bad(body(b.print(b.lit('a'), 'x'), b.print(b.lit('b'), 'x')), 'DUPLICATE_ID');
   });
 
+  it('reserves the editor run-block id', () => {
+    bad(body(b.print(b.lit('a'), 'when-run')), 'DUPLICATE_ID');
+  });
+
   it('rejects unknown ops', () => {
     bad(body(b.do({ id: 'o', kind: 'op', op: 'fs.nuke' as never, args: [] })), 'UNKNOWN_OP');
   });

@@ -2,8 +2,8 @@
 import * as Blockly from 'blockly/core';
 import type { NodeId } from '../../ir/types.ts';
 
-/** Fixed id of the single "when run" hat block. Layout key for its position. */
-export const RUN_BLOCK_ID = 'when-run';
+/** Fixed id of the single "when run" hat block. Layout key for its position. Reserved by the validator. */
+export { RUN_BLOCK_ID } from '../../ir/ids.ts';
 
 /** Block style / toolbox category style names (see theme.ts). */
 export const STYLE = {

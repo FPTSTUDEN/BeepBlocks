@@ -69,7 +69,7 @@ export function readTree(dir: string): SandboxFS {
 }
 
 export interface TreeDiffOptions {
-  /** Compare file mtimes, except for these relative paths. Folder mtimes are never compared. */
+  /** Compare file mtimes, except for these relative paths (lower-case). Folder mtimes are never compared. */
   compareMtimes?: { except: Set<string> };
 }
 
@@ -101,7 +101,7 @@ export function diffTrees(expected: SandboxFS, actual: SandboxFS, opts: TreeDiff
         } else if ((ec.binarySize ?? 0) !== (ac.binarySize ?? 0)) {
           out.push(`${p}: size differs: expected ${ec.binarySize}, got ${ac.binarySize}`);
         }
-        if (opts.compareMtimes && !opts.compareMtimes.except.has(p) && ec.modified !== ac.modified) {
+        if (opts.compareMtimes && !opts.compareMtimes.except.has(p.toLowerCase()) && ec.modified !== ac.modified) {
           out.push(`${p}: modified time differs: expected ${ec.modified}, got ${ac.modified}`);
         }
       }

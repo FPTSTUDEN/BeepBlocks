@@ -28,6 +28,7 @@ import {
   type FieldSchema,
 } from './composites.ts';
 import { checkRegex, checkRegexReplacement, checkTemplate, checkWildcard } from './syntax.ts';
+import { RUN_BLOCK_ID } from './ids.ts';
 
 // ===================================================================== Names
 
@@ -37,11 +38,15 @@ const PY_KEYWORDS = [
   'if', 'import', 'in', 'is', 'lambda', 'nonlocal', 'not', 'or', 'pass', 'raise', 'return',
   'try', 'while', 'with', 'yield',
 ];
-/** Builtins the exporter emits, plus module-level names of the exported script. */
+/**
+ * Builtins the exporter emits, plus module-level names of the exported script that don't
+ * start with "_bp" (those are reserved by prefix). Kept in sync with runtime.py by
+ * src/export/reserved.test.ts.
+ */
 const RESERVED = [
   'print', 'len', 'str', 'int', 'float', 'range', 'sorted', 'min', 'max', 'abs', 'list',
   'bool', 'isinstance', 'fs', 'main', 're', 'shutil', 'sys', 'os', 'argparse', 'Path',
-  'datetime', 'timezone', 'math',
+  'datetime', 'timezone', 'math', '_RealFS', '_PlanFS',
 ];
 const RESERVED_SET = new Set([...PY_KEYWORDS, ...RESERVED]);
 const IDENT = /^[A-Za-z_][A-Za-z0-9_]*$/;
@@ -53,7 +58,7 @@ export function checkIdentifier(name: unknown): string | null {
   if (!IDENT.test(name)) {
     return `"${name}" can only use letters, digits and _, and cannot start with a digit.`;
   }
-  if (name.startsWith('_bp')) return `Names starting with "_bp" are reserved.`;
+  if (/^_bp/i.test(name)) return `Names starting with "_bp" are reserved.`;
   if (RESERVED_SET.has(name)) return `"${name}" is a reserved word; please choose another name.`;
   return null;
 }
@@ -111,6 +116,9 @@ function checkStructure(p: unknown, r: Reporter, primitiveOnly: boolean): void {
       return null;
     }
     if (ids.has(n.id)) r.error(n.id, 'DUPLICATE_ID', `Two blocks share the id "${n.id}".`);
+    if (n.id === RUN_BLOCK_ID) {
+      r.error(n.id, 'DUPLICATE_ID', `The id "${RUN_BLOCK_ID}" is reserved for the "when run" block.`);
+    }
     ids.add(n.id);
     return n.id;
   };

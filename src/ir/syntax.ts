@@ -105,6 +105,10 @@ export function checkRegex(pattern: string): RegexCheck {
   /** Whether the previous token was a quantifier (to allow one lazy `?`). */
   let afterQuantifier = false;
   let afterLazy = false;
+  /** Open groups; `inner` = a capturing group appears somewhere inside. */
+  const open: { capturing: boolean; inner: boolean }[] = [];
+  /** The previous token was a `)` closing a group that contains a capturing group. */
+  let closedWithInnerCapture = false;
   const fail = (error: string): RegexCheck => ({ error, groups });
 
   const escape = (i: number, inClass: boolean): string | null => {
@@ -126,7 +130,7 @@ export function checkRegex(pattern: string): RegexCheck {
       if (err) return fail(err);
       i += 2;
       canQuantify = true;
-      afterQuantifier = afterLazy = false;
+      afterQuantifier = afterLazy = closedWithInnerCapture = false;
       continue;
     }
     if (c === '[') {
@@ -157,34 +161,42 @@ export function checkRegex(pattern: string): RegexCheck {
       }
       i = j + 1;
       canQuantify = true;
-      afterQuantifier = afterLazy = false;
+      afterQuantifier = afterLazy = closedWithInnerCapture = false;
       continue;
     }
     if (c === '(') {
+      let capturing = true;
       if (pattern[i + 1] === '?') {
         if (pattern[i + 2] !== ':') {
           return fail('only plain groups ( ) and non-capturing groups (?: ) are supported.');
         }
+        capturing = false;
         i += 3;
       } else {
         groups += 1;
         i += 1;
       }
+      open.push({ capturing, inner: false });
       depth += 1;
       canQuantify = false;
-      afterQuantifier = afterLazy = false;
+      afterQuantifier = afterLazy = closedWithInnerCapture = false;
       continue;
     }
     if (c === ')') {
       if (depth === 0) return fail('a ")" has no matching "(".');
+      const g = open.pop()!;
+      const parent = open[open.length - 1];
+      if (parent && (g.capturing || g.inner)) parent.inner = true;
       depth -= 1;
       i += 1;
       canQuantify = true;
       afterQuantifier = afterLazy = false;
+      closedWithInnerCapture = g.inner;
       continue;
     }
     if (c === '*' || c === '+' || c === '?' || c === '{') {
       let len = 1;
+      let max = c === '?' ? 1 : Infinity;
       if (c === '{') {
         const m = /^\{(\d+)(,(\d*))?\}/.exec(pattern.slice(i));
         if (!m) return fail('use \\{ for a literal {, or {m}, {m,} or {m,n} to repeat.');
@@ -192,6 +204,7 @@ export function checkRegex(pattern: string): RegexCheck {
           return fail(`in {${m[1]},${m[3]}} the second number must not be smaller.`);
         }
         len = m[0].length;
+        max = m[2] === undefined ? Number(m[1]) : m[3] === '' ? Infinity : Number(m[3]);
       }
       if (c === '?' && afterQuantifier && !afterLazy) {
         afterLazy = true;
@@ -200,17 +213,23 @@ export function checkRegex(pattern: string): RegexCheck {
       }
       if (afterQuantifier) return fail('two repeat symbols in a row are not supported.');
       if (!canQuantify) return fail(`"${c}" must come after something to repeat.`);
+      // JS forgets inner captures on each repetition, Python keeps the last one.
+      if (closedWithInnerCapture && max > 1) {
+        return fail(
+          'a repeated group cannot contain a ( ) group; use (?: ) for the inner group, or capture the whole repeat.',
+        );
+      }
       i += len;
       canQuantify = false;
       afterQuantifier = true;
-      afterLazy = false;
+      afterLazy = closedWithInnerCapture = false;
       continue;
     }
     if (c === ']') return fail('use \\] for a literal ].');
     if (c === '}') return fail('use \\} for a literal }.');
     // '|', '^', '$' are not quantifiable; everything else (including '.') is an atom.
     canQuantify = !(c === '|' || c === '^' || c === '$');
-    afterQuantifier = afterLazy = false;
+    afterQuantifier = afterLazy = closedWithInnerCapture = false;
     i += 1;
   }
   if (depth > 0) return fail('a "(" is never closed.');
