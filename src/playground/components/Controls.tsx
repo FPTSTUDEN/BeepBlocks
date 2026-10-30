@@ -23,23 +23,33 @@ export interface ControlsProps {
   onReset: () => void;
   onScrub: (index: number) => void;
   onSpeed: (speed: Speed) => void;
+  /** When set, Run is disabled and this reason is shown next to it (e.g. invalid program). */
+  runBlockedReason?: string | null;
 }
 
 export function Controls(p: ControlsProps) {
   const speedId = useId();
+  const blockedId = useId();
   const has = p.total > 0 && !p.disabled;
   const last = Math.max(0, p.total - 1);
+  const blocked = p.runBlockedReason ? p.runBlockedReason : null;
   return (
     <div className={styles.controls} role="toolbar" aria-label="Playback controls">
       <button
         type="button"
         className={cx(styles.button, styles.primary)}
         onClick={p.onRun}
-        disabled={p.disabled || p.playing}
+        disabled={p.disabled || p.playing || blocked !== null}
         aria-keyshortcuts="Space"
+        aria-describedby={blocked !== null ? blockedId : undefined}
       >
         <span aria-hidden="true">▶ </span>Run
       </button>
+      {blocked !== null && (
+        <span id={blockedId} className={styles.blockedReason}>
+          {blocked}
+        </span>
+      )}
       <button
         type="button"
         className={styles.button}

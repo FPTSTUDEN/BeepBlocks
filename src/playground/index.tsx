@@ -46,6 +46,8 @@ export interface PlaygroundProps {
   onScenarioChange: (fs: SandboxFS) => void;
   /** Optional accessible name of the region (default "Playground"). */
   label?: string;
+  /** When set, Run is disabled (button and Space) and this reason is shown. */
+  runBlockedReason?: string | null;
 }
 
 const EMPTY_DIFF: Diff = new Map();
@@ -89,7 +91,7 @@ export function Playground(props: PlaygroundProps) {
   const explorer = useExplorerState(fs, snapshot, folderForSnapshot(snapshot));
 
   const run = () => {
-    if (editingScenario) return;
+    if (editingScenario || props.runBlockedReason) return;
     if (timeline === null || stale) {
       setPendingPlay(true);
       props.onRun();
@@ -187,6 +189,7 @@ export function Playground(props: PlaygroundProps) {
         onReset={reset}
         onScrub={go}
         onSpeed={setSpeed}
+        runBlockedReason={editingScenario ? null : (props.runBlockedReason ?? null)}
       />
       <p className={styles.srOnly} aria-live="polite" aria-atomic="true">
         {editingScenario ? '' : announce(timeline, index)}

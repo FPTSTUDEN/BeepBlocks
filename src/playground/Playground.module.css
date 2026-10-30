@@ -452,3 +452,9 @@
   color: var(--bp-muted, #57606a);
   margin: 0;
 }
+
+.blockedReason {
+  color: var(--bp-danger, #b91c1c);
+  font-size: 0.8125rem;
+  align-self: center;
+}
