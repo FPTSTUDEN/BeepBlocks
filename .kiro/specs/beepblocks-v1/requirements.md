@@ -1,8 +1,8 @@
-# Requirements Document — Block Playground v1 (working title)
+# Requirements Document — BeepBlocks v1
 
 ## Introduction
 
-Block Playground is a client-only web application where users compose programs from Scratch-style blocks and watch them execute step by step on an interactive, sandboxed "playground" that models a familiar environment. v1 ships one playground theme — a **file explorer** — backed by an in-memory file system.
+BeepBlocks is a client-only web application where users compose programs from Scratch-style blocks and watch them execute step by step on an interactive, sandboxed "playground" that models a familiar environment. v1 ships one playground theme — a **file explorer** — backed by an in-memory file system.
 
 The product's core promise: **what the user sees in the playground is exactly what the exported script does.** Programs are exported to readable Python that performs the same operations on a real folder the user chooses, so users can prototype an operation safely and then apply it to their own files.
 
@@ -203,6 +203,6 @@ Target users are people with little or no programming experience who want to und
 
 ## Open Questions
 
-1. **Name** — product name to be decided; "Block Playground" is a placeholder.
+1. **Name** — resolved: **BeepBlocks** (project files `.beep.json`; see `naming-brainstorm.md` for the alternatives considered).
 2. **Pattern syntax** — should "rename by pattern" use simple wildcards (`*.jpg`, `photo_{n}`) for beginners, with regex only in primitives? (Proposed: wildcards + numbered templates in composites; regex available in primitives.)
 3. **Bisect condition cost** — should the bisect scenario simulate "expensive checks" (e.g. counting each content read) to make the efficiency lesson visible? (Proposed: yes, via the checks counter.)

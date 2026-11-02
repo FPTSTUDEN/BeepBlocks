@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-r"""mutations — exported from Block Playground
+r"""mutations — exported from BeepBlocks
 
 What it does:
   - Create folder "Out" inside the chosen folder
@@ -134,7 +134,7 @@ def main(fs):
     print(fs.read_text(fs.join(fs.join(fs.join(fs.root(), "out", at="id56"), "docs", at="id57"), "readme.md", at="id58"), at="id59"))
 
 
-# ============ BLOCK PLAYGROUND RUNTIME (do not edit) ============
+# ============ BEEPBLOCKS RUNTIME (do not edit) ============
 
 _bp_Exception = _bp_builtins.Exception
 _bp_AttributeError = _bp_builtins.AttributeError
@@ -918,7 +918,7 @@ def _bp_entry(main):
         except _bp_Exception:
             pass
     parser = argparse.ArgumentParser(
-        description="Runs this Block Playground program on a folder. "
+        description="Runs this BeepBlocks program on a folder. "
         "Without --apply it only shows what it would do."
     )
     parser.add_argument("folder", help="the folder to work on")

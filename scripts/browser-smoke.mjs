@@ -31,11 +31,11 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 /** A project that prints, then sorts the messy-downloads folder with a task block. */
 function seedProject() {
   return {
-    format: 'block-playground-project',
+    format: 'beepblocks-project',
     version: 1,
     title: 'Smoke test',
     program: {
-      format: 'block-playground-ir',
+      format: 'beepblocks-ir',
       version: 1,
       functions: [],
       body: [
@@ -144,15 +144,15 @@ try {
   await waitFor(`!!document.querySelector('[role=region][aria-label^="Playground"]')`, 'the playground');
 
   // 2. Seed a project (using the built-in scenario the app saved) and reload.
-  await waitFor(`!!localStorage.getItem('bp.project')`, 'the first autosave', 5000).catch(async () => {
+  await waitFor(`!!localStorage.getItem('beepblocks.project')`, 'the first autosave', 5000).catch(async () => {
     // No edits yet → nothing autosaved; pick the scenario from a fresh project instead.
   });
   const seeded = seedProject();
   await evaluate(`(() => {
-    const saved = JSON.parse(localStorage.getItem('bp.project') || 'null');
+    const saved = JSON.parse(localStorage.getItem('beepblocks.project') || 'null');
     const p = ${JSON.stringify(seeded)};
     p.scenario = saved ? saved.scenario : null;
-    localStorage.setItem('bp.project', JSON.stringify(p));
+    localStorage.setItem('beepblocks.project', JSON.stringify(p));
     return !!p.scenario;
   })()`).then((ok) => {
     if (!ok) throw new Error('Could not read a scenario to seed the project with');

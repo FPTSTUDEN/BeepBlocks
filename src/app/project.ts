@@ -21,7 +21,7 @@ import { SCENARIOS } from '../domains/fileExplorer/scenarios/index.ts';
 export type Layout = Record<NodeId, { x: number; y: number }>;
 
 export interface ProjectFile {
-  format: 'block-playground-project';
+  format: 'beepblocks-project';
   version: 1;
   title: string;
   /** Un-desugared: composites preserved. */
@@ -31,18 +31,18 @@ export interface ProjectFile {
   scenario: Scenario;
 }
 
-export const PROJECT_KEY = 'bp.project';
-export const PROJECT_EXTENSION = '.bpproj.json';
+export const PROJECT_KEY = 'beepblocks.project';
+export const PROJECT_EXTENSION = '.beep.json';
 export const DEFAULT_TITLE = 'Untitled project';
 const MAX_TITLE = 100;
 
 export function emptyProgram(): Program {
-  return { format: 'block-playground-ir', version: 1, functions: [], body: [] };
+  return { format: 'beepblocks-ir', version: 1, functions: [], body: [] };
 }
 
 export function newProject(scenario: Scenario = SCENARIOS[0]!): ProjectFile {
   return {
-    format: 'block-playground-project',
+    format: 'beepblocks-project',
     version: 1,
     title: DEFAULT_TITLE,
     program: emptyProgram(),
@@ -168,8 +168,8 @@ export function parseProject(input: string | unknown): ProjectParse {
       return { ok: false, errors: ['This file is not valid JSON.'] };
     }
   }
-  if (!isObj(v) || v.format !== 'block-playground-project') {
-    return { ok: false, errors: ['This is not a Block Playground project file.'] };
+  if (!isObj(v) || v.format !== 'beepblocks-project') {
+    return { ok: false, errors: ['This is not a BeepBlocks project file.'] };
   }
   if (v.version !== 1) {
     return {
@@ -181,8 +181,8 @@ export function parseProject(input: string | unknown): ProjectParse {
   if (typeof v.title !== 'string') errors.push('The project has no title.');
   if (!checkLayout(v.layout)) errors.push('The block positions are not valid.');
   const program = v.program;
-  if (!isObj(program) || program.format !== 'block-playground-ir' || program.version !== 1) {
-    errors.push('The project does not contain a version 1 Block Playground program.');
+  if (!isObj(program) || program.format !== 'beepblocks-ir' || program.version !== 1) {
+    errors.push('The project does not contain a version 1 BeepBlocks program.');
   } else {
     for (const e of validateStructure(program).filter((i) => i.severity === 'error').slice(0, 10)) {
       errors.push(`Program${e.nodeId ? ` (block ${e.nodeId})` : ''}: ${e.message}`);
@@ -206,6 +206,38 @@ function sortTree(fs: SandboxFS): SandboxFS {
 }
 
 // ---------------------------------------------------------------- autosave
+
+/** Storage keys and format strings from before the BeepBlocks rename. */
+const LEGACY_PROJECT_KEY = 'bp.project';
+const LEGACY_SETTINGS_KEY = 'bp.settings';
+
+/**
+ * One-time move of an autosave written under the pre-rename keys ("Block Playground"):
+ * rewrites the old format strings and moves both keys. Never throws; leaves newer data alone.
+ */
+export function migrateLegacyStorage(storage: Storage | undefined, settingsKey: string): void {
+  if (!storage) return;
+  try {
+    const oldProject = storage.getItem(LEGACY_PROJECT_KEY);
+    if (oldProject !== null) {
+      if (storage.getItem(PROJECT_KEY) === null) {
+        const p = JSON.parse(oldProject) as Record<string, unknown>;
+        if (p.format === 'block-playground-project') p.format = 'beepblocks-project';
+        const prog = p.program as Record<string, unknown> | undefined;
+        if (prog && prog.format === 'block-playground-ir') prog.format = 'beepblocks-ir';
+        storage.setItem(PROJECT_KEY, JSON.stringify(p));
+      }
+      storage.removeItem(LEGACY_PROJECT_KEY);
+    }
+    const oldSettings = storage.getItem(LEGACY_SETTINGS_KEY);
+    if (oldSettings !== null) {
+      if (storage.getItem(settingsKey) === null) storage.setItem(settingsKey, oldSettings);
+      storage.removeItem(LEGACY_SETTINGS_KEY);
+    }
+  } catch {
+    /* unreadable or blocked: start fresh */
+  }
+}
 
 /** The autosaved project, or null if there is none or it is unreadable. Never throws. */
 export function loadStoredProject(storage: Storage | undefined): ProjectFile | null {

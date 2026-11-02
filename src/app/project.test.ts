@@ -22,9 +22,9 @@ describe('project files', () => {
 
   it.each([
     ['not JSON', '{nope', /not valid JSON/],
-    ['wrong format', { format: 'something-else' }, /not a Block Playground project/],
+    ['wrong format', { format: 'something-else' }, /not a BeepBlocks project/],
     ['newer version', { ...newProject(), version: 2 }, /version 2/],
-    ['malformed program', withProgram({ format: 'block-playground-ir', version: 1, body: 'x' }), /Program/],
+    ['malformed program', withProgram({ format: 'beepblocks-ir', version: 1, body: 'x' }), /Program/],
     [
       'unknown node kind',
       withProgram(b.program([{ id: 'q', kind: 'teleport' } as never])),
@@ -69,8 +69,8 @@ describe('project files', () => {
   });
 
   it('makes safe file names', () => {
-    expect(projectFileName('My: project?')).toBe('My- project-.bpproj.json');
-    expect(projectFileName('  ')).toBe('project.bpproj.json');
-    expect(projectFileName('end.')).toBe('end.bpproj.json');
+    expect(projectFileName('My: project?')).toBe('My- project-.beep.json');
+    expect(projectFileName('  ')).toBe('project.beep.json');
+    expect(projectFileName('end.')).toBe('end.beep.json');
   });
 });

@@ -456,7 +456,7 @@ export function emitScript(input: EmitInput): string {
     ...program.lines,
     '',
     '',
-    '# ============ BLOCK PLAYGROUND RUNTIME (do not edit) ============',
+    '# ============ BEEPBLOCKS RUNTIME (do not edit) ============',
     '',
     RUNTIME_BODY,
     '',

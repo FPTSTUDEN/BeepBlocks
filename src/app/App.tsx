@@ -73,7 +73,7 @@ function Shell({ store }: { store: AppStore }) {
   useLayoutEffect(() => applyTheme(settings), [settings]);
 
   useEffect(() => {
-    document.title = `${project.title || 'Untitled'} — Block Playground`;
+    document.title = `${project.title || 'Untitled'} — BeepBlocks`;
   }, [project.title]);
 
   useEffect(() => {
@@ -130,7 +130,7 @@ function Shell({ store }: { store: AppStore }) {
   return (
     <div className="app">
       <header className="topbar">
-        <h1>Block Playground</h1>
+        <h1>BeepBlocks</h1>
         <input
           type="text"
           className="title-input"

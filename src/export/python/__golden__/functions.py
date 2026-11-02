@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-r"""functions — exported from Block Playground
+r"""functions — exported from BeepBlocks
 
 What it does:
   - Show fact(10) as text
@@ -131,7 +131,7 @@ def main(fs):
         print("small")
 
 
-# ============ BLOCK PLAYGROUND RUNTIME (do not edit) ============
+# ============ BEEPBLOCKS RUNTIME (do not edit) ============
 
 _bp_Exception = _bp_builtins.Exception
 _bp_AttributeError = _bp_builtins.AttributeError
@@ -915,7 +915,7 @@ def _bp_entry(main):
         except _bp_Exception:
             pass
     parser = argparse.ArgumentParser(
-        description="Runs this Block Playground program on a folder. "
+        description="Runs this BeepBlocks program on a folder. "
         "Without --apply it only shows what it would do."
     )
     parser.add_argument("folder", help="the folder to work on")

@@ -12,12 +12,13 @@ import type { SandboxFS, Scenario } from '../domains/fileExplorer/fsTypes.ts';
 import { deepEqual } from './deepEqual.ts';
 import {
   loadStoredProject,
+  migrateLegacyStorage,
   newProject,
   saveStoredProject,
   type Layout,
   type ProjectFile,
 } from './project.ts';
-import { loadSettings, saveSettings, type Settings } from './settings.ts';
+import { SETTINGS_KEY, loadSettings, saveSettings, type Settings } from './settings.ts';
 
 export type SimulateFn = (
   program: Program,
@@ -98,6 +99,7 @@ const errorsOf = (issues: ValidationError[]) => issues.filter((i) => i.severity 
 
 export function createAppStore(deps: AppDeps): AppStore {
   let runId = 0;
+  migrateLegacyStorage(deps.storage, SETTINGS_KEY);
   const store = createStore<AppState>()((set, get) => ({
     project: loadStoredProject(deps.storage) ?? newProject(),
     issues: [],

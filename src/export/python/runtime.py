@@ -1,4 +1,4 @@
-"""Block Playground Python runtime (design.md §5, §8.3).
+"""BeepBlocks Python runtime (design.md §5, §8.3).
 
 This file is embedded into every exported script (see gen-runtime.ts). Only the parts between
 the @bp markers are copied: the import block goes to the top of the script, the runtime body
@@ -811,7 +811,7 @@ def _bp_entry(main):
         except _bp_Exception:
             pass
     parser = argparse.ArgumentParser(
-        description="Runs this Block Playground program on a folder. "
+        description="Runs this BeepBlocks program on a folder. "
         "Without --apply it only shows what it would do."
     )
     parser.add_argument("folder", help="the folder to work on")

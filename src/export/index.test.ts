@@ -14,13 +14,13 @@ describe('exportPython', () => {
     expect(r.ok).toBe(true);
     if (r.ok) {
       expect(r.source).toContain('print("hi")');
-      expect(r.source).toContain('Hi \u2014 exported from Block Playground');
+      expect(r.source).toContain('Hi \u2014 exported from BeepBlocks');
     }
   });
 
   it('uses a default title', () => {
     const r = exportPython(b.program([]), { desugar: identity });
-    expect(r.ok && r.source.includes('Block Playground program \u2014 exported')).toBe(true);
+    expect(r.ok && r.source.includes('BeepBlocks program \u2014 exported')).toBe(true);
   });
 
   it('refuses invalid IR with the validation errors (before desugaring)', () => {

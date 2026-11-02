@@ -141,7 +141,7 @@ export interface HeaderInput {
 /** Header docstring text (unescaped; the emitter makes it safe for a raw docstring). */
 export function buildHeader({ title, original, desugared }: HeaderInput): string {
   const line = (s: string) => `  - ${truncate(s, MAX_LINE)}`;
-  const out: string[] = [`${title} \u2014 exported from Block Playground`, '', 'What it does:'];
+  const out: string[] = [`${title} \u2014 exported from BeepBlocks`, '', 'What it does:'];
   if (original.body.length === 0) out.push('  (nothing yet: the program is empty)');
   for (const s of original.body) out.push(line(describeStmt(s)));
   if (original.functions.length > 0) {

@@ -169,6 +169,21 @@ describe('app store', () => {
     expect(setup(realSimulate, storage).s().settings).toEqual({ mode: 'dark', accent: '#ff0000' });
   });
 
+  it('migrates an autosave from the pre-rename keys once', () => {
+    const storage = memoryStorage();
+    const old = { ...newProject(), title: 'Old one' } as Record<string, unknown>;
+    old.format = 'block-playground-project';
+    old.program = { ...(old.program as object), format: 'block-playground-ir' };
+    storage.setItem('bp.project', JSON.stringify(old));
+    storage.setItem('bp.settings', JSON.stringify({ mode: 'dark', accent: '#ff0000' }));
+    const { s } = setup(realSimulate, storage);
+    expect(s().project.title).toBe('Old one');
+    expect(s().project.program.format).toBe('beepblocks-ir');
+    expect(s().settings.mode).toBe('dark');
+    expect(storage.getItem('bp.project')).toBeNull();
+    expect(storage.getItem('bp.settings')).toBeNull();
+  });
+
   it('replacing the project clears the run', async () => {
     const { s } = setup();
     s().editorChanged(hello, {}, []);

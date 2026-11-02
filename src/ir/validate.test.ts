@@ -304,6 +304,6 @@ describe('serialize', () => {
   it('rejects wrong format, version and junk', () => {
     expect(parseProgram('{nope').ok).toBe(false);
     expect(parseProgram({ format: 'other', version: 1 }).ok).toBe(false);
-    expect(parseProgram({ format: 'block-playground-ir', version: 2, functions: [], body: [] }).ok).toBe(false);
+    expect(parseProgram({ format: 'beepblocks-ir', version: 2, functions: [], body: [] }).ok).toBe(false);
   });
 });

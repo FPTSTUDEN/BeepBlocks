@@ -1,4 +1,4 @@
-/** Registers every Block Playground block type (idempotent). */
+/** Registers every BeepBlocks block type (idempotent). */
 import * as Blockly from 'blockly/core';
 import * as En from 'blockly/msg/en';
 import { defineCompositeBlocks } from './composites.ts';

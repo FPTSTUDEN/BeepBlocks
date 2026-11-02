@@ -35,8 +35,8 @@ export function parseProgram(input: string | unknown): ParseResult {
     return { ok: false, errors: [structural('Expected a program object.')] };
   }
   const v = value as Record<string, unknown>;
-  if (v.format !== 'block-playground-ir') {
-    return { ok: false, errors: [structural('This is not a Block Playground program.')] };
+  if (v.format !== 'beepblocks-ir') {
+    return { ok: false, errors: [structural('This is not a BeepBlocks program.')] };
   }
   if (v.version !== 1) {
     return {

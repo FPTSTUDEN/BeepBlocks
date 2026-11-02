@@ -1,4 +1,4 @@
-# Implementation Plan — Block Playground v1 (working title)
+# Implementation Plan — BeepBlocks v1
 
 Legend:
 - **[SEQ]** — done by the integrator, in order. Later tasks depend on it.
@@ -220,13 +220,13 @@ Builds against `__mocks__/timelines.ts`.
 
 - [x] 2.4 Persistence
   - Autosave to `localStorage`.
-  - Import/export of `.bpproj.json` with full validation before replacing anything.
+  - Import/export of `.beep.json` with full validation before replacing anything.
   - Done: work-in-progress programs load via `validateStructure` (§13).
   - _Req: 12.1–12.3_
 
 - [x] 2.5 Visual themes
   - Light and dark presets plus an accent picker with automatic contrast-safe foreground.
-  - Persisted in `bp.settings`.
+  - Persisted in `beepblocks.settings`.
   - Done: the accent itself is also nudged to 4.5:1 against the background (§10.2).
   - _Req: 11.3, 11.4_
 

@@ -18,7 +18,7 @@ export interface ExportOptions {
   title?: string;
 }
 
-const DEFAULT_TITLE = 'Block Playground program';
+const DEFAULT_TITLE = 'BeepBlocks program';
 
 const failure = (message: string): ExportResult => ({
   ok: false,

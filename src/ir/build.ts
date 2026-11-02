@@ -36,7 +36,7 @@ const id = (given?: NodeId) => given ?? freshId();
 
 export const b = {
   program: (body: Stmt[], functions: FunctionDef[] = []): Program => ({
-    format: 'block-playground-ir',
+    format: 'beepblocks-ir',
     version: 1,
     functions,
     body,

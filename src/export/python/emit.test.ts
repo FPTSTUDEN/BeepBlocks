@@ -24,7 +24,7 @@ function exported(program: Program, title = 'test'): string {
 /** The emitted user program (between the banners). */
 function programPart(source: string): string {
   const start = source.indexOf('# ======================= YOUR PROGRAM');
-  const end = source.indexOf('# ============ BLOCK PLAYGROUND RUNTIME');
+  const end = source.indexOf('# ============ BEEPBLOCKS RUNTIME');
   return source.slice(start, end);
 }
 
@@ -278,7 +278,7 @@ describe('header', () => {
     const del = CASES.find((c) => c.name === 'composite-delete')!;
     const r = exportPython(del.program, { desugar: del.desugar!, title: 'Clean up' });
     if (!r.ok) throw new Error('export failed');
-    expect(r.source).toContain('Clean up \u2014 exported from Block Playground');
+    expect(r.source).toContain('Clean up \u2014 exported from BeepBlocks');
     expect(r.source).toContain('\u26a0 This script can DELETE or OVERWRITE files:');
     expect(r.source).toContain(
       'Delete files in the chosen folder and its subfolders matching "*.tmp" (block fa)',

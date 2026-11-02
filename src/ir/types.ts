@@ -27,7 +27,7 @@ export const T = {
 } as const;
 
 export interface Program {
-  format: 'block-playground-ir';
+  format: 'beepblocks-ir';
   version: 1;
   functions: FunctionDef[];
   body: Stmt[];
@@ -224,5 +224,5 @@ function typePlural(t: Type): string {
 }
 
 export function emptyProgram(): Program {
-  return { format: 'block-playground-ir', version: 1, functions: [], body: [] };
+  return { format: 'beepblocks-ir', version: 1, functions: [], body: [] };
 }

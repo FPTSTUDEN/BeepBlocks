@@ -1,8 +1,8 @@
-# Design Document — Block Playground v1 (working title)
+# Design Document — BeepBlocks v1
 
 ## 1. Overview
 
-Block Playground is a client-only React + TypeScript web app. Users build programs with Blockly blocks, run them step by step against an in-memory file system, and export them to a standalone Python script.
+BeepBlocks is a client-only React + TypeScript web app. Users build programs with Blockly blocks, run them step by step against an in-memory file system, and export them to a standalone Python script.
 
 Everything revolves around one **IR** (intermediate representation):
 
@@ -89,7 +89,7 @@ export type Type =
   | { t: 'list'; of: Type };
 
 export interface Program {
-  format: 'block-playground-ir';
+  format: 'beepblocks-ir';
   version: 1;
   functions: FunctionDef[];
   body: Stmt[];
@@ -576,7 +576,7 @@ WRITE  <path>
 ```python
 #!/usr/bin/env python3
 """
-<Program title> — exported from Block Playground
+<Program title> — exported from BeepBlocks
 
 What it does:
   <one plain-language line per top-level block, from op/composite labels>
@@ -604,7 +604,7 @@ def main(fs):
     for item in fs.list(fs.root()):
         ...
 
-# ============ BLOCK PLAYGROUND RUNTIME (do not edit) ============
+# ============ BEEPBLOCKS RUNTIME (do not edit) ============
 # _BPError, _BPPath, _RealFS, _PlanFS, helpers ...
 
 if __name__ == "__main__":
@@ -710,7 +710,7 @@ v1 registers one theme, `fileExplorer`. The IR core, interpreter loop, and expor
 - The accent color is user-chosen. It is used for text, tags and focus rings, so the applied accent is the user's color blended toward the preset foreground just enough to reach 4.5:1 against the background (the settings menu shows the adjusted color when that happens). Foreground-on-accent is black or white, whichever contrasts more, which is always at least 4.58:1.
 - Preset text colors reach 4.5:1 and borders 3:1 on both background and surface (unit-tested).
 - The Blockly theme is derived from the same variables.
-- Settings persist in `localStorage` under the key `bp.settings`.
+- Settings persist in `localStorage` under the key `beepblocks.settings`.
 
 ## 11. Conformance Suite
 
@@ -754,7 +754,7 @@ Coverage requirement: every op, every error code except `STEP_LIMIT`/`RECURSION_
 
 ```ts
 interface ProjectFile {
-  format: 'block-playground-project';
+  format: 'beepblocks-project';
   version: 1;
   title: string;
   program: Program;                      // un-desugared (composites preserved)
@@ -763,8 +763,8 @@ interface ProjectFile {
 }
 ```
 
-- Autosave goes to `localStorage` (`bp.project`), debounced at 1 s, and is flushed on `beforeunload`. If storage refuses the write, a banner suggests "Save file".
-- Import/export uses `.bpproj.json` files.
+- Autosave goes to `localStorage` (`beepblocks.project`), debounced at 1 s, and is flushed on `beforeunload`. If storage refuses the write, a banner suggests "Save file".
+- Import/export uses `.beep.json` files.
 - An import is fully validated (format, version, IR structure, scenario) before it replaces the current project. On failure, the errors are shown and nothing changes (Req 12.3).
 - A saved program may be work in progress: the editor emits `null` for empty sockets. Loading therefore checks the program with `validateStructure` (the structural phase of the validator, with empty sockets allowed) rather than the full validator; Run and Export still require a fully valid program. Scenario trees are checked with the same name rules as the scenario editor (unique case-insensitive names, exactly one of `content`/`binarySize`, integer mtimes), and folder children are re-sorted into §5.3 order on load.
 

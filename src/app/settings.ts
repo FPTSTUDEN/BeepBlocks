@@ -1,6 +1,6 @@
 /**
  * Visual themes (design.md §10.2, Req 11.3–11.4): light/dark presets as CSS custom properties,
- * a user-chosen accent kept WCAG-legible, and persistence under `bp.settings`.
+ * a user-chosen accent kept WCAG-legible, and persistence under `beepblocks.settings`.
  */
 
 export type Mode = 'light' | 'dark';
@@ -11,7 +11,7 @@ export interface Settings {
   accent: string;
 }
 
-export const SETTINGS_KEY = 'bp.settings';
+export const SETTINGS_KEY = 'beepblocks.settings';
 export const DEFAULT_ACCENT = '#2563eb';
 export const DEFAULT_SETTINGS: Settings = { mode: 'light', accent: DEFAULT_ACCENT };
 
