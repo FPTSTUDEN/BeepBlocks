@@ -3,7 +3,7 @@
  * In list view it shows a hinted list in list order with a 0-based position gutter and a final
  * "end = <length>" row. ARIA listbox with roving focus: ↑/↓ move, Enter (or click) activates.
  */
-import { useId, useState, type KeyboardEvent } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { fileSize } from '../../domains/fileExplorer/fsTypes.ts';
 import { fileKind, formatDate, humanSize } from '../lib/format.ts';
 import type { FileRow } from '../lib/rows.ts';
@@ -42,8 +42,13 @@ export function keyOfTarget(target: EventTarget | null): string | null {
 
 export function FileList(props: FileListProps) {
   const { rows, listMode } = props;
-  const keys = [...rows.map((r) => r.key), ...(listMode ? [END_KEY] : [])];
+  const keys = useMemo(
+    () => [...rows.map((r) => r.key), ...(listMode ? [END_KEY] : [])],
+    [rows, listMode],
+  );
   const [focusKey, setFocusKey] = useState<string | null>(null);
+  const previousKeys = useRef(keys);
+  const listRef = useRef<HTMLUListElement>(null);
   const hintId = useId();
   const current =
     focusKey !== null && keys.includes(focusKey)
@@ -57,6 +62,17 @@ export function FileList(props: FileListProps) {
     const items = list.querySelectorAll<HTMLElement>('[data-rowkey]');
     [...items].find((el) => el.dataset['rowkey'] === key)?.focus();
   };
+  useEffect(() => {
+    if (focusKey !== null && !keys.includes(focusKey) && keys.length > 0) {
+      const oldIndex = previousKeys.current.indexOf(focusKey);
+      const next = keys[Math.min(Math.max(oldIndex, 0), keys.length - 1)]!;
+      setFocusKey(next);
+      [...(listRef.current?.querySelectorAll<HTMLElement>('[data-rowkey]') ?? [])]
+        .find((el) => el.dataset['rowkey'] === next)
+        ?.focus();
+    }
+    previousKeys.current = keys;
+  }, [focusKey, keys]);
 
   const onKeyDown = (e: KeyboardEvent<HTMLUListElement>) => {
     const own = keyOfTarget(e.target);
@@ -69,10 +85,40 @@ export function FileList(props: FileListProps) {
       case 'ArrowUp':
         if (i > 0) focusRow(e.currentTarget, keys[i - 1]!);
         break;
+      case 'Home':
+        focusRow(e.currentTarget, keys[0]!);
+        break;
+      case 'End':
+        focusRow(e.currentTarget, keys.at(-1)!);
+        break;
       case 'Enter': {
         const row = rows.find((r) => r.key === from);
         if (row) props.onActivate(row);
         break;
+      }
+      case ' ':
+      case 'Spacebar': {
+        const row = rows.find((r) => r.key === from);
+        if (row) props.onActivate(row);
+        break;
+      }
+      case 'ArrowRight': {
+        const row = rows.find((r) => r.key === from);
+        if (row?.node?.type === 'folder' && !row.ghost && row.path !== null) {
+          props.onOpenFolder?.(row.path);
+          break;
+        }
+        return;
+      }
+      case 'ArrowLeft':
+      case 'Backspace': {
+        const row = rows.find((r) => r.key === from);
+        if (row?.node?.type === 'folder' && row.path !== null) {
+          const parent = row.path.slice(0, Math.max(0, row.path.lastIndexOf('/')));
+          props.onOpenFolder?.(parent);
+          break;
+        }
+        return;
       }
       default:
         return;
@@ -96,6 +142,7 @@ export function FileList(props: FileListProps) {
         {props.activateHint}
       </p>
       <ul
+        ref={listRef}
         role="listbox"
         aria-label={props.label}
         aria-describedby={hintId}
@@ -163,6 +210,8 @@ function Row({ row, listMode, focusable, selected, onFocus, onActivate, onOpen }
   const kind = node ? fileKind(node) : null;
   const name =
     listMode && row.path !== null ? row.path : (node?.name ?? row.path ?? row.text ?? '');
+  const sizeText = node?.type === 'file' ? humanSize(fileSize(node)) : node ? 'no size' : 'missing';
+  const dateText = node ? formatDate(node.modified) : 'no modified date';
   return (
     <li
       data-rowkey={row.key}
@@ -170,6 +219,7 @@ function Row({ row, listMode, focusable, selected, onFocus, onActivate, onOpen }
       aria-selected={selected}
       tabIndex={focusable ? 0 : -1}
       className={cx(styles.fileRow, row.active && styles.active, row.ghost && styles.ghost)}
+      aria-label={`${name}, ${sizeText}, modified ${dateText}${row.ghost ? ', deleted' : ''}`}
       data-path={row.path ?? undefined}
       onFocus={onFocus}
       onClick={onActivate}

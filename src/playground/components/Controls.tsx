@@ -1,5 +1,5 @@
 /** Timeline controls (task E.5): Run, Pause, Step back/forward, Reset, scrubber, speed. */
-import { useId } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import { SPEEDS, formatSpeed, isSpeed, type Speed } from '../lib/controls.ts';
 import { cx } from './Badges.tsx';
 import styles from '../Playground.module.css';
@@ -30,12 +30,28 @@ export interface ControlsProps {
 export function Controls(p: ControlsProps) {
   const speedId = useId();
   const blockedId = useId();
+  const runRef = useRef<HTMLButtonElement>(null);
+  const pauseRef = useRef<HTMLButtonElement>(null);
+  const backRef = useRef<HTMLButtonElement>(null);
+  const forwardRef = useRef<HTMLButtonElement>(null);
+  const resetRef = useRef<HTMLButtonElement>(null);
   const has = p.total > 0 && !p.disabled;
   const last = Math.max(0, p.total - 1);
   const blocked = p.runBlockedReason ? p.runBlockedReason : null;
+  useEffect(() => {
+    const active = document.activeElement;
+    const wasControl = [runRef.current, pauseRef.current, backRef.current, forwardRef.current].includes(
+      active as HTMLButtonElement | null,
+    );
+    if (!wasControl || !(active as HTMLButtonElement | null)?.disabled) return;
+    const next = [runRef.current, pauseRef.current, backRef.current, forwardRef.current, resetRef.current]
+      .find((button) => button !== null && !button.disabled);
+    next?.focus();
+  }, [p.playing, p.index, p.total, p.disabled, blocked]);
   return (
     <div className={styles.controls} role="toolbar" aria-label="Playback controls">
       <button
+        ref={runRef}
         type="button"
         className={cx(styles.button, styles.primary)}
         onClick={p.onRun}
@@ -51,6 +67,7 @@ export function Controls(p: ControlsProps) {
         </span>
       )}
       <button
+        ref={pauseRef}
         type="button"
         className={styles.button}
         onClick={p.onPause}
@@ -60,6 +77,7 @@ export function Controls(p: ControlsProps) {
         <span aria-hidden="true">⏸ </span>Pause
       </button>
       <button
+        ref={backRef}
         type="button"
         className={styles.button}
         onClick={p.onBack}
@@ -69,6 +87,7 @@ export function Controls(p: ControlsProps) {
         <span aria-hidden="true">⏮ </span>Step back
       </button>
       <button
+        ref={forwardRef}
         type="button"
         className={styles.button}
         onClick={p.onForward}
@@ -78,6 +97,7 @@ export function Controls(p: ControlsProps) {
         Step forward<span aria-hidden="true"> ⏭</span>
       </button>
       <button
+        ref={resetRef}
         type="button"
         className={styles.button}
         onClick={p.onReset}

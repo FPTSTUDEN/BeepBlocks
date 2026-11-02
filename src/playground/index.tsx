@@ -4,7 +4,7 @@
  * Presentational: the timeline, the current index, staleness and the scenario all come from
  * props. Local state is UI-only (playing, speed, folder selection/expansion, list toggle).
  */
-import { useEffect, useState, type KeyboardEvent } from 'react';
+import { useEffect, useId, useState, type KeyboardEvent } from 'react';
 import type { NodeId } from '../ir/types.ts';
 import type { Snapshot, Timeline } from '../ir/timeline.ts';
 import type { SandboxFS } from '../domains/fileExplorer/fsTypes.ts';
@@ -48,6 +48,8 @@ export interface PlaygroundProps {
   label?: string;
   /** When set, Run is disabled (button and Space) and this reason is shown. */
   runBlockedReason?: string | null;
+  /** Optional callback for focusing the editor block that caused a runtime error. */
+  onShowBlock?: (nodeId: NodeId) => void;
 }
 
 const EMPTY_DIFF: Diff = new Map();
@@ -67,6 +69,8 @@ export function Playground(props: PlaygroundProps) {
   const [showList, setShowList] = useState(true);
   /** Set when Run asked the parent for a fresh timeline; playback starts once it arrives. */
   const [pendingPlay, setPendingPlay] = useState(false);
+  const [announcement, setAnnouncement] = useState(() => announce(timeline, index));
+  const staleId = useId();
   const [seenTimeline, setSeenTimeline] = useState(timeline);
   if (seenTimeline !== timeline) {
     setSeenTimeline(timeline);
@@ -100,10 +104,17 @@ export function Playground(props: PlaygroundProps) {
     if (index >= last) props.onIndexChange(0);
     setPlaying(true);
   };
-  const pause = () => setPlaying(false);
+  const pause = () => {
+    setPlaying(false);
+    if (timeline) setAnnouncement(announce(timeline, index));
+  };
   const go = (i: number) => {
     setPlaying(false);
-    if (timeline) props.onIndexChange(clampIndex(i, timeline));
+    if (timeline) {
+      const next = clampIndex(i, timeline);
+      props.onIndexChange(next);
+      setAnnouncement(announce(timeline, next));
+    }
   };
   const reset = () => {
     setPlaying(false);
@@ -126,6 +137,12 @@ export function Playground(props: PlaygroundProps) {
 
   const done = timeline !== null && index === last && timeline.outcome === 'done';
   const error = snapshot?.error;
+  useEffect(() => {
+    if (!editingScenario && timeline && (done || error) && !playing) {
+      const timer = setTimeout(() => setAnnouncement(announce(timeline, index)), 0);
+      return () => clearTimeout(timer);
+    }
+  }, [done, editingScenario, error, index, playing, timeline]);
   const status = !timeline
     ? 'Not run yet'
     : done
@@ -147,17 +164,28 @@ export function Playground(props: PlaygroundProps) {
         <ScenarioEditor fs={props.initial} onChange={props.onScenarioChange} />
       ) : (
         <>
-          {error && (
-            <div className={styles.errorBanner} role="alert">
-              <strong>
-                <span aria-hidden="true">⚠ </span>Error:
-              </strong>{' '}
-              {error.message}{' '}
-              <span>
-                at block <span className={styles.blockId}>{error.nodeId}</span>
-              </span>
-            </div>
-          )}
+          <div className={styles.errorBanner} role="alert">
+            {error && (
+              <>
+                <strong>
+                  <span aria-hidden="true">⚠ </span>Error:
+                </strong>{' '}
+                {error.message}{' '}
+                <span>
+                  at block <span className={styles.blockId}>{error.nodeId}</span>
+                </span>
+                {props.onShowBlock && (
+                  <button
+                    type="button"
+                    className={styles.button}
+                    onClick={() => props.onShowBlock?.(error.nodeId)}
+                  >
+                    Show block
+                  </button>
+                )}
+              </>
+            )}
+          </div>
           <RunView
             fs={fs}
             timeline={timeline}
@@ -170,6 +198,7 @@ export function Playground(props: PlaygroundProps) {
             onShowList={setShowList}
             onTrace={props.onTrace}
             stale={stale}
+            staleId={staleId}
           />
         </>
       )}
@@ -192,7 +221,7 @@ export function Playground(props: PlaygroundProps) {
         runBlockedReason={editingScenario ? null : (props.runBlockedReason ?? null)}
       />
       <p className={styles.srOnly} aria-live="polite" aria-atomic="true">
-        {editingScenario ? '' : announce(timeline, index)}
+        {editingScenario ? '' : announcement}
       </p>
     </section>
   );
@@ -210,6 +239,7 @@ interface RunViewProps {
   onShowList: (show: boolean) => void;
   onTrace: (nodeIds: NodeId[]) => void;
   stale: boolean;
+  staleId: string;
 }
 
 function RunView(p: RunViewProps) {
@@ -227,13 +257,15 @@ function RunView(p: RunViewProps) {
   return (
     <>
       <div className={styles.main}>
-        {p.stale && timeline !== null && (
-          <div className={styles.staleOverlay}>
-            <p className={styles.staleMessage} role="status">
-              <span aria-hidden="true">⟳ </span>Program changed — run again
-            </p>
-          </div>
-        )}
+        <div className={styles.staleOverlay}>
+          <p id={p.staleId} className={styles.staleMessage} role="status">
+            {p.stale && timeline !== null && (
+              <>
+                <span aria-hidden="true">⟳ </span>Program changed — run again
+              </>
+            )}
+          </p>
+        </div>
         <Explorer
           fs={p.fs}
           state={p.explorer}
@@ -245,7 +277,8 @@ function RunView(p: RunViewProps) {
             if (row.path === null) return;
             p.onTrace(timeline ? traceNodeIds(timeline, p.index, row.path) : []);
           }}
-          activateHint="Press Enter to highlight the blocks that touched this item."
+          activateHint="Press Enter or Space to highlight the blocks that touched this item. On a folder, ArrowRight opens it; ArrowLeft or Backspace goes to its parent."
+          describedBy={p.staleId}
           diff={diff}
           active={active}
           {...(tags ? { pathTags: tags.pathTags } : {})}
@@ -262,7 +295,7 @@ function RunView(p: RunViewProps) {
           }
         />
       </div>
-      <div className={styles.panels}>
+      <div className={styles.panels} aria-describedby={p.staleId}>
         <VariablesPanel
           vars={tags?.vars ?? []}
           missing={tags?.missing ?? new Set()}

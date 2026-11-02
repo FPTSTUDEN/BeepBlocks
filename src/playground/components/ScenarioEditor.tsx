@@ -4,7 +4,7 @@
  * emitted as a new, sorted, immutable `SandboxFS`; names follow `checkName` plus
  * case-insensitive uniqueness, with plain-language inline errors.
  */
-import { useId, useState, type FormEvent } from 'react';
+import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import type { FsNode, SandboxFS } from '../../domains/fileExplorer/fsTypes.ts';
 import { getNode } from '../../domains/fileExplorer/fsTypes.ts';
 import type { Diff } from '../lib/diff.ts';
@@ -36,9 +36,18 @@ const NO_DIFF: Diff = new Map();
 export function ScenarioEditor({ fs, onChange }: ScenarioEditorProps) {
   const explorer = useExplorerState(fs, null, null);
   const [itemPath, setItemPath] = useState<string | null>(null);
+  const [focusPath, setFocusPath] = useState<string | null>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
   const item = itemPath !== null ? canonicalPath(fs, itemPath) : null;
   const target = item ?? explorer.folder;
   const rows = folderRows(fs, explorer.folder, NO_DIFF, null);
+  useEffect(() => {
+    if (focusPath === null) return;
+    const key = pathKey(focusPath);
+    [...(editorRef.current?.querySelectorAll<HTMLElement>('[role="treeitem"]') ?? [])]
+      .find((el) => el.dataset['rowkey'] === key)
+      ?.focus();
+  }, [focusPath, fs]);
 
   const apply: Apply = (r, select) => {
     if (!r.ok) return r.error;
@@ -54,7 +63,7 @@ export function ScenarioEditor({ fs, onChange }: ScenarioEditorProps) {
   };
 
   return (
-    <div className={styles.editor}>
+    <div ref={editorRef} className={styles.editor}>
       <p className={styles.hint}>
         Editing the starting files. Choose a folder on the left, then pick an item to change it.
       </p>
@@ -73,7 +82,7 @@ export function ScenarioEditor({ fs, onChange }: ScenarioEditorProps) {
         onActivate={(row) => {
           if (row.path !== null) setItemPath(row.path);
         }}
-        activateHint="Press Enter to edit this item."
+        activateHint="Press Enter or Space to edit this item. On a folder, ArrowRight opens it; ArrowLeft or Backspace goes to its parent."
       />
       <AddForm
         key={`add:${pathKey(explorer.folder)}`}
@@ -81,7 +90,13 @@ export function ScenarioEditor({ fs, onChange }: ScenarioEditorProps) {
         folder={explorer.folder}
         onAdd={(node) => apply(addNode(fs, explorer.folder, node), 'item')}
       />
-      <ItemForm key={`item:${pathKey(target)}`} fs={fs} path={target} apply={apply} />
+      <ItemForm
+        key={`item:${pathKey(target)}`}
+        fs={fs}
+        path={target}
+        apply={apply}
+        onDeleteFocus={(path) => setFocusPath(parentPath(path))}
+      />
     </div>
   );
 }
@@ -159,9 +174,15 @@ function AddForm(props: { fs: SandboxFS; folder: string; onAdd: (node: FsNode) =
   );
 }
 
-function ItemForm(props: { fs: SandboxFS; path: string; apply: Apply }) {
+function ItemForm(props: {
+  fs: SandboxFS;
+  path: string;
+  apply: Apply;
+  onDeleteFocus?: (path: string) => void;
+}) {
   const { fs, path, apply } = props;
   const id = useId();
+  const nameRef = useRef<HTMLInputElement>(null);
   const node = getNode(fs, path);
   const [name, setName] = useState(node?.name ?? '');
   const [nameError, setNameError] = useState<string | null>(null);
@@ -172,6 +193,9 @@ function ItemForm(props: { fs: SandboxFS; path: string; apply: Apply }) {
     node?.type === 'file' && node.content === undefined ? String(node.binarySize ?? 0) : '',
   );
   const [sizeError, setSizeError] = useState<string | null>(null);
+  useEffect(() => {
+    nameRef.current?.focus();
+  }, [path]);
   if (!node) return null;
 
   const isRoot = path === '';
@@ -198,6 +222,7 @@ function ItemForm(props: { fs: SandboxFS; path: string; apply: Apply }) {
           <label htmlFor={`${id}-name`}>Name</label>
           <input
             id={`${id}-name`}
+            ref={nameRef}
             className={styles.input}
             value={name}
             aria-invalid={shownName !== null}
@@ -292,7 +317,10 @@ function ItemForm(props: { fs: SandboxFS; path: string; apply: Apply }) {
           <button
             type="button"
             className={cx(styles.button, styles.danger)}
-            onClick={() => apply(deleteNode(fs, path), 'none')}
+            onClick={() => {
+              props.onDeleteFocus?.(path);
+              apply(deleteNode(fs, path), 'none');
+            }}
           >
             {node.type === 'folder'
               ? `Delete ${baseName(path)} and everything inside`
