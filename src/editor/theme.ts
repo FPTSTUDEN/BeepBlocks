@@ -62,7 +62,7 @@ export function buildBlocklyTheme(vars: ThemeValues): Blockly.Theme {
   for (const [name, colour] of Object.entries(BLOCK_COLOURS)) {
     blockStyles[name] = {
       colourPrimary: colour,
-      colourSecondary: Blockly.utils.colour.blend('#ffffff', colour, 0.35) ?? colour,
+      colourSecondary: Blockly.utils.colour.blend('#000000', colour, 0.2) ?? colour,
       colourTertiary: Blockly.utils.colour.blend('#000000', colour, 0.25) ?? colour,
       hat: name === STYLE.program || name === STYLE.functions ? 'cap' : '',
     };
@@ -81,7 +81,7 @@ export function buildBlocklyTheme(vars: ThemeValues): Blockly.Theme {
     insertionMarkerColour: vars['--bp-accent'],
     insertionMarkerOpacity: 0.4,
     markerColour: vars['--bp-highlight'],
-    cursorColour: vars['--bp-highlight'],
+    cursorColour: vars['--bp-accent'],
     selectedGlowColour: vars['--bp-accent'],
     selectedGlowOpacity: 0.6,
   });
@@ -113,9 +113,15 @@ const EDITOR_CSS = `
 .bp-editor-hint { color: var(--bp-muted, #6b7280); font-size: 0.85em; margin-left: auto; }
 .bp-editor-workspace { flex: 1 1 auto; min-height: 320px; position: relative; }
 .bp-running > .blocklyPath { stroke: var(--bp-highlight, #f59e0b) !important;
-  stroke-width: 5px !important; }
+  stroke-width: 5px !important; stroke-dasharray: none !important; }
 .bp-marked > .blocklyPath { stroke: var(--bp-accent, #2563eb) !important;
   stroke-width: 3px !important; stroke-dasharray: 6 3; }
+.blocklyActiveFocus:is(.blocklyPath, .blocklyHighlightedConnectionPath) {
+  stroke-dasharray: 2 2 !important; stroke-width: 3px !important;
+}
+.bp-running > .blocklyPath.blocklyActiveFocus {
+  stroke-dasharray: none !important; stroke-width: 5px !important;
+}
 .blocklyText, .blocklyFlyoutLabelText { font-family: var(--bp-font, system-ui, sans-serif); }
 `;
 

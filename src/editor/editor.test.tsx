@@ -131,6 +131,36 @@ describe('<BlockEditor>', () => {
     expect(cls('p').contains('bp-marked')).toBe(false);
   });
 
+  test('shows marked blocks, scrolls them into view, and preserves the problem status', async () => {
+    const { onChange, getWs, rerender } = setup();
+    await waitFor(() => expect(onChange).toHaveBeenCalled());
+    const ws = getWs();
+    const scroll = vi.spyOn(ws, 'scrollBoundsIntoView');
+    rerender({ markedIds: ['p'] });
+    await waitFor(() => expect(scroll).toHaveBeenCalled());
+    expect(screen.getByRole('status').textContent).toContain('Showing the block.');
+    expect(screen.getByRole('status').textContent).toContain('problem');
+    scroll.mockClear();
+    rerender({ highlightIds: ['a1'] });
+    await waitFor(() => expect(scroll).toHaveBeenCalled());
+  });
+
+  test('does not scroll a highlighted block that is already visible', async () => {
+    const { onChange, getWs, rerender } = setup();
+    await waitFor(() => expect(onChange).toHaveBeenCalled());
+    const ws = getWs();
+    const scroll = vi.spyOn(ws, 'scrollBoundsIntoView');
+    vi.spyOn(ws.getMetricsManager(), 'getViewMetrics').mockReturnValue({
+      left: -100,
+      top: -100,
+      width: 1000,
+      height: 1000,
+    });
+    rerender({ highlightIds: ['a1'] });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(scroll).not.toHaveBeenCalled();
+  });
+
   test('readOnly makes the workspace read-only', async () => {
     const { onChange, getWs, rerender } = setup({ readOnly: true });
     await waitFor(() => expect(onChange).toHaveBeenCalled());
@@ -182,11 +212,42 @@ describe('<BlockEditor>', () => {
     expect(shortcuts.length).toBeGreaterThan(10);
     const host = screen.getByTestId('bp-editor-workspace');
     expect(host.querySelector('.injectionDiv')).not.toBeNull();
+    expect(document.querySelectorAll('#shortcuts')).toHaveLength(1);
+    expect(screen.getByText(/Enter opens the selected block menu/)).toBeTruthy();
     const ws = getWs();
     view.unmount();
     expect(host.querySelector('.injectionDiv')).toBeNull();
     expect(ws.getTopBlocks(false).length).toBe(0);
     warn.mockRestore();
+  });
+
+  test('does not let Blockly shortcuts consume keys from an outside text input', async () => {
+    const { onChange, getWs } = setup();
+    await waitFor(() => expect(onChange).toHaveBeenCalled());
+    const input = document.createElement('input');
+    document.body.appendChild(input);
+    input.focus();
+    fireEvent.keyDown(input, { key: 'Delete', code: 'Delete' });
+    expect(getWs().getBlockById('a1')).not.toBeNull();
+    input.remove();
+  });
+
+  test('does not let Blockly shortcuts consume keys from an outside button', async () => {
+    const { onChange, getWs } = setup();
+    await waitFor(() => expect(onChange).toHaveBeenCalled());
+    const button = document.createElement('button');
+    document.body.appendChild(button);
+    fireEvent.keyDown(button, { key: 'Delete', code: 'Delete' });
+    expect(getWs().getBlockById('a1')).not.toBeNull();
+    button.remove();
+  });
+
+  test('does not let Blockly shortcuts consume keys from an editor toolbar button', async () => {
+    const { onChange, getWs } = setup();
+    await waitFor(() => expect(onChange).toHaveBeenCalled());
+    const button = screen.getByRole('button', { name: 'Undo' });
+    fireEvent.keyDown(button, { key: 'Delete', code: 'Delete' });
+    expect(getWs().getBlockById('a1')).not.toBeNull();
   });
 
   // Rendering ~330 blocks is slow under jsdom (Blockly's own serialization takes as long).
