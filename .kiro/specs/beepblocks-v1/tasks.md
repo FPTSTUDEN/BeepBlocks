@@ -267,4 +267,20 @@ Builds against `__mocks__/timelines.ts`.
   - Done as an automated check, `pnpm e2e` (Playwright 1.64.1): 8/8 starter runs pass in Chromium 156 and Firefox 157 (one run per engine; Edge shares Chromium's engine and is exercised by `pnpm smoke`). Passed 3 times in a row after fixing a race in the check itself; a tampered golden was confirmed to fail it.
   - Not covered: branded Google Chrome and Mozilla Firefox (not installed; Playwright's builds of the same engines were used), Safari/WebKit, and screen-reader output (NVDA/VoiceOver). These are left for a manual pass by the user.
 
-- [ ] 3.4 Final review against requirements.md: tick every acceptance criterion or record why it's deferred.
+- [x] 3.4 Final review against requirements.md: tick every acceptance criterion or record why it's deferred.
+  - Acceptance review complete:
+    - Req 1 (IR): all seven criteria verified by the IR contracts, validator, serialization, completeness tests, and invalid-node tests.
+    - Req 2 (composites): all four composites, deterministic desugaring, simulator/exporter parity, and editable fields verified by composite, conformance, and Expand tests.
+    - Req 3 (editor): Blockly mapping, palette order, live validation, plain-language errors, and undo/redo verified by editor tests and the keyboard smoke walkthrough.
+    - Req 4 (Expand): in-place editable expansion, preserved parameters, behavioral parity, and one-step undo verified by Expand tests and E2E runs.
+    - Req 5 (sandbox): immutable in-memory FS, no simulation disk access, four scenarios, scenario editing, and reset behavior verified by FS, scenario, app, and smoke tests.
+    - Req 6 (simulator): snapshots, errors, step limits, determinism, and Worker execution verified by simulator/Worker tests and conformance.
+    - Req 7 (playground): explorer, highlights, diff labels, variable tags, counters, variables panel, and click-to-trace verified by playground tests and smoke/E2E checks.
+    - Req 8 (controls): playback controls, scrubber, speed, and stale timelines verified by app/playground tests and E2E checks.
+    - Req 9 (Python export): standard-library script, dry-run/`--apply`, readable headers/comments, download/copy, and invalid-IR rejection verified by exporter tests, Python tests, conformance, and E2E.
+    - Req 10 (conformance): strict suite passes 29/29 fixtures with 44/44 ops, 13/13 error codes, and 22/22 composite variants covered.
+    - Req 11 (themes): domain interface, file-explorer-only v1, light/dark themes, accent contrast, and persistence verified by app/settings tests and smoke/axe checks.
+    - Req 12 (persistence): autosave, project import/export, and validation-before-replacement verified by project/store tests.
+    - Req 13 (non-functional): client-only React/TypeScript build, module boundaries, contrast, keyboard navigation, and non-color cues verified by build/lint/typecheck, smoke/axe, and tests.
+  - Release gates rerun successfully: `pnpm test` (3,837), `pnpm test:py` (65; 2 skipped by design), `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm conformance -- --strict`, `pnpm smoke`, and `pnpm e2e` (8/8).
+  - Deferred/manual verification: branded Google Chrome and Mozilla Firefox were unavailable; Playwright Chromium 156 and Firefox 157 plus installed Edge were used instead. Safari/WebKit and screen-reader output (NVDA/VoiceOver) remain outside the available automated environment. These do not block the v1 acceptance review but should be checked before a broad accessibility/browser release.
