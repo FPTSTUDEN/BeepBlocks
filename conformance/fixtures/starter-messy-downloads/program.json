@@ -1,0 +1,25 @@
+{
+  "format": "beepblocks-ir",
+  "version": 1,
+  "functions": [],
+  "body": [
+    {
+      "id": "dl-sort",
+      "kind": "composite",
+      "name": "sortByType",
+      "fields": {
+        "grouping": "category"
+      },
+      "inputs": {
+        "folder": {
+          "id": "dl-folder",
+          "kind": "op",
+          "op": "fs.root",
+          "args": []
+        }
+      },
+      "bodies": {},
+      "binds": {}
+    }
+  ]
+}

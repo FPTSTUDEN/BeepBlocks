@@ -9,7 +9,7 @@
  * Environment: BP_PYTHON overrides the Python executable (default: python on Windows, python3 elsewhere).
  */
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { parseProgram, type Program } from '../src/ir/index.ts';
 import { DRY_RUN_PREFIX, type OutputLine, type Timeline } from '../src/ir/timeline.ts';
@@ -200,6 +200,8 @@ function runFixture(name: string, records: FixtureRecord[]): string[] {
     }
     if (expected.output) problems.push(...diffLines('golden output', expected.output, simOut.output));
   }
+  // Keep the work folder only for debugging a failure: starter trees hold ~100 MB of binary files.
+  if (problems.length === 0) rmSync(work, { recursive: true, force: true });
   return problems;
 }
 

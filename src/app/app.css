@@ -270,6 +270,39 @@ body {
   font-family: var(--bp-mono);
 }
 
+.dialog p {
+  margin: 0;
+}
+
+.new-heading {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.starters {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.5rem;
+  overflow: auto;
+}
+
+.starter {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.75rem;
+  background: var(--bp-surface);
+  border: 1px solid var(--bp-border);
+  border-radius: 6px;
+}
+
+.starter p {
+  margin-top: 0.2rem;
+}
+
 /* --------------------------------------------------------------- settings */
 
 .settings {

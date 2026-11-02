@@ -1,0 +1,92 @@
+{
+  "format": "beepblocks-ir",
+  "version": 1,
+  "functions": [],
+  "body": [
+    {
+      "id": "nl-search",
+      "kind": "composite",
+      "name": "findFirst",
+      "fields": {
+        "sortBy": "name"
+      },
+      "inputs": {
+        "folder": {
+          "id": "nl-folder",
+          "kind": "op",
+          "op": "fs.root",
+          "args": []
+        },
+        "condition": {
+          "id": "nl-cond",
+          "kind": "op",
+          "op": "text.contains",
+          "args": [
+            {
+              "id": "nl-cond-read",
+              "kind": "op",
+              "op": "fs.readText",
+              "args": [
+                {
+                  "id": "nl-cond-log",
+                  "kind": "var",
+                  "name": "log"
+                }
+              ]
+            },
+            {
+              "id": "nl-cond-text",
+              "kind": "lit",
+              "value": "status: ERROR"
+            }
+          ]
+        }
+      },
+      "bodies": {
+        "found": [
+          {
+            "id": "nl-found",
+            "kind": "print",
+            "value": {
+              "id": "nl-found-text",
+              "kind": "binary",
+              "op": "+",
+              "left": {
+                "id": "nl-found-label",
+                "kind": "lit",
+                "value": "First failing night: "
+              },
+              "right": {
+                "id": "nl-found-name",
+                "kind": "op",
+                "op": "fs.name",
+                "args": [
+                  {
+                    "id": "nl-found-var",
+                    "kind": "var",
+                    "name": "failed"
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "notFound": [
+          {
+            "id": "nl-none",
+            "kind": "print",
+            "value": {
+              "id": "nl-none-text",
+              "kind": "lit",
+              "value": "Every night passed."
+            }
+          }
+        ]
+      },
+      "binds": {
+        "candidate": "log",
+        "match": "failed"
+      }
+    }
+  ]
+}

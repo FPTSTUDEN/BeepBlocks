@@ -736,6 +736,8 @@ conformance/fixtures/<name>/
 
 Coverage requirement: every op, every error code except `STEP_LIMIT`/`RECURSION_LIMIT`, and every composite × field variant appears in at least one fixture. `conformance/coverage.ts` checks this and fails if something is missing.
 
+Starter fixtures: `starter-<scenario id>` runs each starter project (§13.1) on its full built-in scenario. `pnpm gen:starters` writes their `program.json` and `tree.json` from `src/app/starters.ts`, and `conformance/starters.test.ts` fails if they drift. Their `expected.json` (output and error) is derived by hand and never generated. The runner deletes a fixture's temp folder once it passes, since starter trees hold ~100 MB of binary files.
+
 ## 12. Known Divergences (documented, not tested)
 
 | Area | Simulator | Python | Mitigation |
@@ -767,6 +769,20 @@ interface ProjectFile {
 - Import/export uses `.beep.json` files.
 - An import is fully validated (format, version, IR structure, scenario) before it replaces the current project. On failure, the errors are shown and nothing changes (Req 12.3).
 - A saved program may be work in progress: the editor emits `null` for empty sockets. Loading therefore checks the program with `validateStructure` (the structural phase of the validator, with empty sockets allowed) rather than the full validator; Run and Export still require a fully valid program. Scenario trees are checked with the same name rules as the scenario editor (unique case-insensitive names, exactly one of `content`/`binarySize`, integer mtimes), and folder children are re-sorted into §5.3 order on load.
+
+### 13.1 Starter projects
+
+`src/app/starters.ts` defines one starter per built-in scenario, each built around the scenario's `suggestedComposite`:
+
+| Scenario | Starter | Program |
+|---|---|---|
+| `messy-downloads` | Sort my downloads | `sortByType` (category) on the root |
+| `camera-photos` | Rename camera photos | `renameByPattern` `IMG_*` → `{date}_{n:3}{ext}` |
+| `project-tree` | Clear out temporary files | if `Trash` is missing, make it; then `findAndAct` (recursive, extension `tmp`, move to `Trash`) |
+| `nightly-logs` | Find the first failing night | `findFirst` by name where the log contains `status: ERROR`; prints the match (6 log reads) |
+
+- First run (no autosave) opens the first starter instead of an empty program.
+- "New…" opens a dialog listing every starter ("Open", one click) plus "Blank project" on the current scenario. The dialog itself is the confirmation that the current project is replaced.
 
 ## 14. Error Handling Summary
 

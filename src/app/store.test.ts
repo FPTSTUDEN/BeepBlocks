@@ -9,6 +9,7 @@ import { simulateSync } from '../sim/index.ts';
 import { activeNodeIds, createAppStore, isStale, type SimulateFn } from './store.ts';
 import { PROJECT_KEY, newProject } from './project.ts';
 import { SETTINGS_KEY } from './settings.ts';
+import { STARTERS } from './starters.ts';
 
 function memoryStorage(): Storage {
   const m = new Map<string, string>();
@@ -34,6 +35,12 @@ function setup(simulate: SimulateFn = realSimulate, storage: Storage = memorySto
 const hello: Program = b.program([b.print(b.lit('hello'), 'p1')]);
 
 describe('app store', () => {
+  it('opens the first starter project when nothing is saved yet', () => {
+    const { s } = setup();
+    expect(s().project.title).toBe(STARTERS[0]!.title);
+    expect(s().project.program).toEqual(STARTERS[0]!.program);
+    expect(s().project.scenario.id).toBe(STARTERS[0]!.scenarioId);
+  });
   it('runs a valid program and records the timeline', async () => {
     const { s } = setup();
     s().editorChanged(hello, {}, []);

@@ -8,6 +8,7 @@ import { simulateSync } from '../sim/index.ts';
 import { App } from './App.tsx';
 import { createAppStore, type AppStore } from './store.ts';
 import { newProject, PROJECT_KEY } from './project.ts';
+import { STARTERS } from './starters.ts';
 
 afterEach(cleanup);
 
@@ -95,5 +96,28 @@ describe('App shell', () => {
     expect((screen.getByRole('button', { name: 'Export Python' }) as HTMLButtonElement).disabled).toBe(true);
     expect(screen.getByText(/problem.* to fix before running/)).toBeTruthy();
     expect(screen.getByText('Fix the problems marked in the editor to run.')).toBeTruthy();
+  });
+
+  it('opens a starter project from the New dialog in one click', async () => {
+    const store = renderApp();
+    fireEvent.click(screen.getByRole('button', { name: 'New…' }));
+    const dialog = await screen.findByRole('dialog', { name: 'New project' });
+    const open = within(dialog).getAllByRole('button', { name: /^Open example/ });
+    expect(open).toHaveLength(STARTERS.length);
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Open example “Find the first failing night”' }));
+    expect(screen.queryByRole('dialog')).toBeNull();
+    const { project } = store.getState();
+    expect(project.title).toBe('Find the first failing night');
+    expect(project.scenario.id).toBe('nightly-logs');
+    expect(project.program.body[0]).toMatchObject({ kind: 'composite', name: 'findFirst' });
+  });
+
+  it('starts a blank project on the current scenario', async () => {
+    const store = renderApp();
+    fireEvent.click(screen.getByRole('button', { name: 'New…' }));
+    const dialog = await screen.findByRole('dialog', { name: 'New project' });
+    fireEvent.click(within(dialog).getByRole('button', { name: /^Blank project/ }));
+    expect(store.getState().project.program.body).toEqual([]);
+    expect(store.getState().project.title).toBe('Untitled project');
   });
 });

@@ -1,6 +1,7 @@
 /**
  * Browser smoke test: serves dist/ with `vite preview`, opens it in headless Edge/Chrome over
- * the DevTools protocol, loads a seeded project, presses Run, and checks the result.
+ * the DevTools protocol, checks the first-run starter, opens every starter from the New dialog,
+ * runs the binary-search starter, then loads a seeded project, presses Run, and checks the result.
  *
  *   pnpm build && node scripts/browser-smoke.mjs
  *
@@ -142,6 +143,54 @@ try {
   await send('Page.navigate', { url });
   await waitFor(`!!document.querySelector('.blocklySvg')`, 'the Blockly workspace');
   await waitFor(`!!document.querySelector('[role=region][aria-label^="Playground"]')`, 'the playground');
+
+  // 1b. First run opens a starter; every starter opens from the New dialog and renders its blocks.
+  await waitFor(`document.querySelector('.title-input')?.value === 'Sort my downloads'`, 'the first-run starter');
+  const starters = [
+    ['Sort my downloads', 'Messy Downloads folder'],
+    ['Rename camera photos', 'Camera photos'],
+    ['Clear out temporary files', 'Project folder'],
+    ['Find the first failing night', 'Nightly build logs'],
+  ];
+  for (const [title, scenario] of starters) {
+    await evaluate(`[...document.querySelectorAll('button')].find(b => b.textContent === 'New…').click()`);
+    await waitFor(`!!document.querySelector('dialog[open]')`, 'the New dialog');
+    await evaluate(
+      `document.querySelector('dialog[open] button[aria-label=' + JSON.stringify(${JSON.stringify(`Open example “${title}”`)}) + ']').click()`,
+    );
+    await waitFor(`document.querySelector('.title-input')?.value === ${JSON.stringify(title)}`, `starter "${title}"`);
+    await waitFor(
+      `document.querySelector('#bp-scenario').selectedOptions[0]?.textContent === ${JSON.stringify(scenario)}`,
+      `the scenario of "${title}"`,
+    );
+    await waitFor(`document.querySelectorAll('.blocklyDraggable').length >= 2`, `the blocks of "${title}"`);
+  }
+  // The last starter (binary search) runs and finds the first failing log.
+  await waitFor(
+    `(() => { const b = [...document.querySelectorAll('button')].find(b => b.textContent.trim().endsWith('Run')); return b && !b.disabled; })()`,
+    'Run to be enabled on the bisect starter',
+  );
+  await evaluate(`[...document.querySelectorAll('button')].find(b => b.textContent.trim().endsWith('Run')).click()`);
+  await waitFor(`/Step \\d+ of \\d+|Done/.test(document.body.innerText)`, 'the bisect timeline');
+  await evaluate(`(async () => {
+    const fwd = [...document.querySelectorAll('button')].find(b => b.textContent.includes('Step forward'));
+    for (let i = 0; i < 2000 && !fwd.disabled; i++) { fwd.click(); await new Promise(r => setTimeout(r, 0)); }
+  })()`);
+  await waitFor(
+    `document.body.innerText.includes('First failing night: nightly-2026-02-10.log')`,
+    'the bisect result',
+  );
+  // Back to the messy-downloads starter for the seeded-project checks below.
+  await evaluate(`[...document.querySelectorAll('button')].find(b => b.textContent === 'New…').click()`);
+  await waitFor(`!!document.querySelector('dialog[open]')`, 'the New dialog');
+  await evaluate(`document.querySelector('dialog[open] button[aria-label="Open example “Sort my downloads”"]').click()`);
+  await waitFor(`document.querySelector('.title-input')?.value === 'Sort my downloads'`, 'the downloads starter');
+  // Let the autosave settle, or the reload's beforeunload flush would overwrite the seed below.
+  await waitFor(
+    `JSON.parse(localStorage.getItem('beepblocks.project') || '{}').title === 'Sort my downloads'`,
+    'the starter autosave',
+    5000,
+  );
 
   // 2. Seed a project (using the built-in scenario the app saved) and reload.
   await waitFor(`!!localStorage.getItem('beepblocks.project')`, 'the first autosave', 5000).catch(async () => {

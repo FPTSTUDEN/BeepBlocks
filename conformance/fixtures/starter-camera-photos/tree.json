@@ -1,0 +1,184 @@
+{
+  "root": {
+    "type": "folder",
+    "name": "",
+    "modified": 1754769600,
+    "children": [
+      {
+        "type": "folder",
+        "name": "Edited",
+        "modified": 1754769600,
+        "children": [
+          {
+            "type": "file",
+            "name": "IMG_0003_edit.jpg",
+            "modified": 1754769600,
+            "binarySize": 2100000
+          }
+        ]
+      },
+      {
+        "type": "file",
+        "name": "IMG_0001.JPG",
+        "modified": 1754042700,
+        "binarySize": 1837123
+      },
+      {
+        "type": "file",
+        "name": "IMG_0002.JPG",
+        "modified": 1754046600,
+        "binarySize": 1874246
+      },
+      {
+        "type": "file",
+        "name": "IMG_0003.jpg",
+        "modified": 1754050500,
+        "binarySize": 1911369
+      },
+      {
+        "type": "file",
+        "name": "IMG_0004.JPG",
+        "modified": 1754054400,
+        "binarySize": 1948492
+      },
+      {
+        "type": "file",
+        "name": "img_0005.JPG",
+        "modified": 1754130300,
+        "binarySize": 1985615
+      },
+      {
+        "type": "file",
+        "name": "IMG_0006.jpg",
+        "modified": 1754134200,
+        "binarySize": 2022738
+      },
+      {
+        "type": "file",
+        "name": "IMG_0007.JPG",
+        "modified": 1754138100,
+        "binarySize": 2059861
+      },
+      {
+        "type": "file",
+        "name": "IMG_0008.JPG",
+        "modified": 1754142000,
+        "binarySize": 2096984
+      },
+      {
+        "type": "file",
+        "name": "IMG_0009.jpg",
+        "modified": 1754217900,
+        "binarySize": 2134107
+      },
+      {
+        "type": "file",
+        "name": "IMG_0010.JPG",
+        "modified": 1754221800,
+        "binarySize": 2171230
+      },
+      {
+        "type": "file",
+        "name": "IMG_0011.JPG",
+        "modified": 1754225700,
+        "binarySize": 2208353
+      },
+      {
+        "type": "file",
+        "name": "IMG_0012.jpg",
+        "modified": 1754226000,
+        "binarySize": 2245476
+      },
+      {
+        "type": "file",
+        "name": "IMG_0013.JPG",
+        "modified": 1754301900,
+        "binarySize": 2282599
+      },
+      {
+        "type": "file",
+        "name": "IMG_0014.JPG",
+        "modified": 1754305800,
+        "binarySize": 2319722
+      },
+      {
+        "type": "file",
+        "name": "IMG_0015.jpg",
+        "modified": 1754309700,
+        "binarySize": 2356845
+      },
+      {
+        "type": "file",
+        "name": "IMG_0016.JPG",
+        "modified": 1754313600,
+        "binarySize": 2393968
+      },
+      {
+        "type": "file",
+        "name": "img_0017.JPG",
+        "modified": 1754389500,
+        "binarySize": 2431091
+      },
+      {
+        "type": "file",
+        "name": "IMG_0018.jpg",
+        "modified": 1754393400,
+        "binarySize": 2468214
+      },
+      {
+        "type": "file",
+        "name": "IMG_0019.JPG",
+        "modified": 1754397300,
+        "binarySize": 2505337
+      },
+      {
+        "type": "file",
+        "name": "IMG_0020.JPG",
+        "modified": 1754401200,
+        "binarySize": 2542460
+      },
+      {
+        "type": "file",
+        "name": "IMG_0021.jpg",
+        "modified": 1754477100,
+        "binarySize": 2579583
+      },
+      {
+        "type": "file",
+        "name": "IMG_0022.JPG",
+        "modified": 1754481000,
+        "binarySize": 2616706
+      },
+      {
+        "type": "file",
+        "name": "IMG_0023.JPG",
+        "modified": 1754484900,
+        "binarySize": 2653829
+      },
+      {
+        "type": "file",
+        "name": "IMG_0024.jpg",
+        "modified": 1754485200,
+        "binarySize": 2690952
+      },
+      {
+        "type": "file",
+        "name": "MVI_0025.MP4",
+        "modified": 1754578800,
+        "binarySize": 98566144
+      },
+      {
+        "type": "file",
+        "name": "notes.txt",
+        "modified": 1754589600,
+        "content": "Trip to the coast, August 2025.\nCamera: borrowed from Sam.\n"
+      },
+      {
+        "type": "file",
+        "name": "Thumbs.db",
+        "modified": 1754582400,
+        "binarySize": 24576
+      }
+    ]
+  }
+}

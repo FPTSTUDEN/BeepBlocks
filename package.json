@@ -18,7 +18,8 @@
     "test:py": "python -m unittest discover -s src/export/python -p \"test_*.py\"",
     "conformance": "tsx conformance/run.ts",
     "smoke": "vite build && node scripts/browser-smoke.mjs",
-    "gen:runtime": "tsx src/export/python/gen-runtime.ts"
+    "gen:runtime": "tsx src/export/python/gen-runtime.ts",
+    "gen:starters": "tsx conformance/gen-starters.ts"
   },
   "dependencies": {
     "@blockly/keyboard-navigation": "3.0.5",

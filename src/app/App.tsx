@@ -21,10 +21,10 @@ import { deepEqual } from './deepEqual.ts';
 import { Dialog } from './Dialog.tsx';
 import { ExportDialog } from './ExportDialog.tsx';
 import { IssueList } from './IssueList.tsx';
+import { NewProjectDialog } from './NewProjectDialog.tsx';
 import { downloadText, readFileText } from './download.ts';
 import {
   PROJECT_EXTENSION,
-  newProject,
   parseProject,
   projectFileName,
   serializeProject,
@@ -65,6 +65,7 @@ function Shell({ store }: { store: AppStore }) {
   const actions = store.getState();
 
   const [exportOpen, setExportOpen] = useState(false);
+  const [newOpen, setNewOpen] = useState(false);
   const [importErrors, setImportErrors] = useState<string[] | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const runHintId = useId();
@@ -121,11 +122,7 @@ function Shell({ store }: { store: AppStore }) {
     }
   };
 
-  const onNew = () => {
-    if (window.confirm('Start a new project? This replaces the current project.')) {
-      actions.replaceProject(newProject(builtin ?? SCENARIOS[0]));
-    }
-  };
+  const onNew = () => setNewOpen(true);
 
   return (
     <div className="app">
@@ -179,8 +176,8 @@ function Shell({ store }: { store: AppStore }) {
         </div>
         <span className="spacer" />
         <div className="group">
-          <button type="button" className="btn" onClick={onNew}>
-            New
+          <button type="button" className="btn" aria-haspopup="dialog" onClick={onNew}>
+            New…
           </button>
           <button type="button" className="btn" onClick={() => fileInput.current?.click()}>
             Open…
@@ -271,6 +268,16 @@ function Shell({ store }: { store: AppStore }) {
         </div>
       </main>
 
+      {newOpen && (
+        <NewProjectDialog
+          blankScenario={builtin ?? SCENARIOS[0]!}
+          onOpen={(p) => {
+            setNewOpen(false);
+            actions.replaceProject(p);
+          }}
+          onClose={() => setNewOpen(false)}
+        />
+      )}
       {exportOpen && (
         <ExportDialog
           program={project.program}

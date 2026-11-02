@@ -1,0 +1,26 @@
+{
+  "format": "beepblocks-ir",
+  "version": 1,
+  "functions": [],
+  "body": [
+    {
+      "id": "cam-rename",
+      "kind": "composite",
+      "name": "renameByPattern",
+      "fields": {
+        "match": "IMG_*",
+        "template": "{date}_{n:3}{ext}"
+      },
+      "inputs": {
+        "folder": {
+          "id": "cam-folder",
+          "kind": "op",
+          "op": "fs.root",
+          "args": []
+        }
+      },
+      "bodies": {},
+      "binds": {}
+    }
+  ]
+}

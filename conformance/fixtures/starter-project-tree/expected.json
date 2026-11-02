@@ -1,0 +1,11 @@
+{
+  "output": [
+    "MKDIR  Trash/",
+    "MOVE   build/step1.tmp -> Trash/",
+    "MOVE   build/step2.tmp -> Trash/",
+    "MOVE   cache.tmp -> Trash/",
+    "MOVE   docs/draft.tmp -> Trash/",
+    "MOVE   src/edit.tmp -> Trash/"
+  ],
+  "error": null
+}

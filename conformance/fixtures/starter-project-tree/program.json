@@ -1,0 +1,111 @@
+{
+  "format": "beepblocks-ir",
+  "version": 1,
+  "functions": [],
+  "body": [
+    {
+      "id": "pt-if",
+      "kind": "if",
+      "cond": {
+        "id": "pt-missing",
+        "kind": "unary",
+        "op": "not",
+        "arg": {
+          "id": "pt-exists",
+          "kind": "op",
+          "op": "fs.exists",
+          "args": [
+            {
+              "id": "pt-exists-path",
+              "kind": "op",
+              "op": "fs.join",
+              "args": [
+                {
+                  "id": "pt-exists-path-root",
+                  "kind": "op",
+                  "op": "fs.root",
+                  "args": []
+                },
+                {
+                  "id": "pt-exists-path-name",
+                  "kind": "lit",
+                  "value": "Trash"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "then": [
+        {
+          "id": "pt-mkdir",
+          "kind": "do",
+          "expr": {
+            "id": "pt-mkdir-op",
+            "kind": "op",
+            "op": "fs.makeFolder",
+            "args": [
+              {
+                "id": "pt-mkdir-path",
+                "kind": "op",
+                "op": "fs.join",
+                "args": [
+                  {
+                    "id": "pt-mkdir-path-root",
+                    "kind": "op",
+                    "op": "fs.root",
+                    "args": []
+                  },
+                  {
+                    "id": "pt-mkdir-path-name",
+                    "kind": "lit",
+                    "value": "Trash"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "else": []
+    },
+    {
+      "id": "pt-find",
+      "kind": "composite",
+      "name": "findAndAct",
+      "fields": {
+        "recursive": true,
+        "extension": "tmp",
+        "action": "move"
+      },
+      "inputs": {
+        "folder": {
+          "id": "pt-folder",
+          "kind": "op",
+          "op": "fs.root",
+          "args": []
+        },
+        "destination": {
+          "id": "pt-dest",
+          "kind": "op",
+          "op": "fs.join",
+          "args": [
+            {
+              "id": "pt-dest-root",
+              "kind": "op",
+              "op": "fs.root",
+              "args": []
+            },
+            {
+              "id": "pt-dest-name",
+              "kind": "lit",
+              "value": "Trash"
+            }
+          ]
+        }
+      },
+      "bodies": {},
+      "binds": {}
+    }
+  ]
+}

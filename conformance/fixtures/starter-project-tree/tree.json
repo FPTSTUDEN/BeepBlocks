@@ -1,0 +1,209 @@
+{
+  "root": {
+    "type": "folder",
+    "name": "",
+    "modified": 1768996800,
+    "children": [
+      {
+        "type": "file",
+        "name": ".gitignore",
+        "modified": 1767355200,
+        "content": "*.tmp\n*.log\nbuild/\n"
+      },
+      {
+        "type": "folder",
+        "name": "assets",
+        "modified": 1767960000,
+        "children": [
+          {
+            "type": "file",
+            "name": "intro-video.mp4",
+            "modified": 1767873600,
+            "binarySize": 50331648
+          },
+          {
+            "type": "file",
+            "name": "logo.png",
+            "modified": 1767441600,
+            "binarySize": 18342
+          },
+          {
+            "type": "file",
+            "name": "raw-recording.wav",
+            "modified": 1767960000,
+            "binarySize": 100663296
+          }
+        ]
+      },
+      {
+        "type": "folder",
+        "name": "build",
+        "modified": 1768737600,
+        "children": [
+          {
+            "type": "file",
+            "name": "build.log",
+            "modified": 1768737600,
+            "content": "compiling...\ndone in 4.2s\n"
+          },
+          {
+            "type": "file",
+            "name": "bundle.bin",
+            "modified": 1768737600,
+            "binarySize": 12582912
+          },
+          {
+            "type": "file",
+            "name": "step1.tmp",
+            "modified": 1768737600,
+            "content": "intermediate\n"
+          },
+          {
+            "type": "file",
+            "name": "step2.tmp",
+            "modified": 1768737600,
+            "content": "intermediate\n"
+          }
+        ]
+      },
+      {
+        "type": "file",
+        "name": "cache.tmp",
+        "modified": 1768910400,
+        "content": "temporary cache\n"
+      },
+      {
+        "type": "folder",
+        "name": "data",
+        "modified": 1768478400,
+        "children": [
+          {
+            "type": "file",
+            "name": "archive-2025.zip",
+            "modified": 1767268800,
+            "binarySize": 31457280
+          },
+          {
+            "type": "file",
+            "name": "readings.csv",
+            "modified": 1768478400,
+            "content": "time,temp\n00:00,4.5\n01:00,4.1\n"
+          }
+        ]
+      },
+      {
+        "type": "folder",
+        "name": "docs",
+        "modified": 1768824000,
+        "children": [
+          {
+            "type": "file",
+            "name": "diagram.png",
+            "modified": 1767700800,
+            "binarySize": 245760
+          },
+          {
+            "type": "file",
+            "name": "draft.tmp",
+            "modified": 1768824000,
+            "content": "half-written section\n"
+          },
+          {
+            "type": "file",
+            "name": "guide.md",
+            "modified": 1767614400,
+            "content": "# Guide\n\nRun main.py.\n"
+          }
+        ]
+      },
+      {
+        "type": "folder",
+        "name": "logs",
+        "modified": 1768910400,
+        "children": [
+          {
+            "type": "file",
+            "name": "app.log",
+            "modified": 1768910400,
+            "content": "2026-01-20 INFO started\n2026-01-20 INFO stopped\n"
+          },
+          {
+            "type": "file",
+            "name": "error.log",
+            "modified": 1768824000,
+            "content": "2026-01-19 ERROR sensor timeout\n"
+          },
+          {
+            "type": "folder",
+            "name": "old",
+            "modified": 1767182400,
+            "children": [
+              {
+                "type": "file",
+                "name": "2025-11.log",
+                "modified": 1764504000,
+                "content": "2025-11-30 INFO all good\n"
+              },
+              {
+                "type": "file",
+                "name": "2025-12.log",
+                "modified": 1767182400,
+                "content": "2025-12-31 INFO happy new year\n"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "file",
+        "name": "README.md",
+        "modified": 1767355200,
+        "content": "# Weather Station\n\nCollects readings and draws charts.\n"
+      },
+      {
+        "type": "folder",
+        "name": "src",
+        "modified": 1768392000,
+        "children": [
+          {
+            "type": "folder",
+            "name": "__pycache__",
+            "modified": 1768219200,
+            "children": [
+              {
+                "type": "file",
+                "name": "utils.cpython-313.pyc",
+                "modified": 1768219200,
+                "binarySize": 1204
+              }
+            ]
+          },
+          {
+            "type": "file",
+            "name": "chart.py",
+            "modified": 1768392000,
+            "content": "def draw(values):\n    pass\n"
+          },
+          {
+            "type": "file",
+            "name": "edit.tmp",
+            "modified": 1768996800,
+            "content": "unsaved changes\n"
+          },
+          {
+            "type": "file",
+            "name": "main.py",
+            "modified": 1768046400,
+            "content": "from utils import load\n\nprint(load('readings.csv'))\n"
+          },
+          {
+            "type": "file",
+            "name": "utils.py",
+            "modified": 1768219200,
+            "content": "def load(path):\n    return open(path).read()\n"
+          }
+        ]
+      }
+    ]
+  }
+}

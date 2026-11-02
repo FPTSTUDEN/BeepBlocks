@@ -13,11 +13,11 @@ import { deepEqual } from './deepEqual.ts';
 import {
   loadStoredProject,
   migrateLegacyStorage,
-  newProject,
   saveStoredProject,
   type Layout,
   type ProjectFile,
 } from './project.ts';
+import { STARTERS, starterProject } from './starters.ts';
 import { SETTINGS_KEY, loadSettings, saveSettings, type Settings } from './settings.ts';
 
 export type SimulateFn = (
@@ -101,7 +101,8 @@ export function createAppStore(deps: AppDeps): AppStore {
   let runId = 0;
   migrateLegacyStorage(deps.storage, SETTINGS_KEY);
   const store = createStore<AppState>()((set, get) => ({
-    project: loadStoredProject(deps.storage) ?? newProject(),
+    // First run (nothing saved yet): open a starter so there is something to run straight away.
+    project: loadStoredProject(deps.storage) ?? starterProject(STARTERS[0]!),
     issues: [],
     timeline: null,
     index: 0,
