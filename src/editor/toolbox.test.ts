@@ -5,7 +5,13 @@ import { COMPOSITE_NAMES } from '../ir/composites.ts';
 import { OP_NAMES } from '../ir/ops.ts';
 import { B, compositeBlockType, opBlockType, registerBlocks } from './blocks/index.ts';
 import { variableTypeKey } from './blocks/variables.ts';
-import { buildBlocklyTheme, readThemeVars, rebuildTheme, THEME_VARS } from './theme.ts';
+import {
+  BLOCK_COLOURS,
+  buildBlocklyTheme,
+  readThemeVars,
+  rebuildTheme,
+  THEME_VARS,
+} from './theme.ts';
 import {
   CATEGORY_NAMES,
   CREATE_VAR_TYPES,
@@ -89,6 +95,23 @@ describe('toolbox', () => {
 });
 
 describe('theme', () => {
+  const luminance = (hex: string): number => {
+    const channels = [1, 3, 5].map((i) => Number.parseInt(hex.slice(i, i + 2), 16) / 255);
+    const linear = channels.map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+    return 0.2126 * linear[0]! + 0.7152 * linear[1]! + 0.0722 * linear[2]!;
+  };
+  const contrastWithWhite = (hex: string) => 1.05 / (luminance(hex) + 0.05);
+
+  test('uses readable white text on primary and secondary block colours', () => {
+    for (const [style, colour] of Object.entries(BLOCK_COLOURS)) {
+      expect(contrastWithWhite(colour), `${style} primary ${colour}`).toBeGreaterThanOrEqual(4.5);
+      const secondary = Blockly.utils.colour.blend('#000000', colour, 0.2) ?? colour;
+      expect(contrastWithWhite(secondary), `${style} secondary ${secondary}`).toBeGreaterThanOrEqual(
+        4.5,
+      );
+    }
+  });
+
   test('derived from CSS custom properties with fallbacks, and rebuildable', () => {
     const div = document.createElement('div');
     document.body.appendChild(div);

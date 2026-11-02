@@ -100,6 +100,39 @@ function setClass(
   return next;
 }
 
+function scrollBlockIntoView(ws: Blockly.WorkspaceSvg, id: string, onlyIfOutside = false): void {
+  const block = ws.getBlockById(id);
+  if (!block) return;
+  const bounds = block.getBoundingRectangle();
+  if (onlyIfOutside) {
+    const view = ws.getMetricsManager().getViewMetrics(true);
+    const visible =
+      bounds.left >= view.left &&
+      bounds.top >= view.top &&
+      bounds.right <= view.left + view.width &&
+      bounds.bottom <= view.top + view.height;
+    if (visible) return;
+  }
+  ws.scrollBoundsIntoView(bounds, 20);
+}
+
+function ensureShortcutHost(doc: Document): void {
+  if (doc.getElementById('shortcuts')) return;
+  const host = doc.createElement('div');
+  host.id = 'shortcuts';
+  doc.body.appendChild(host);
+}
+
+function isBlocklyShortcut(event: Pick<KeyboardEvent, 'key' | 'ctrlKey' | 'metaKey'>): boolean {
+  const key = event.key.toLowerCase();
+  return (
+    ['delete', 'backspace', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright', 't', '/', 'escape'].includes(
+      key,
+    ) ||
+    (event.ctrlKey || event.metaKey) && ['z', 'y', 'c', 'v'].includes(key)
+  );
+}
+
 // -------------------------------------------------------------- component
 
 export function BlockEditor(props: BlockEditorProps) {
@@ -115,6 +148,7 @@ export function BlockEditor(props: BlockEditorProps) {
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
   const [status, setStatus] = useState('');
+  const problemStatusRef = useRef('');
   const hintId = useId();
 
   useEffect(() => {
@@ -137,9 +171,10 @@ export function BlockEditor(props: BlockEditorProps) {
       setCanRedo(ws.getRedoStack().length > 0);
     }
     const errors = r.issues.filter((i) => i.severity === 'error').length;
-    setStatus(
-      errors === 0 ? 'No problems found.' : `${errors} problem${errors === 1 ? '' : 's'} found.`,
-    );
+    const problemStatus =
+      errors === 0 ? 'No problems found.' : `${errors} problem${errors === 1 ? '' : 's'} found.`;
+    problemStatusRef.current = problemStatus;
+    setStatus(problemStatus);
     propsRef.current.onChange(r.program, r.layout, r.issues);
   }, []);
 
@@ -165,6 +200,7 @@ export function BlockEditor(props: BlockEditorProps) {
     if (!host) return;
     setupOnce();
     ensureEditorCss(host.ownerDocument);
+    ensureShortcutHost(host.ownerDocument);
     const ws = Blockly.inject(host, {
       toolbox: buildToolbox(),
       theme: buildBlocklyTheme(readThemeVars(host)),
@@ -222,6 +258,30 @@ export function BlockEditor(props: BlockEditorProps) {
   useEffect(decorate, [decorate, highlightIds, markedIds]);
 
   useEffect(() => {
+    const ws = wsRef.current;
+    if (!ws) return;
+    const resolved = (markedIds ?? [])
+      .map((id) => resolveToExisting(id, (x) => ws.getBlockById(x) !== null))
+      .filter((id): id is string => id !== null);
+    if (resolved.length === 0) return;
+    scrollBlockIntoView(ws, resolved[0]!);
+    setStatus(
+      `${resolved.length === 1 ? 'Showing the block.' : `Showing ${resolved.length} blocks.`} ${
+        problemStatusRef.current
+      }`,
+    );
+  }, [markedIds]);
+
+  useEffect(() => {
+    const ws = wsRef.current;
+    if (!ws) return;
+    const resolved = (highlightIds ?? [])
+      .map((id) => resolveToExisting(id, (x) => ws.getBlockById(x) !== null))
+      .filter((id): id is string => id !== null);
+    if (resolved.length > 0) scrollBlockIntoView(ws, resolved[0]!, true);
+  }, [highlightIds]);
+
+  useEffect(() => {
     wsRef.current?.setIsReadOnly(readOnly === true);
   }, [readOnly]);
 
@@ -229,6 +289,20 @@ export function BlockEditor(props: BlockEditorProps) {
     const ws = wsRef.current;
     if (ws && themeKey !== undefined) rebuildTheme(ws, hostRef.current ?? undefined);
   }, [themeKey]);
+
+  useEffect(() => {
+    const guardGlobalShortcuts = (event: KeyboardEvent) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement) || target.closest('.bp-editor')) return;
+      const isTextEditor =
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target.isContentEditable;
+      if (!isTextEditor && isBlocklyShortcut(event)) event.stopPropagation();
+    };
+    document.addEventListener('keydown', guardGlobalShortcuts, true);
+    return () => document.removeEventListener('keydown', guardGlobalShortcuts, true);
+  }, []);
 
   const undo = (redo: boolean) => {
     const ws = wsRef.current;
@@ -242,6 +316,15 @@ export function BlockEditor(props: BlockEditorProps) {
       role="region"
       aria-label={props.label ?? 'Block editor'}
       aria-describedby={hintId}
+      onKeyDownCapture={(event) => {
+        const target = event.target;
+        const inWorkspace = hostRef.current?.contains(target as Node) ?? false;
+        const isTextEditor =
+          target instanceof HTMLInputElement ||
+          target instanceof HTMLTextAreaElement ||
+          (target instanceof HTMLElement && target.isContentEditable);
+        if (!inWorkspace && !isTextEditor && isBlocklyShortcut(event)) event.stopPropagation();
+      }}
     >
       <div className="bp-editor-toolbar" role="toolbar" aria-label="Editor actions">
         <button type="button" onClick={() => undo(false)} disabled={readOnly || !canUndo}>
@@ -255,11 +338,10 @@ export function BlockEditor(props: BlockEditorProps) {
         </span>
         <span className="bp-editor-hint" id={hintId}>
           Tab into the workspace, then use the arrow keys; press T for the palette and / for all
-          keyboard shortcuts.
+          keyboard shortcuts. Enter opens the selected block menu or field editor.
         </span>
       </div>
       <div ref={hostRef} className="bp-editor-workspace" data-testid="bp-editor-workspace" />
-      <div id="shortcuts" />
     </div>
   );
 }
