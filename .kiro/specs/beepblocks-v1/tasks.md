@@ -245,11 +245,14 @@ Builds against `__mocks__/timelines.ts`.
 
 ## Phase 3 — Polish and Verification [SEQ]
 
-- [ ] 3.1 Accessibility pass
+- [x] 3.1 Accessibility pass
   - Keyboard-only walkthrough of the editor, controls, and explorer.
   - Contrast checks on both presets and on extreme accent colors.
   - Non-color diff cues.
   - _Req: 13.4, 13.5_
+  - Done: playground and editor fixes by 2 parallel Copilot CLI agents (worktrees `a11y/playground`, `a11y/editor`), reviewed and corrected on merge (a global key guard that would have swallowed playground/dialog keys was removed; Blockly 12 binds keys on its injection div only; file-list ← logic, row names, and scenario-editor focus fixed). App shell, colours and verification by the integrator.
+  - Colours: new `--bp-highlight-bg` for the active row; accent legible on bg, surface and highlight-bg; no opacity on text (§10.2).
+  - Verification: `pnpm smoke` now runs a real-key walkthrough (skip links, palette → workspace, Ctrl+Enter block menu with Expand, field dropdown, tree, file list, Space/→/Home playback) and axe-core WCAG 2.1 AA audits in 8 page states (both presets, dialogs, mid-run, extreme accents). Screen-reader output itself (NVDA/VoiceOver) was not tested and stays a manual 3.3 item.
 
 - [x] 3.2 Starter projects: one ready-made project per scenario, showing its composite, so the first-run experience demonstrates each task in one click. Also add each as a conformance fixture (scenario tree × its composite, carried over from 2.6), with a hand-checked golden where practical (e.g. bisect on `nightly-logs` finds `nightly-2026-02-10.log`).
   - Done: `src/app/starters.ts` (§13.1); first run opens "Sort my downloads"; "New…" dialog with one-click "Open" per starter.

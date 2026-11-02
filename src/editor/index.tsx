@@ -123,16 +123,6 @@ function ensureShortcutHost(doc: Document): void {
   doc.body.appendChild(host);
 }
 
-function isBlocklyShortcut(event: Pick<KeyboardEvent, 'key' | 'ctrlKey' | 'metaKey'>): boolean {
-  const key = event.key.toLowerCase();
-  return (
-    ['delete', 'backspace', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright', 't', '/', 'escape'].includes(
-      key,
-    ) ||
-    (event.ctrlKey || event.metaKey) && ['z', 'y', 'c', 'v'].includes(key)
-  );
-}
-
 // -------------------------------------------------------------- component
 
 export function BlockEditor(props: BlockEditorProps) {
@@ -290,19 +280,10 @@ export function BlockEditor(props: BlockEditorProps) {
     if (ws && themeKey !== undefined) rebuildTheme(ws, hostRef.current ?? undefined);
   }, [themeKey]);
 
-  useEffect(() => {
-    const guardGlobalShortcuts = (event: KeyboardEvent) => {
-      const target = event.target;
-      if (!(target instanceof HTMLElement) || target.closest('.bp-editor')) return;
-      const isTextEditor =
-        target instanceof HTMLInputElement ||
-        target instanceof HTMLTextAreaElement ||
-        target.isContentEditable;
-      if (!isTextEditor && isBlocklyShortcut(event)) event.stopPropagation();
-    };
-    document.addEventListener('keydown', guardGlobalShortcuts, true);
-    return () => document.removeEventListener('keydown', guardGlobalShortcuts, true);
-  }, []);
+  // Blockly 12 and the keyboard-navigation plugin bind keydown on the injection div (and the
+  // dropdown div), not on document, so keys pressed outside the workspace never reach editor
+  // shortcuts; the tests pin this. No global key guard is needed (one would also swallow the
+  // playground's and dialogs' own keys).
 
   const undo = (redo: boolean) => {
     const ws = wsRef.current;
@@ -316,15 +297,6 @@ export function BlockEditor(props: BlockEditorProps) {
       role="region"
       aria-label={props.label ?? 'Block editor'}
       aria-describedby={hintId}
-      onKeyDownCapture={(event) => {
-        const target = event.target;
-        const inWorkspace = hostRef.current?.contains(target as Node) ?? false;
-        const isTextEditor =
-          target instanceof HTMLInputElement ||
-          target instanceof HTMLTextAreaElement ||
-          (target instanceof HTMLElement && target.isContentEditable);
-        if (!inWorkspace && !isTextEditor && isBlocklyShortcut(event)) event.stopPropagation();
-      }}
     >
       <div className="bp-editor-toolbar" role="toolbar" aria-label="Editor actions">
         <button type="button" onClick={() => undo(false)} disabled={readOnly || !canUndo}>
@@ -338,7 +310,8 @@ export function BlockEditor(props: BlockEditorProps) {
         </span>
         <span className="bp-editor-hint" id={hintId}>
           Tab into the workspace, then use the arrow keys; press T for the palette and / for all
-          keyboard shortcuts. Enter opens the selected block menu or field editor.
+          keyboard shortcuts. Enter edits the field under the cursor; Ctrl+Enter opens the block’s
+          menu (Expand, Duplicate, Delete…).
         </span>
       </div>
       <div ref={hostRef} className="bp-editor-workspace" data-testid="bp-editor-workspace" />

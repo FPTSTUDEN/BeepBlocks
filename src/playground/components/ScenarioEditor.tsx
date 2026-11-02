@@ -36,18 +36,23 @@ const NO_DIFF: Diff = new Map();
 export function ScenarioEditor({ fs, onChange }: ScenarioEditorProps) {
   const explorer = useExplorerState(fs, null, null);
   const [itemPath, setItemPath] = useState<string | null>(null);
-  const [focusPath, setFocusPath] = useState<string | null>(null);
+  /** Tree item to focus after the next tree change (a delete unmounts the focused button). */
+  const focusPathRef = useRef<string | null>(null);
+  const [focusName, setFocusName] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
   const item = itemPath !== null ? canonicalPath(fs, itemPath) : null;
   const target = item ?? explorer.folder;
   const rows = folderRows(fs, explorer.folder, NO_DIFF, null);
   useEffect(() => {
+    const focusPath = focusPathRef.current;
     if (focusPath === null) return;
+    // One-shot: later edits (which also change `fs`) must not pull focus back to the tree.
+    focusPathRef.current = null;
     const key = pathKey(focusPath);
     [...(editorRef.current?.querySelectorAll<HTMLElement>('[role="treeitem"]') ?? [])]
       .find((el) => el.dataset['rowkey'] === key)
       ?.focus();
-  }, [focusPath, fs]);
+  }, [fs]);
 
   const apply: Apply = (r, select) => {
     if (!r.ok) return r.error;
@@ -95,7 +100,10 @@ export function ScenarioEditor({ fs, onChange }: ScenarioEditorProps) {
         fs={fs}
         path={target}
         apply={apply}
-        onDeleteFocus={(path) => setFocusPath(parentPath(path))}
+        onDeleteFocus={(path) => (focusPathRef.current = parentPath(path))}
+        focusName={focusName}
+        onFocusedName={() => setFocusName(false)}
+        onRenamed={() => setFocusName(true)}
       />
     </div>
   );
@@ -179,6 +187,10 @@ function ItemForm(props: {
   path: string;
   apply: Apply;
   onDeleteFocus?: (path: string) => void;
+  /** Focus the name field on mount (set by a rename, which re-mounts the form). */
+  focusName?: boolean;
+  onFocusedName?: () => void;
+  onRenamed?: () => void;
 }) {
   const { fs, path, apply } = props;
   const id = useId();
@@ -194,7 +206,13 @@ function ItemForm(props: {
   );
   const [sizeError, setSizeError] = useState<string | null>(null);
   useEffect(() => {
-    nameRef.current?.focus();
+    // Only after a rename (the form re-mounts under the new path); never when the user is
+    // just moving through the tree or the list.
+    if (props.focusName) {
+      nameRef.current?.focus();
+      props.onFocusedName?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [path]);
   if (!node) return null;
 
@@ -209,7 +227,9 @@ function ItemForm(props: {
   const rename = (e: FormEvent) => {
     e.preventDefault();
     if (name === node.name) return;
-    setNameError(apply(renameNode(fs, path, name), 'result'));
+    const error = apply(renameNode(fs, path, name), 'result');
+    if (error === null) props.onRenamed?.();
+    setNameError(error);
   };
 
   return (

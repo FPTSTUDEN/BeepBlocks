@@ -35,21 +35,54 @@ export function Controls(p: ControlsProps) {
   const backRef = useRef<HTMLButtonElement>(null);
   const forwardRef = useRef<HTMLButtonElement>(null);
   const resetRef = useRef<HTMLButtonElement>(null);
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  /** Control that should get focus as soon as it is enabled (e.g. Pause while a run starts). */
+  const pendingFocus = useRef<HTMLButtonElement | null>(null);
   const has = p.total > 0 && !p.disabled;
   const last = Math.max(0, p.total - 1);
   const blocked = p.runBlockedReason ? p.runBlockedReason : null;
+  // A focused button that becomes disabled would drop focus to <body>, outside the playground
+  // (and its shortcuts). Move focus to its counterpart (Run ↔ Pause, Back ↔ Forward), or park
+  // it on the toolbar until that counterpart is enabled (Run waits for the new timeline).
   useEffect(() => {
     const active = document.activeElement;
-    const wasControl = [runRef.current, pauseRef.current, backRef.current, forwardRef.current].includes(
-      active as HTMLButtonElement | null,
-    );
-    if (!wasControl || !(active as HTMLButtonElement | null)?.disabled) return;
-    const next = [runRef.current, pauseRef.current, backRef.current, forwardRef.current, resetRef.current]
-      .find((button) => button !== null && !button.disabled);
-    next?.focus();
+    const pending = pendingFocus.current;
+    if (pending) {
+      if (!pending.disabled) {
+        pendingFocus.current = null;
+        if (active === toolbarRef.current) pending.focus();
+      } else if (active !== toolbarRef.current) {
+        pendingFocus.current = null; // the user moved on
+      }
+      return;
+    }
+    const counterpart = new Map<Element | null, HTMLButtonElement | null>([
+      [runRef.current, pauseRef.current],
+      [pauseRef.current, runRef.current],
+      [backRef.current, forwardRef.current],
+      [forwardRef.current, backRef.current],
+    ]);
+    if (!counterpart.has(active) || !(active as HTMLButtonElement).disabled) return;
+    const next = counterpart.get(active) ?? null;
+    if (next && !next.disabled) next.focus();
+    else if (active === runRef.current && next) {
+      pendingFocus.current = next;
+      toolbarRef.current?.focus();
+    } else {
+      [runRef, pauseRef, backRef, forwardRef, resetRef]
+        .map((r) => r.current)
+        .find((b) => b !== null && !b.disabled)
+        ?.focus();
+    }
   }, [p.playing, p.index, p.total, p.disabled, blocked]);
   return (
-    <div className={styles.controls} role="toolbar" aria-label="Playback controls">
+    <div
+      ref={toolbarRef}
+      className={styles.controls}
+      role="toolbar"
+      aria-label="Playback controls"
+      tabIndex={-1}
+    >
       <button
         ref={runRef}
         type="button"

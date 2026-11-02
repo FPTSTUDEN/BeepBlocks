@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 /* eslint-disable no-restricted-imports -- tests build REAL timelines with the simulator. */
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { useState } from 'react';
 import { b } from '../ir/build.ts';
 import type { Stmt } from '../ir/types.ts';
 import type { Timeline } from '../ir/timeline.ts';
@@ -137,5 +138,142 @@ describe('Playground with a real simulator timeline', () => {
     render(<Playground {...props(tl, camera, tl.snapshots.length - 1)} />);
     const alert = screen.getByRole('alert');
     expect(alert.textContent).toContain(`at block ${tl.snapshots.at(-1)!.error!.nodeId}`);
+  });
+});
+
+describe('file list keyboard navigation on a nested scenario', () => {
+  const tree = getScenario('project-tree')!.tree;
+  const t = run([b.print(b.lit('hi'), 'p')], tree);
+  const rowEl = (path: string) => document.querySelector<HTMLElement>(`[role=option][data-path="${path}"]`)!;
+
+  it('→ opens a folder; ← and Backspace go up one folder from any row', () => {
+    render(<Playground {...props(t, tree, 0)} />);
+    rowEl('logs').focus();
+    fireEvent.keyDown(rowEl('logs'), { key: 'ArrowRight' });
+    expect(screen.getByRole('listbox', { name: 'Files in ./logs' })).toBeTruthy();
+    rowEl('logs/old').focus();
+    fireEvent.keyDown(rowEl('logs/old'), { key: 'ArrowRight' });
+    expect(screen.getByRole('listbox', { name: 'Files in ./logs/old' })).toBeTruthy();
+    // A file row: Backspace goes up to logs, then ← goes up to the top folder.
+    rowEl('logs/old/2025-11.log').focus();
+    fireEvent.keyDown(rowEl('logs/old/2025-11.log'), { key: 'Backspace' });
+    expect(screen.getByRole('listbox', { name: 'Files in ./logs' })).toBeTruthy();
+    rowEl('logs/app.log').focus();
+    fireEvent.keyDown(rowEl('logs/app.log'), { key: 'ArrowLeft' });
+    expect(screen.getByRole('listbox', { name: 'Files in Top folder' })).toBeTruthy();
+  });
+
+  it('← in the top folder does nothing and does not step the timeline', () => {
+    const onIndexChange = vi.fn();
+    render(<Playground {...props(t, tree, 1)} onIndexChange={onIndexChange} />);
+    rowEl('cache.tmp').focus();
+    fireEvent.keyDown(rowEl('cache.tmp'), { key: 'ArrowLeft' });
+    expect(screen.getByRole('listbox', { name: 'Files in Top folder' })).toBeTruthy();
+    expect(onIndexChange).not.toHaveBeenCalled();
+  });
+
+  it('keeps badges and tags in a row’s accessible text and labels size and date', () => {
+    render(<Playground {...props(t, tree, 0)} />);
+    const text = rowEl('cache.tmp').textContent!;
+    expect(text).toContain('cache.tmp');
+    expect(text).toMatch(/, size 16 B/);
+    expect(text).toMatch(/, modified 2026-01-20 12:00/);
+    expect(rowEl('cache.tmp').getAttribute('aria-label')).toBeNull();
+  });
+});
+
+describe('scenario editor focus', () => {
+  const tree = getScenario('project-tree')!.tree;
+  function Editor() {
+    const [fs, setFs] = useState(tree);
+    return (
+      <Playground
+        {...props(run([], tree), fs, 0)}
+        initial={fs}
+        editingScenario
+        onScenarioChange={setFs}
+      />
+    );
+  }
+
+  it('choosing a folder in the tree leaves focus in the tree', () => {
+    render(<Editor />);
+    const tree = screen.getByRole('tree', { name: 'Folders' });
+    const docs = within(tree).getByRole('treeitem', { name: /docs/ });
+    docs.focus();
+    fireEvent.keyDown(docs, { key: 'Enter' });
+    expect(document.activeElement).toBe(within(tree).getByRole('treeitem', { name: /docs/ }));
+  });
+
+  it('keeps focus in the name field after a rename', () => {
+    render(<Editor />);
+    fireEvent.click(document.querySelector<HTMLElement>('[role=option][data-path="cache.tmp"]')!);
+    const edit = screen.getByRole('region', { name: 'Edit File cache.tmp' });
+    const name = within(edit).getByRole('textbox', { name: 'Name' });
+    fireEvent.change(name, { target: { value: 'cache.old' } });
+    fireEvent.click(within(edit).getByRole('button', { name: 'Rename' }));
+    const renamed = screen.getByRole('region', { name: 'Edit File cache.old' });
+    expect(document.activeElement).toBe(within(renamed).getByRole('textbox', { name: 'Name' }));
+  });
+
+  it('moves focus to the parent folder in the tree after a delete', () => {
+    render(<Editor />);
+    const tree = screen.getByRole('tree', { name: 'Folders' });
+    fireEvent.keyDown(within(tree).getByRole('treeitem', { name: /docs/ }), { key: 'Enter' });
+    fireEvent.click(document.querySelector<HTMLElement>('[role=option][data-path="docs/draft.tmp"]')!);
+    fireEvent.click(screen.getByRole('button', { name: 'Delete draft.tmp' }));
+    expect(document.activeElement?.getAttribute('role')).toBe('treeitem');
+    expect(document.activeElement?.textContent).toContain('docs');
+  });
+});
+
+describe('playback focus while a run starts', () => {
+  const tree = getScenario('project-tree')!.tree;
+  const t = run([b.print(b.lit('a'), 'p1'), b.print(b.lit('b'), 'p2')], tree);
+
+  /** Like the app: Run is blocked ("Running…") until the timeline arrives a moment later. */
+  function Host() {
+    const [timeline, setTimeline] = useState<Timeline<SandboxFS> | null>(null);
+    const [running, setRunning] = useState(false);
+    const [index, setIndex] = useState(0);
+    return (
+      <Playground
+        {...props(t, tree, index)}
+        timeline={timeline}
+        onIndexChange={setIndex}
+        runBlockedReason={running ? 'Running…' : null}
+        onRun={() => {
+          setRunning(true);
+          setTimeout(() => {
+            setTimeline(t);
+            setRunning(false);
+          }, 10);
+        }}
+        onReset={() => {
+          setTimeline(null);
+          setIndex(0);
+        }}
+      />
+    );
+  }
+
+  it('parks focus on the toolbar, then moves it to Pause; Reset is announced', async () => {
+    vi.useFakeTimers();
+    try {
+      render(<Host />);
+      const runBtn = screen.getByRole('button', { name: /Run/ });
+      runBtn.focus();
+      fireEvent.click(runBtn);
+      expect(document.activeElement).toBe(screen.getByRole('toolbar', { name: 'Playback controls' }));
+      await act(async () => {
+        vi.advanceTimersByTime(20);
+      });
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: /Pause/ }));
+      fireEvent.click(screen.getByRole('button', { name: /Reset/ }));
+      const live = document.querySelector('[aria-live="polite"][aria-atomic="true"]')!;
+      expect(live.textContent).toBe('Reset to the starting files.');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

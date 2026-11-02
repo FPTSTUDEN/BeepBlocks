@@ -1,7 +1,8 @@
 /**
  * File list (tasks E.1–E.3, E.6): name, type icon, human size, UTC date, diff badge and tags.
  * In list view it shows a hinted list in list order with a 0-based position gutter and a final
- * "end = <length>" row. ARIA listbox with roving focus: ↑/↓ move, Enter (or click) activates.
+ * "end = <length>" row. ARIA listbox with roving focus: ↑/↓/Home/End move, Enter/Space (or click)
+ * activates; in folder view → opens the focused folder and ←/Backspace goes up a folder.
  */
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { fileSize } from '../../domains/fileExplorer/fsTypes.ts';
@@ -33,6 +34,13 @@ export interface FileListProps {
 }
 
 const END_KEY = '__end__';
+
+/** Parent of a relative path ("a/b" → "a", "a" → ""), or null for the root itself. */
+function parentOf(path: string): string | null {
+  if (path === '') return null;
+  const i = path.lastIndexOf('/');
+  return i < 0 ? '' : path.slice(0, i);
+}
 
 /** The `data-rowkey` of the row containing the event target, if any. */
 export function keyOfTarget(target: EventTarget | null): string | null {
@@ -103,22 +111,27 @@ export function FileList(props: FileListProps) {
         break;
       }
       case 'ArrowRight': {
+        // Folder view only: open the focused folder. In list view ←/→ stay timeline shortcuts.
+        if (listMode) return;
         const row = rows.find((r) => r.key === from);
         if (row?.node?.type === 'folder' && !row.ghost && row.path !== null) {
           props.onOpenFolder?.(row.path);
-          break;
         }
-        return;
+        break;
       }
       case 'ArrowLeft':
       case 'Backspace': {
+        // Folder view only: go up from the folder being shown (the parent of any of its rows).
+        if (listMode) return;
         const row = rows.find((r) => r.key === from);
-        if (row?.node?.type === 'folder' && row.path !== null) {
-          const parent = row.path.slice(0, Math.max(0, row.path.lastIndexOf('/')));
-          props.onOpenFolder?.(parent);
-          break;
+        if (row?.path) {
+          const shown = parentOf(row.path);
+          if (shown !== null) {
+            const up = parentOf(shown);
+            if (up !== null) props.onOpenFolder?.(up);
+          }
         }
-        return;
+        break;
       }
       default:
         return;
@@ -210,8 +223,6 @@ function Row({ row, listMode, focusable, selected, onFocus, onActivate, onOpen }
   const kind = node ? fileKind(node) : null;
   const name =
     listMode && row.path !== null ? row.path : (node?.name ?? row.path ?? row.text ?? '');
-  const sizeText = node?.type === 'file' ? humanSize(fileSize(node)) : node ? 'no size' : 'missing';
-  const dateText = node ? formatDate(node.modified) : 'no modified date';
   return (
     <li
       data-rowkey={row.key}
@@ -219,7 +230,6 @@ function Row({ row, listMode, focusable, selected, onFocus, onActivate, onOpen }
       aria-selected={selected}
       tabIndex={focusable ? 0 : -1}
       className={cx(styles.fileRow, row.active && styles.active, row.ghost && styles.ghost)}
-      aria-label={`${name}, ${sizeText}, modified ${dateText}${row.ghost ? ', deleted' : ''}`}
       data-path={row.path ?? undefined}
       onFocus={onFocus}
       onClick={onActivate}
@@ -245,10 +255,16 @@ function Row({ row, listMode, focusable, selected, onFocus, onActivate, onOpen }
         {row.diff && <DiffBadge diff={row.diff} />}
         <Tags tags={row.tags} indexTags={row.indexTags} />
       </span>
+      {/* The column header is aria-hidden, so each cell carries its own label for screen
+          readers; the option's name is its text content, badges and tags included. */}
       <span className={styles.size}>
+        {node?.type === 'file' && <span className={styles.srOnly}>, size </span>}
         {node?.type === 'file' ? humanSize(fileSize(node)) : node ? '—' : ''}
       </span>
-      <span className={styles.date}>{node ? formatDate(node.modified) : ''}</span>
+      <span className={styles.date}>
+        {node && <span className={styles.srOnly}>, modified </span>}
+        {node ? formatDate(node.modified) : ''}
+      </span>
     </li>
   );
 }

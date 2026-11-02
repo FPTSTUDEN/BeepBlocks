@@ -262,6 +262,7 @@ function Shell({ store }: { store: AppStore }) {
             onRun={() => void actions.run()}
             onReset={actions.reset}
             onTrace={actions.mark}
+            onShowBlock={showBlock}
             editingScenario={editingScenario}
             onScenarioChange={actions.setScenarioTree}
             label={`Playground: ${project.scenario.title}`}

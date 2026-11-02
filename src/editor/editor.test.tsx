@@ -213,7 +213,7 @@ describe('<BlockEditor>', () => {
     const host = screen.getByTestId('bp-editor-workspace');
     expect(host.querySelector('.injectionDiv')).not.toBeNull();
     expect(document.querySelectorAll('#shortcuts')).toHaveLength(1);
-    expect(screen.getByText(/Enter opens the selected block menu/)).toBeTruthy();
+    expect(screen.getByText(/Ctrl\+Enter opens the block’s/)).toBeTruthy();
     const ws = getWs();
     view.unmount();
     expect(host.querySelector('.injectionDiv')).toBeNull();

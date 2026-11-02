@@ -656,6 +656,11 @@ This is a real `.py` file, so it can be linted and unit-tested with Python direc
   3. Splice the blocks in place inside one Blockly event group, so a single undo reverts it.
 - **Validation:** runs on workspace change, debounced at 300 ms. Blocks with errors get a Blockly warning icon and the plain-language message.
 - **Variables:** Blockly variables carry their type. Blocks that create bound names (`candidate`, `match`) show those names as editable fields.
+- **Keyboard** (`@blockly/keyboard-navigation`, verified with real key events in `pnpm smoke`):
+  - Tab moves palette → palette flyout → workspace. Arrow keys move the cursor between blocks, inputs, and fields; → enters a block's inputs.
+  - T opens the palette, / shows all shortcuts. Enter on a field opens its editor (dropdown, text, checkbox, date). Ctrl+Enter (Alt/⌘+Enter) opens the block's menu, which includes "Expand into basic blocks" on composites.
+  - Blockly binds keydown on its injection div (and the dropdown div), not on `document`, so keys pressed elsewhere in the page never trigger editor shortcuts (tests pin this; there is deliberately no global key guard).
+- **Non-colour cues:** the running block has a solid 5 px outline, blocks marked by "Show block"/click-to-trace a dashed 3 px outline, and the keyboard-focused block or field a dotted 3 px outline (`.blocklyActiveFocus`). "Show block" scrolls the first marked block into view and announces "Showing the block." in the editor's status region; during playback the running block is scrolled into view only when it is completely off-screen. Block colours keep white text ≥ 4.5:1 (unit-tested).
 
 ## 10. Playground UI (file explorer theme)
 
@@ -681,11 +686,19 @@ Layout, left to right: **Editor | Playground**. Below the playground sits the ti
 - **Controls:**
   - Run, Pause, Step back, Step forward, and Reset.
   - A scrubber (range input) and a speed selector (0.25×–8×).
-  - Keyboard shortcuts: Space = run/pause, ←/→ = step, Home = reset.
+  - Keyboard shortcuts: Space = run/pause, ←/→ = step, Home = reset. They work anywhere inside the playground region except where a widget handles the key itself (text fields, the folder tree, and the file list; see "Keyboard" below).
   - There is a single Run button, in this timeline bar (not duplicated in the top bar). While the program is invalid, the app passes `runBlockedReason`: Run and Space are disabled and the reason is shown as visible text next to the button, since a disabled button can't take focus to reveal a tooltip.
 - **Click-to-trace.** Clicking an item highlights every block whose snapshot touched that path. The trace comes from `action.from/to` and from `fsRead` events tagged with their path.
-- **Stale marker.** Editing the program after a run greys the timeline and shows "Program changed — run again" (Req 8.4).
+- **Stale marker.** Editing the program after a run greys the timeline (grayscale, no opacity) and shows "Program changed — run again" (Req 8.4).
 - **Scenario editor.** An "Edit scenario" mode makes the explorer editable: add, rename, and delete items, and set size, date, and content. Reset restores the scenario's saved tree.
+- **Keyboard** (Req 13.4; walked through with real key events in `pnpm smoke`):
+  - Skip links ("Skip to the block editor", "Skip to the playground") are the first Tab stops.
+  - Folder tree (ARIA tree): ↑/↓ move, → expands or enters, ← collapses or goes to the parent, Home/End first/last, Enter/Space selects. The tree consumes these keys, so they never step the timeline.
+  - File list (ARIA listbox): ↑/↓/Home/End move, Enter/Space trace the item (run view) or edit it (scenario mode). In folder view → opens a folder row and ←/Backspace go up one folder; in list view ←/→ remain timeline shortcuts. Each row's text includes its badges, tags, and sr-only "size"/"modified" labels (the column header is `aria-hidden`).
+  - Playback controls keep focus inside the playground: when the focused control becomes disabled, focus moves to its counterpart (Run ↔ Pause, Step back ↔ Step forward). While a run starts, focus waits on the toolbar and moves to Pause once the timeline arrives.
+  - The Output list is focusable, so it can be scrolled from the keyboard.
+- **Announcements:** one polite live region says "Step N of M: …" when stepping manually, on pause, on done, on error, and "Reset to the starting files." on reset; automatic playback steps are not announced. The error banner (`role=alert`) and stale message (`role=status`) stay mounted and only change their text, so screen readers announce them. The error banner has a "Show block" button (`onShowBlock`). The stale message also describes the explorer and panels (`aria-describedby`).
+- **Scenario editor focus:** after a rename, focus stays in the name field; after a delete, it moves to the parent folder in the tree. Choosing a folder or item does not move focus.
 
 ### 10.1 Domain theme interface (Req 11.1)
 

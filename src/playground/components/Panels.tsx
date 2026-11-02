@@ -107,7 +107,8 @@ export function OutputPanel({ lines }: { lines: readonly OutputLine[] }) {
       {lines.length === 0 ? (
         <p className={styles.empty}>No output yet.</p>
       ) : (
-        <ol className={styles.output}>
+        // Scrollable (max-height), so it must be reachable by keyboard to scroll it.
+        <ol className={styles.output} tabIndex={0} aria-labelledby={headingId}>
           {lines.map((l, i) => (
             <li key={i} className={styles.outputLine} data-kind={l.kind}>
               <span className={styles.lineKind}>

@@ -119,6 +119,7 @@ export function Playground(props: PlaygroundProps) {
   const reset = () => {
     setPlaying(false);
     setPendingPlay(false);
+    setAnnouncement('Reset to the starting files.');
     props.onReset();
   };
 

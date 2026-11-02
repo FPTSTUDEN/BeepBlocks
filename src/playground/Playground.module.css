@@ -98,7 +98,7 @@
 
 .stale .explorer,
 .stale .panels {
-  opacity: 0.45;
+  /* No opacity: it would drop text below 4.5:1. Grayscale keeps luminance (and contrast). */
   filter: grayscale(1);
 }
 
@@ -184,11 +184,12 @@
 }
 
 .active {
-  background: var(--bp-highlight, #fff3b0);
+  /* A tint text stays legible on (design.md §10.2); --bp-highlight is for strokes only. */
+  background: var(--bp-highlight-bg, #fef3c7);
 }
 
 .ghost {
-  opacity: 0.55;
+  color: var(--bp-muted, #57606a);
 }
 
 .ghost .name {

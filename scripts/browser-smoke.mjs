@@ -128,6 +128,35 @@ try {
     }
     throw new Error(`Timed out waiting for ${what}`);
   };
+  const KEY_CODES = { Tab: 9, Enter: 13, Escape: 27, ' ': 32, End: 35, Home: 36, ArrowLeft: 37, ArrowUp: 38, ArrowRight: 39, ArrowDown: 40 };
+  /** A real key press through the browser's input pipeline (not a synthetic DOM event). */
+  const press = async (key, { ctrl = false, shift = false } = {}) => {
+    const modifiers = (ctrl ? 2 : 0) | (shift ? 8 : 0);
+    const text = key === ' ' ? ' ' : key === 'Enter' ? '\r' : undefined;
+    const base = { key, windowsVirtualKeyCode: KEY_CODES[key], modifiers };
+    await send('Input.dispatchKeyEvent', { type: 'keyDown', ...base, ...(text && !ctrl ? { text } : {}) });
+    await send('Input.dispatchKeyEvent', { type: 'keyUp', ...base });
+    await sleep(120);
+  };
+  /** Short description of the focused element (block id inside Blockly). */
+  const focused = () =>
+    evaluate(`(() => {
+      const a = document.activeElement;
+      const block = a?.closest?.('[data-id]')?.getAttribute('data-id');
+      return block ? 'block:' + block : (a?.id ? '#' + a.id + ' ' : '') + (a?.getAttribute('role') ?? a?.tagName ?? '') + ' ' + (a?.textContent ?? '').trim().slice(0, 40);
+    })()`);
+  const expectFocus = async (pattern, what) => {
+    const end = Date.now() + 3000;
+    let got = '';
+    while (Date.now() < end) {
+      got = await focused();
+      if (pattern.test(got)) return;
+      await sleep(100);
+    }
+    throw new Error(`Keyboard walkthrough: expected focus on ${what}, got "${got}"`);
+  };
+  const statusText = () => evaluate(`document.querySelector('[data-testid=status]').textContent`);
+
   /**
    * WCAG 2.1 A/AA audit of the current page state with axe-core. Violations are collected as
    * problems (one line per rule and element).
@@ -176,6 +205,56 @@ try {
   await waitFor(`document.querySelector('.title-input')?.value === 'Sort my downloads'`, 'the first-run starter');
   await waitFor(`document.querySelectorAll('.blocklyDraggable').length >= 1`, 'the first-run blocks');
   await audit('first run, light');
+
+  // 1a. Keyboard-only walkthrough (real key events) on the first-run starter.
+  await evaluate(`document.activeElement?.blur()`);
+  await press('Tab');
+  await expectFocus(/Skip to the block editor/, 'the first skip link');
+  await press('Enter');
+  await expectFocus(/^#bp-editor-pane/, 'the editor pane');
+  await press('Tab'); // palette category
+  await press('Tab'); // palette flyout
+  await press('Tab'); // workspace: the "when run" block
+  await expectFocus(/^block:when-run$/, 'the "when run" block');
+  await press('ArrowDown');
+  await expectFocus(/^block:dl-sort$/, 'the sort task block');
+  await press('Enter', { ctrl: true });
+  await waitFor(
+    `[...document.querySelectorAll('.blocklyContextMenu .blocklyMenuItem')].some(e => e.textContent.includes('Expand into basic blocks'))`,
+    'the block menu with "Expand" (Ctrl+Enter)',
+  );
+  await press('Escape');
+  await expectFocus(/^block:dl-sort$/, 'the sort block after closing its menu');
+  await press('ArrowRight'); // the folder input
+  await press('ArrowRight'); // the "group by" dropdown field
+  await press('Enter');
+  await waitFor(`!!document.querySelector('.blocklyDropdownMenu[role=listbox]')`, 'the field dropdown (Enter)');
+  await press('Escape');
+  // Playground: skip link, folder tree, file list, then the playback controls. (Focusing the
+  // first skip link stands in for Tab from the address bar.)
+  await evaluate(`document.querySelector('.skip-links a').focus()`);
+  await press('Tab');
+  await expectFocus(/Skip to the playground/, 'the second skip link');
+  await press('Enter');
+  await press('Tab');
+  await expectFocus(/treeitem .*Top folder/, 'the folder tree');
+  await press('Tab');
+  await expectFocus(/^option /, 'the file list');
+  await press('End');
+  await expectFocus(/option .*song\.mp3/, 'the last file (End)');
+  await press('Tab');
+  await expectFocus(/Run$/, 'the Run button');
+  await press(' ');
+  await expectFocus(/Pause$/, 'Pause after starting the run with Space');
+  await press(' ');
+  await expectFocus(/Run$/, 'Run after pausing with Space');
+  const paused = await statusText();
+  await press('ArrowRight');
+  const stepped = await statusText();
+  const n = (s) => Number(/Step (\d+)/.exec(s)?.[1]);
+  if (!(n(stepped) === n(paused) + 1)) problems.push(`ArrowRight did not step forward: "${paused}" → "${stepped}"`);
+  await press('Home');
+  if ((await statusText()) !== 'Not run yet') problems.push('Home did not reset the timeline');
   const starters = [
     ['Sort my downloads', 'Messy Downloads folder'],
     ['Rename camera photos', 'Camera photos'],
@@ -285,6 +364,22 @@ try {
     for (let i = 0; i < 6 && !back.disabled; i++) { back.click(); await new Promise(r => setTimeout(r, 0)); }
   })()`);
   await audit('mid-run with diffs, dark');
+
+  // 6. Extreme accent colours (they are blended until legible): yellow in light, blue in dark.
+  const setAccent = (hex) =>
+    evaluate(`(() => {
+      const input = document.querySelector('input[type=color]');
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, ${JSON.stringify(hex)});
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    })()`);
+  await setAccent('#0000ff');
+  await waitFor(`JSON.parse(localStorage.getItem('beepblocks.settings') || '{}').accent === '#0000ff'`, 'the blue accent');
+  await audit('accent #0000ff, dark');
+  await evaluate(`document.querySelector('input[value=light]').click()`);
+  await setAccent('#ffff00');
+  await waitFor(`document.documentElement.dataset.bpMode === 'light'`, 'light mode');
+  await waitFor(`JSON.parse(localStorage.getItem('beepblocks.settings') || '{}').accent === '#ffff00'`, 'the yellow accent');
+  await audit('accent #ffff00, light');
 } catch (err) {
   problems.push(err instanceof Error ? err.message : String(err));
 } finally {
