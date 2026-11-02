@@ -1,8 +1,8 @@
 /**
  * End-to-end check of every starter project in real browser engines (tasks 3.3):
  *
- *   pnpm e2e                    Chromium, Edge (installed), Firefox
- *   pnpm e2e firefox            one engine: chromium | msedge | firefox
+ *   pnpm e2e                    Chromium and Firefox (one run per engine)
+ *   pnpm e2e firefox            one engine: chromium | firefox
  *
  * For each engine and starter, in the built app (`vite preview`):
  *   1. open the starter from the "New…" dialog, Run, pause, scrub to the middle and to the end,
@@ -16,8 +16,8 @@
  *      prints the output with "[dry run] " prefixes; `--apply` prints the output and leaves the
  *      same tree as the simulator (diffed like the conformance suite).
  *
- * Browsers come from Playwright (`pnpm exec playwright install chromium firefox`); Edge is the
- * installed one. BP_PYTHON overrides the Python executable.
+ * Browsers come from Playwright (`pnpm exec playwright install chromium firefox`). The installed
+ * Edge is covered by `pnpm smoke`. BP_PYTHON overrides the Python executable.
  */
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -38,12 +38,11 @@ const TMP = join(ROOT, '.e2e-tmp');
 const PORT = 4319;
 const PYTHON = process.env.BP_PYTHON ?? (process.platform === 'win32' ? 'python' : 'python3');
 
-type Engine = 'chromium' | 'msedge' | 'firefox';
-const ENGINES: Engine[] = ['chromium', 'msedge', 'firefox'];
+type Engine = 'chromium' | 'firefox';
+const ENGINES: Engine[] = ['chromium', 'firefox'];
 
 function launch(engine: Engine): Promise<Browser> {
-  if (engine === 'firefox') return firefox.launch();
-  return chromium.launch(engine === 'msedge' ? { channel: 'msedge' } : {});
+  return engine === 'firefox' ? firefox.launch() : chromium.launch();
 }
 
 const golden = (s: Starter): string[] =>
@@ -85,10 +84,17 @@ async function scrubTo(page: Page, value: number | 'end'): Promise<void> {
 async function runAndScrub(page: Page, problems: string[], label: string): Promise<string[]> {
   const run = page.getByRole('button', { name: /Run$/ });
   await run.click();
-  const pause = page.getByRole('button', { name: /Pause$/ });
-  await pause.waitFor();
-  await page.waitForFunction(() => !(document.querySelector('[data-testid=status]')?.textContent ?? '').includes('Not run'));
-  if (await pause.isEnabled()) await pause.click();
+  // Wait for a NEW playback (Pause enabled) and pause it in the same page task. Checking the
+  // status instead would pass at once on the previous, stale timeline after Expand.
+  await page.waitForFunction(() => {
+    const b = [...document.querySelectorAll('button')].find((x) => x.textContent?.trim().endsWith('Pause'));
+    if (!(b instanceof HTMLButtonElement) || b.disabled) return false;
+    b.click();
+    return true;
+  });
+  if (await page.getByText('Program changed — run again').isVisible()) {
+    problems.push(`${label}: the timeline is still stale after Run`);
+  }
   const max = Number(await page.getByRole('slider', { name: 'Step' }).getAttribute('max'));
   const mid = Math.floor(max / 2);
   await scrubTo(page, mid);

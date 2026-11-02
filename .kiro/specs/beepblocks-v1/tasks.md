@@ -7,7 +7,7 @@ Legend:
 
 Environment verified: Node 22.20, pnpm 10.33, Python 3.9.0 on PATH (the runtime targets 3.9+), Edge for `pnpm smoke`.
 
-**Status:** Phases 0–2 and tasks 3.1–3.3 complete. Full suite green: 3,837 unit tests, 65 Python tests, lint, typecheck, build, `pnpm smoke` (Edge: keyboard walkthrough + axe in 8 states), `pnpm e2e` (12/12 starter runs in Chromium, Edge, Firefox); conformance 29/29 with complete coverage. Next: 3.4 (final review against requirements.md).
+**Status:** Phases 0–2 and tasks 3.1–3.3 complete. Full suite green: 3,837 unit tests, 65 Python tests, lint, typecheck, build, `pnpm smoke` (Edge: keyboard walkthrough + axe in 8 states), `pnpm e2e` (8/8 starter runs in Chromium and Firefox); conformance 29/29 with complete coverage. Next: 3.4 (final review against requirements.md).
 
 ---
 
@@ -264,7 +264,7 @@ Builds against `__mocks__/timelines.ts`.
   - expand the composite and re-run (same result);
   - export, dry-run on a real copy, then `--apply`, and compare the result.
   - _Req: 13.3, 4.3, 9.2_
-  - Done as an automated check, `pnpm e2e` (Playwright 1.64.1): 12/12 starter runs pass in Chromium 156, Edge 156 (installed), Firefox 157. A tampered golden was confirmed to fail it.
+  - Done as an automated check, `pnpm e2e` (Playwright 1.64.1): 8/8 starter runs pass in Chromium 156 and Firefox 157 (one run per engine; Edge shares Chromium's engine and is exercised by `pnpm smoke`). Passed 3 times in a row after fixing a race in the check itself; a tampered golden was confirmed to fail it.
   - Not covered: branded Google Chrome and Mozilla Firefox (not installed; Playwright's builds of the same engines were used), Safari/WebKit, and screen-reader output (NVDA/VoiceOver). These are left for a manual pass by the user.
 
 - [ ] 3.4 Final review against requirements.md: tick every acceptance criterion or record why it's deferred.
