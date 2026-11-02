@@ -4,3 +4,4 @@ coverage/
 *.tsbuildinfo
 __pycache__/
 .conformance-tmp/
+.e2e-tmp/

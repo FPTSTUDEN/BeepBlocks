@@ -823,6 +823,8 @@ interface ProjectFile {
 - **Python runtime tests:** `python -m unittest` on `runtime.py` against a temp dir, covering `_RealFS` and `_PlanFS`.
 - **Conformance:** §11. This is the release gate.
 - **Completeness tests:** every op in `ir/ops.ts` has a sim implementation, a Python emission, a block definition, and fixture coverage.
+- **Browser smoke (`pnpm smoke`, installed Edge over CDP):** first run, starters, a real-key keyboard walkthrough, export, themes, and axe-core WCAG 2.1 AA audits (§10, §10.2).
+- **End-to-end (`pnpm e2e`, Playwright: Chromium, installed Edge, Firefox):** for every starter in every engine: run, pause, scrub, step; the Output panel equals the starter fixture's golden; Expand (mouse) and re-run gives the same output; both exported scripts (before and after Expand) dry-run unchanged and `--apply` to the simulator's tree on a real copy of the scenario.
 - **UI:** component tests for timeline controls and tag placement. Manual accessibility check covering keyboard-only use and contrast.
 
 ## 16. Parallel Implementation Plan (preview for tasks.md)
