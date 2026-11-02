@@ -284,6 +284,8 @@ class Interpreter {
         return yield* this.op(e);
       case 'call':
         return yield* this.call(e);
+      case 'compositeExpr':
+        throw new Error('Expression composites must be desugared before simulation.');
     }
   }
 

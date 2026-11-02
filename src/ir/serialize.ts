@@ -38,13 +38,13 @@ export function parseProgram(input: string | unknown): ParseResult {
   if (v.format !== 'beepblocks-ir') {
     return { ok: false, errors: [structural('This is not a BeepBlocks program.')] };
   }
-  if (v.version !== 1) {
+  if (v.version !== 1 && v.version !== 2) {
     return {
       ok: false,
-      errors: [structural(`Unsupported program version ${String(v.version)} (expected 1).`)],
+      errors: [structural(`Unsupported program version ${String(v.version)} (expected 1 or 2).`)],
     };
   }
-  const program = value as Program;
+  const program = { ...(value as Program), version: 2 as const };
   const issues = validateProgram(program);
   const errors = issues.filter((e) => e.severity === 'error');
   if (errors.length > 0) return { ok: false, errors };

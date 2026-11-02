@@ -49,6 +49,26 @@ describe('structure', () => {
     ok(p);
     expect(validateProgram(p, { primitiveOnly: true }).map((i) => i.code)).toContain('STRUCTURE');
   });
+
+  it('accepts expression composites and rejects them in primitive-only mode', () => {
+    const p = body(b.assign('n', b.compositeExpr('countFiles', { inputs: { folder: b.root() } })));
+    ok(p);
+    expect(validateProgram(p, { primitiveOnly: true }).map((i) => i.code)).toContain('STRUCTURE');
+  });
+
+  it('requires halving-search paths to end in a marker', () => {
+    const p = body(
+      b.composite('halvingSearch', {
+        inputs: { line: b.list(T.path, []) },
+        bodies: { decide: [b.if(b.lit(true), [b.composite('keepLeftHalf')])] },
+      }),
+    );
+    bad(p, 'INCOMPLETE_SEARCH');
+  });
+
+  it('rejects half markers outside a halving search decision', () => {
+    bad(body(b.composite('keepRightHalf')), 'MISPLACED_BLOCK');
+  });
 });
 
 describe('names', () => {
@@ -304,6 +324,11 @@ describe('serialize', () => {
   it('rejects wrong format, version and junk', () => {
     expect(parseProgram('{nope').ok).toBe(false);
     expect(parseProgram({ format: 'other', version: 1 }).ok).toBe(false);
-    expect(parseProgram({ format: 'beepblocks-ir', version: 2, functions: [], body: [] }).ok).toBe(false);
+    const v2 = parseProgram({ format: 'beepblocks-ir', version: 2, functions: [], body: [] });
+    expect(v2.ok).toBe(true);
+    if (v2.ok) expect(v2.program.version).toBe(2);
+    const v1 = parseProgram({ format: 'beepblocks-ir', version: 1, functions: [], body: [] });
+    expect(v1.ok).toBe(true);
+    if (v1.ok) expect(v1.program.version).toBe(2);
   });
 });

@@ -55,7 +55,9 @@ export type ValidationCode =
   | 'BAD_TEMPLATE'
   | 'BAD_FIELD'
   | 'MISSING_INPUT'
-  | 'LARGE_INT';
+  | 'LARGE_INT'
+  | 'MISPLACED_BLOCK'
+  | 'INCOMPLETE_SEARCH';
 
 export interface ValidationError {
   nodeId: NodeId;

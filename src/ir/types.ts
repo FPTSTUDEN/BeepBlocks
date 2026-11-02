@@ -5,7 +5,7 @@
  * the composites module desugars it, and the simulator and exporter consume the
  * desugared (primitive-only) form.
  */
-import type { CompositeStmt } from './composites.ts';
+import type { CompositeExpr, CompositeStmt } from './composites.ts';
 import type { OpName } from './ops.ts';
 
 export type NodeId = string;
@@ -28,7 +28,7 @@ export const T = {
 
 export interface Program {
   format: 'beepblocks-ir';
-  version: 1;
+  version: 1 | 2;
   functions: FunctionDef[];
   body: Stmt[];
 }
@@ -110,7 +110,10 @@ export interface VarHint {
 
 // --------------------------------------------------------------- Expressions
 
-export type Expr = Lit | DateLit | ListLit | Var | Binary | Unary | OpExpr | CallExpr;
+export type Expr = Lit | DateLit | ListLit | Var | Binary | Unary | OpExpr | CallExpr | CompositeExpr;
+
+/** Primitive expressions only — what the simulator and exporter accept. */
+export type PrimitiveExpr = Exclude<Expr, CompositeExpr>;
 
 /**
  * Literal. For numbers, `float: true` marks a Python float literal (`3.0`);
@@ -224,5 +227,5 @@ function typePlural(t: Type): string {
 }
 
 export function emptyProgram(): Program {
-  return { format: 'beepblocks-ir', version: 1, functions: [], body: [] };
+  return { format: 'beepblocks-ir', version: 2, functions: [], body: [] };
 }

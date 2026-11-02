@@ -29,7 +29,7 @@ import type {
   While,
 } from './types.ts';
 import type { OpName } from './ops.ts';
-import type { CompositeName, CompositeStmt, FieldValue } from './composites.ts';
+import type { AnyCompositeName, CompositeExpr, CompositeExprName, CompositeStmt, FieldValue } from './composites.ts';
 import { freshId } from './ids.ts';
 
 const id = (given?: NodeId) => given ?? freshId();
@@ -37,7 +37,7 @@ const id = (given?: NodeId) => given ?? freshId();
 export const b = {
   program: (body: Stmt[], functions: FunctionDef[] = []): Program => ({
     format: 'beepblocks-ir',
-    version: 1,
+    version: 2,
     functions,
     body,
   }),
@@ -96,7 +96,7 @@ export const b = {
   do: (expr: OpExpr | CallExpr, nodeId?: NodeId): Do => ({ id: id(nodeId), kind: 'do', expr }),
   print: (value: Expr, nodeId?: NodeId): Print => ({ id: id(nodeId), kind: 'print', value }),
   composite: (
-    name: CompositeName,
+    name: AnyCompositeName,
     parts: {
       fields?: Record<string, FieldValue>;
       inputs?: Record<string, Expr>;
@@ -111,6 +111,18 @@ export const b = {
     fields: parts.fields ?? {},
     inputs: parts.inputs ?? {},
     bodies: parts.bodies ?? {},
+    binds: parts.binds ?? {},
+  }),
+  compositeExpr: (
+    name: CompositeExprName,
+    parts: { fields?: Record<string, FieldValue>; inputs?: Record<string, Expr>; binds?: Record<string, string> } = {},
+    nodeId?: NodeId,
+  ): CompositeExpr => ({
+    id: id(nodeId),
+    kind: 'compositeExpr',
+    name,
+    fields: parts.fields ?? {},
+    inputs: parts.inputs ?? {},
     binds: parts.binds ?? {},
   }),
 

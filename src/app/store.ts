@@ -116,10 +116,11 @@ export function createAppStore(deps: AppDeps): AppStore {
 
     editorChanged(program, layout, issues) {
       const { project } = get();
+      const normalized = program.version === 1 ? { ...program, version: 2 as const } : program;
       // Keep the old reference when the editor re-emits an equal program (e.g. after a reload).
-      const same = deepEqual(program, project.program);
+      const same = deepEqual(normalized, project.program);
       set({
-        project: { ...project, program: same ? project.program : program, layout },
+        project: { ...project, program: same ? project.program : normalized, layout },
         issues,
       });
     },

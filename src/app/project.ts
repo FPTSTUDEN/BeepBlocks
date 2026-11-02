@@ -37,7 +37,7 @@ export const DEFAULT_TITLE = 'Untitled project';
 const MAX_TITLE = 100;
 
 export function emptyProgram(): Program {
-  return { format: 'beepblocks-ir', version: 1, functions: [], body: [] };
+  return { format: 'beepblocks-ir', version: 2, functions: [], body: [] };
 }
 
 export function newProject(scenario: Scenario = SCENARIOS[0]!): ProjectFile {
@@ -181,8 +181,8 @@ export function parseProject(input: string | unknown): ProjectParse {
   if (typeof v.title !== 'string') errors.push('The project has no title.');
   if (!checkLayout(v.layout)) errors.push('The block positions are not valid.');
   const program = v.program;
-  if (!isObj(program) || program.format !== 'beepblocks-ir' || program.version !== 1) {
-    errors.push('The project does not contain a version 1 BeepBlocks program.');
+  if (!isObj(program) || program.format !== 'beepblocks-ir' || (program.version !== 1 && program.version !== 2)) {
+    errors.push('The project does not contain a valid BeepBlocks program.');
   } else {
     for (const e of validateStructure(program).filter((i) => i.severity === 'error').slice(0, 10)) {
       errors.push(`Program${e.nodeId ? ` (block ${e.nodeId})` : ''}: ${e.message}`);
@@ -191,6 +191,7 @@ export function parseProject(input: string | unknown): ProjectParse {
   errors.push(...checkScenario(v.scenario));
   if (errors.length > 0) return { ok: false, errors };
   const copy = structuredClone(v) as unknown as ProjectFile;
+  copy.program.version = 2;
   copy.title = copy.title.slice(0, MAX_TITLE);
   copy.scenario = { ...copy.scenario, tree: sortTree(copy.scenario.tree) };
   return { ok: true, project: copy };

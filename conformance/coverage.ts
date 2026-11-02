@@ -36,6 +36,24 @@ export const REQUIRED_VARIANTS: readonly string[] = [
     (c) => `findAndAct criterion ${c}`,
   ),
   ...['name', 'modified', 'size'].map((k) => `findFirst sortBy=${k}`),
+  ...['move', 'copy', 'delete', 'rename'].map((a) => `everyFile action=${a}`),
+  'everyFile includeSubfolders=true',
+  'everyFile includeSubfolders=false',
+  'everyFile makeFolder=true',
+  'everyFile makeFolder=false',
+  'goThrough includeSubfolders=true',
+  'goThrough includeSubfolders=false',
+  'repeatTimes',
+  'keepDoingUntil',
+  ...['first', 'biggest', 'smallest', 'newest', 'oldest'].map((k) => `findFile which=${k}`),
+  ...['listing', 'name', 'date', 'size'].map((k) => `filesIn order=${k}`),
+  'countFiles',
+  'typeOf by=category',
+  'typeOf by=extension',
+  'halvingSearch',
+  'hoist statement',
+  'hoist while condition',
+  'hoist short circuit',
 ];
 
 function walkStmts(stmts: Stmt[], visitStmt: (s: Stmt) => void, visitExpr: (e: Expr) => void): void {
@@ -55,6 +73,9 @@ function walkStmts(stmts: Stmt[], visitStmt: (s: Stmt) => void, visitExpr: (e: E
       case 'op':
       case 'call':
         e.args.forEach(expr);
+        break;
+      case 'compositeExpr':
+        Object.values(e.inputs).forEach(expr);
         break;
       default:
         break;
@@ -127,6 +148,29 @@ function variantsOf(c: CompositeStmt): string[] {
     case 'findFirst':
       out.push(`findFirst sortBy=${String(getField(c, 'sortBy'))}`);
       break;
+    case 'everyFile':
+      out.push(`everyFile action=${String(getField(c, 'action'))}`);
+      out.push(`everyFile includeSubfolders=${String(getField(c, 'includeSubfolders'))}`);
+      out.push(`everyFile makeFolder=${String(getField(c, 'makeFolder'))}`);
+      break;
+    case 'goThrough':
+      out.push(`goThrough includeSubfolders=${String(getField(c, 'includeSubfolders'))}`);
+      break;
+    case 'repeatTimes':
+      out.push('repeatTimes');
+      break;
+    case 'keepDoingUntil':
+      out.push('keepDoingUntil');
+      break;
+    case 'findFile':
+      out.push(`findFile which=${String(getField(c, 'which'))}`);
+      break;
+    case 'halvingSearch':
+      out.push('halvingSearch');
+      break;
+    case 'keepLeftHalf':
+    case 'keepRightHalf':
+      break;
   }
   return out;
 }
@@ -140,7 +184,14 @@ export function coverageReport(records: FixtureRecord[]): { complete: boolean; t
     walkStmts(
       allStmts(r.source),
       (s) => s.kind === 'composite' && variantsOf(s).forEach((v) => variants.add(v)),
-      (e) => e.kind === 'op' && ops.add(e.op),
+      (e) => {
+        if (e.kind === 'op') ops.add(e.op);
+        if (e.kind === 'compositeExpr') {
+          if (e.name === 'filesIn') variants.add(`filesIn order=${String(e.fields.order ?? 'listing')}`);
+          else if (e.name === 'typeOf') variants.add(`typeOf by=${String(e.fields.by ?? 'category')}`);
+          else variants.add(e.name);
+        }
+      },
     );
     if (r.errorCode) codes.add(r.errorCode);
   }

@@ -375,6 +375,8 @@ class Emitter {
           e.fn,
           e.args.map((a) => this.expr(a)),
         );
+      case 'compositeExpr':
+        throw new Error('Expression composites must be desugared before export.');
     }
   }
 

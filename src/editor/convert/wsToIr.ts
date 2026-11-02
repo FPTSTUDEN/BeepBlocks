@@ -302,7 +302,7 @@ export function wsToIr(ws: Blockly.Workspace): WsToIrResult {
     }
   }
   return {
-    program: { format: 'beepblocks-ir', version: 1, functions, body },
+    program: { format: 'beepblocks-ir', version: 2, functions, body },
     layout,
     warnings: r.warnings,
     issues: r.issues,

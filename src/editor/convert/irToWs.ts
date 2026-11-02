@@ -265,6 +265,9 @@ export class BlockBuilder {
         return this.op(e, scope, e.id);
       case 'call':
         return this.call(e.fn, e.args, scope, B.call, e.id);
+      case 'compositeExpr':
+        this.warnings.push(`Expression action "${e.id}" is not supported by the v1 editor yet.`);
+        return null;
     }
   }
 

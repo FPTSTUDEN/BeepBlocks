@@ -26,6 +26,8 @@ export function showExpr(e: Expr, nested = false): string {
     case 'op':
     case 'call':
       return `${e.kind === 'op' ? e.op : e.fn}(${e.args.map((x) => showExpr(x)).join(', ')})`;
+    case 'compositeExpr':
+      return `<${e.name}>`;
   }
 }
 

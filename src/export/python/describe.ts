@@ -62,6 +62,8 @@ export function describeExpr(e: Expr, depth = 0): string {
       return describeOp(e.op, e.args, depth);
     case 'call':
       return `${e.fn}(${e.args.map((x) => describeExpr(x, depth + 1)).join(', ')})`;
+    case 'compositeExpr':
+      return e.name;
   }
 }
 

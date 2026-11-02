@@ -7,7 +7,24 @@
 import type { NodeId, Stmt, Expr, Type, Program } from './types.ts';
 
 export const COMPOSITE_NAMES = ['renameByPattern', 'sortByType', 'findAndAct', 'findFirst'] as const;
-export type CompositeName = (typeof COMPOSITE_NAMES)[number];
+export type CompositeTaskName = (typeof COMPOSITE_NAMES)[number];
+export const ACTION_NAMES = [
+  'everyFile',
+  'makeFolderIfMissing',
+  'goThrough',
+  'repeatTimes',
+  'keepDoingUntil',
+  'findFile',
+  'halvingSearch',
+  'keepLeftHalf',
+  'keepRightHalf',
+] as const;
+export type ActionName = (typeof ACTION_NAMES)[number];
+export type CompositeName = CompositeTaskName | ActionName;
+export const COMPOSITE_EXPR_NAMES = ['filesIn', 'countFiles', 'typeOf'] as const;
+export type CompositeExprName = (typeof COMPOSITE_EXPR_NAMES)[number];
+export const ALL_COMPOSITE_NAMES = [...COMPOSITE_NAMES, ...ACTION_NAMES] as const;
+export type AnyCompositeName = CompositeName;
 
 /** Literal configuration value. `null` = optional field left unset. Dates are 'YYYY-MM-DD'. */
 export type FieldValue = string | number | boolean | null;
@@ -15,11 +32,20 @@ export type FieldValue = string | number | boolean | null;
 export interface CompositeStmt {
   id: NodeId;
   kind: 'composite';
-  name: CompositeName;
+  name: AnyCompositeName;
   fields: Record<string, FieldValue>;
   inputs: Record<string, Expr>;
   bodies: Record<string, Stmt[]>;
   /** User-chosen names for the variables this composite introduces, keyed by bind key. */
+  binds: Record<string, string>;
+}
+
+export interface CompositeExpr {
+  id: NodeId;
+  kind: 'compositeExpr';
+  name: CompositeExprName;
+  fields: Record<string, FieldValue>;
+  inputs: Record<string, Expr>;
   binds: Record<string, string>;
 }
 
@@ -54,7 +80,9 @@ export interface BindSchema {
 }
 
 export interface CompositeSchema {
-  name: CompositeName;
+  name: AnyCompositeName;
+  level: 'task' | 'action';
+  rank: number;
   label: string;
   help: string;
   fields: readonly FieldSchema[];
@@ -63,6 +91,18 @@ export interface CompositeSchema {
   binds: readonly BindSchema[];
   /** Cross-field requirements beyond the schema (checked by the validator). */
   requires?: readonly { when: { field: string; equals: FieldValue[] }; need: string[] }[];
+}
+
+export interface CompositeExprSchema {
+  name: CompositeExprName;
+  level: 'action';
+  rank: 1;
+  label: string;
+  help: string;
+  returns: Type;
+  fields: readonly FieldSchema[];
+  inputs: readonly InputSchema[];
+  binds: readonly BindSchema[];
 }
 
 // ---------------------------------------------------------- Desugar contract
@@ -78,10 +118,25 @@ export interface CompositeDef extends CompositeSchema {
   desugar(node: CompositeStmt, ctx: DesugarCtx): Stmt[];
 }
 
+export interface CompositeExprDef extends CompositeExprSchema {
+  desugar(node: CompositeExpr, ctx: DesugarCtx): { pre: Stmt[]; value: Expr };
+}
+
 /** Injected into editor/ and export/ by app/ so they need not import composites/. */
 export type DesugarProgram = (program: Program) => Program;
 /** Desugars a single composite in the context of a program (used by editor Expand). */
+export type DesugarOneResult =
+  | { kind: 'stmt'; stmts: Stmt[] }
+  | {
+      kind: 'expr';
+      pre: Stmt[];
+      value: Expr;
+      anchor: NodeId;
+      anchorRole: 'before' | 'whileCond' | 'shortCircuit';
+    };
+/** Legacy statement expansion API; v2 expression expansion uses DesugarOneResult internally. */
 export type DesugarOne = (program: Program, compositeId: NodeId) => Stmt[];
+export type DesugarFully = (program: Program, compositeId: NodeId) => DesugarOneResult;
 
 // ------------------------------------------------------------------ Schemas
 const PATH: Type = { t: 'path' };
@@ -90,6 +145,8 @@ const BOOL: Type = { t: 'bool' };
 export const COMPOSITE_SCHEMAS: Readonly<Record<CompositeName, CompositeSchema>> = {
   renameByPattern: {
     name: 'renameByPattern',
+    level: 'task',
+    rank: 3,
     label: 'Rename files matching a pattern',
     help:
       'Renames every file directly inside the folder whose name matches the pattern. ' +
@@ -113,6 +170,8 @@ export const COMPOSITE_SCHEMAS: Readonly<Record<CompositeName, CompositeSchema>>
 
   sortByType: {
     name: 'sortByType',
+    level: 'task',
+    rank: 3,
     label: 'Sort files into folders by type',
     help:
       'Moves each file directly inside the folder into a subfolder for its type, creating ' +
@@ -134,6 +193,8 @@ export const COMPOSITE_SCHEMAS: Readonly<Record<CompositeName, CompositeSchema>>
 
   findAndAct: {
     name: 'findAndAct',
+    level: 'task',
+    rank: 3,
     label: 'Find files and do something with them',
     help:
       'Finds files in the folder (and its subfolders, if chosen) that meet every criterion ' +
@@ -191,6 +252,8 @@ export const COMPOSITE_SCHEMAS: Readonly<Record<CompositeName, CompositeSchema>>
 
   findFirst: {
     name: 'findFirst',
+    level: 'task',
+    rank: 3,
     label: 'Find the first file where\u2026 (binary search)',
     help:
       'Sorts the files in the folder, then finds the first one where the condition is true ' +
@@ -218,14 +281,130 @@ export const COMPOSITE_SCHEMAS: Readonly<Record<CompositeName, CompositeSchema>>
       { key: 'match', type: PATH, defaultName: 'match', visibleIn: ['found'] },
     ],
   },
+} as unknown as Readonly<Record<CompositeName, CompositeSchema>>;
+
+const actionBase = (name: ActionName, rank = 1): Pick<CompositeSchema, 'name' | 'level' | 'rank'> => ({
+  name,
+  level: 'action',
+  rank,
+});
+
+export const ACTION_SCHEMAS: Readonly<Record<ActionName, CompositeSchema>> = {
+  everyFile: {
+    ...actionBase('everyFile', 2),
+    label: 'Do something to every file',
+    help: 'Does nothing when no file matches.',
+    fields: [
+      { key: 'action', kind: 'enum', label: 'action', default: 'move', options: ['move', 'copy', 'delete', 'rename'] },
+      { key: 'includeSubfolders', kind: 'bool', label: 'include subfolders', default: false },
+      { key: 'makeFolder', kind: 'bool', label: 'make folder', default: false },
+      { key: 'renameTemplate', kind: 'text', label: 'new name', optional: true, default: null, syntax: 'template' },
+    ],
+    inputs: [
+      { key: 'folder', label: 'in folder', type: PATH },
+      { key: 'condition', label: 'where', type: BOOL, optional: true },
+      { key: 'destination', label: 'into folder', type: PATH, optional: true },
+    ],
+    bodies: [],
+    binds: [{ key: 'file', type: PATH, defaultName: 'file', visibleIn: ['condition', 'destination'] }],
+  },
+  makeFolderIfMissing: {
+    ...actionBase('makeFolderIfMissing'),
+    label: 'Make folder if it is missing',
+    help: 'Makes the folder when it is missing and does nothing when it already exists.',
+    fields: [], inputs: [{ key: 'path', label: 'folder', type: PATH }], bodies: [], binds: [],
+  },
+  goThrough: {
+    ...actionBase('goThrough'),
+    label: 'Go through files one by one',
+    help: 'Runs the steps once for each file; does nothing when there are no files.',
+    fields: [{ key: 'includeSubfolders', kind: 'bool', label: 'include subfolders', default: false }],
+    inputs: [{ key: 'folder', label: 'in folder', type: PATH }],
+    bodies: [{ key: 'body', label: 'steps' }],
+    binds: [{ key: 'file', type: PATH, defaultName: 'file', visibleIn: ['body'] }],
+  },
+  repeatTimes: {
+    ...actionBase('repeatTimes'),
+    label: 'Repeat a number of times',
+    help: 'Runs the steps the given number of times; does nothing when the number is zero.',
+    fields: [], inputs: [{ key: 'n', label: 'times', type: { t: 'number' } }], bodies: [{ key: 'body', label: 'steps' }], binds: [],
+  },
+  keepDoingUntil: {
+    ...actionBase('keepDoingUntil'),
+    label: 'Keep doing until',
+    help: 'Checks the condition before each round and runs no steps when it is already true.',
+    fields: [], inputs: [{ key: 'condition', label: 'until', type: BOOL }], bodies: [{ key: 'body', label: 'steps' }], binds: [],
+  },
+  findFile: {
+    ...actionBase('findFile'),
+    label: 'Find a file',
+    help: 'Runs the matching steps, or the no-match steps when no file matches.',
+    fields: [
+      { key: 'which', kind: 'enum', label: 'which', default: 'first', options: ['first', 'biggest', 'smallest', 'newest', 'oldest'] },
+      { key: 'includeSubfolders', kind: 'bool', label: 'include subfolders', default: false },
+    ],
+    inputs: [
+      { key: 'folder', label: 'in folder', type: PATH },
+      { key: 'condition', label: 'where', type: BOOL, optional: true },
+    ],
+    bodies: [{ key: 'found', label: 'if found' }, { key: 'notFound', label: 'if none is found' }],
+    binds: [
+      { key: 'file', type: PATH, defaultName: 'file', visibleIn: ['condition'] },
+      { key: 'found', type: PATH, defaultName: 'found', visibleIn: ['found'] },
+    ],
+  },
+  halvingSearch: {
+    ...actionBase('halvingSearch'),
+    label: 'Search by halving',
+    help: 'Looks at the middle item repeatedly and runs the matching result steps.',
+    fields: [], inputs: [{ key: 'line', label: 'line', type: { t: 'list', of: PATH } }],
+    bodies: [{ key: 'decide', label: 'decide' }, { key: 'found', label: 'if found' }, { key: 'notFound', label: 'if none is found' }],
+    binds: [
+      { key: 'middle', type: PATH, defaultName: 'middle', visibleIn: ['decide'] },
+      { key: 'answer', type: PATH, defaultName: 'answer', visibleIn: ['found'] },
+    ],
+  },
+  keepLeftHalf: { ...actionBase('keepLeftHalf'), label: 'Keep the left half, including the middle', help: 'Used inside a halving search.', fields: [], inputs: [], bodies: [], binds: [] },
+  keepRightHalf: { ...actionBase('keepRightHalf'), label: 'Keep the right half', help: 'Used inside a halving search.', fields: [], inputs: [], bodies: [], binds: [] },
 };
+
+export const COMPOSITE_EXPR_SCHEMAS: Readonly<Record<CompositeExprName, CompositeExprSchema>> = {
+  filesIn: {
+    name: 'filesIn', level: 'action', rank: 1, label: 'The files in', help: 'Returns matching files in the requested order.',
+    returns: { t: 'list', of: PATH },
+    fields: [
+      { key: 'includeSubfolders', kind: 'bool', label: 'include subfolders', default: false },
+      { key: 'order', kind: 'enum', label: 'lined up by', default: 'listing', options: ['listing', 'name', 'date', 'size'] },
+    ],
+    inputs: [{ key: 'folder', label: 'folder', type: PATH }, { key: 'condition', label: 'where', type: BOOL, optional: true }],
+    binds: [{ key: 'file', type: PATH, defaultName: 'file', visibleIn: ['condition'] }],
+  },
+  countFiles: {
+    name: 'countFiles', level: 'action', rank: 1, label: 'How many files', help: 'Returns zero when no files match.',
+    returns: { t: 'number' },
+    fields: [{ key: 'includeSubfolders', kind: 'bool', label: 'include subfolders', default: false }],
+    inputs: [{ key: 'folder', label: 'folder', type: PATH }, { key: 'condition', label: 'where', type: BOOL, optional: true }],
+    binds: [{ key: 'file', type: PATH, defaultName: 'file', visibleIn: ['condition'] }],
+  },
+  typeOf: {
+    name: 'typeOf', level: 'action', rank: 1, label: 'The type of', help: 'Returns the file type category or extension.',
+    returns: { t: 'text' },
+    fields: [{ key: 'by', kind: 'enum', label: 'by', default: 'category', options: ['category', 'extension'] }],
+    inputs: [{ key: 'file', label: 'file', type: PATH }],
+    binds: [],
+  },
+};
+
+export function schemaFor(name: AnyCompositeName): CompositeSchema {
+  return COMPOSITE_SCHEMAS[name as CompositeName] ?? ACTION_SCHEMAS[name as ActionName];
+}
 
 // ------------------------------------------------------------------ Helpers
 
 /** Field value with the schema default applied for missing keys. */
 export function getField(node: CompositeStmt, key: string): FieldValue {
   if (key in node.fields) return node.fields[key] ?? null;
-  const schema = COMPOSITE_SCHEMAS[node.name].fields.find((f) => f.key === key);
+  const schema = schemaFor(node.name).fields.find((f) => f.key === key);
   if (!schema) throw new Error(`Composite ${node.name} has no field "${key}"`);
   return schema.default;
 }
@@ -234,7 +413,7 @@ export function getField(node: CompositeStmt, key: string): FieldValue {
 export function getBind(node: CompositeStmt, key: string): string {
   const name = node.binds[key];
   if (typeof name === 'string' && name.length > 0) return name;
-  const schema = COMPOSITE_SCHEMAS[node.name].binds.find((b) => b.key === key);
+  const schema = schemaFor(node.name).binds.find((b) => b.key === key);
   if (!schema) throw new Error(`Composite ${node.name} has no bind "${key}"`);
   return schema.defaultName;
 }

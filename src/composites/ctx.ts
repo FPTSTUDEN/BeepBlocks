@@ -8,7 +8,7 @@
  * validator would reject.
  */
 import type { CompositeStmt, DesugarCtx } from '../ir/composites.ts';
-import { COMPOSITE_SCHEMAS, getBind } from '../ir/composites.ts';
+import { COMPOSITE_EXPR_SCHEMAS, schemaFor, getBind } from '../ir/composites.ts';
 import { derivedId } from '../ir/ids.ts';
 import type { Expr, FunctionDef, NodeId, Program, Stmt } from '../ir/types.ts';
 import { checkIdentifier } from '../ir/validate.ts';
@@ -34,6 +34,13 @@ function collectExpr(e: Expr, out: Set<string>): void {
     case 'call':
       for (const a of e.args) collectExpr(a, out);
       return;
+    case 'compositeExpr':
+      for (const bind of COMPOSITE_EXPR_SCHEMAS[e.name].binds) {
+        const name = e.binds[bind.key];
+        out.add(name || bind.defaultName);
+      }
+      for (const a of Object.values(e.inputs)) collectExpr(a, out);
+      return;
     case 'lit':
     case 'date':
       return;
@@ -41,7 +48,7 @@ function collectExpr(e: Expr, out: Set<string>): void {
 }
 
 function collectComposite(s: CompositeStmt, out: Set<string>): void {
-  const schema = COMPOSITE_SCHEMAS[s.name];
+  const schema = schemaFor(s.name);
   for (const bind of schema.binds) out.add(getBind(s, bind.key));
   // Unknown bind keys are invalid, but avoiding their names costs nothing.
   for (const name of Object.values(s.binds)) if (name) out.add(name);

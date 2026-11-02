@@ -20,9 +20,14 @@ import { ARITH_OPS, COMPARE_OPS, typeEquals, typeToPlain } from './types.ts';
 import type { ValidationCode, ValidationError } from './errors.ts';
 import { OPS, isOpName, type SigType } from './ops.ts';
 import {
+  ACTION_NAMES,
+  COMPOSITE_EXPR_NAMES,
+  COMPOSITE_EXPR_SCHEMAS,
   COMPOSITE_NAMES,
-  COMPOSITE_SCHEMAS,
   getBind,
+  schemaFor,
+  type CompositeExpr,
+  type CompositeExprSchema,
   type CompositeSchema,
   type CompositeStmt,
   type FieldSchema,
@@ -105,7 +110,7 @@ class Reporter {
 // ================================================================ Structure
 
 const STMT_KINDS = ['assign', 'if', 'while', 'forEach', 'return', 'do', 'print', 'composite'];
-const EXPR_KINDS = ['lit', 'date', 'list', 'var', 'binary', 'unary', 'op', 'call'];
+const EXPR_KINDS = ['lit', 'date', 'list', 'var', 'binary', 'unary', 'op', 'call', 'compositeExpr'];
 const BIN_OPS = [...ARITH_OPS, ...COMPARE_OPS, 'and', 'or'];
 
 function checkStructure(p: unknown, r: Reporter, primitiveOnly: boolean, allowHoles = false): void {
@@ -178,6 +183,16 @@ function checkStructure(p: unknown, r: Reporter, primitiveOnly: boolean, allowHo
         if (!Array.isArray(v.args)) r.error(id, 'STRUCTURE', 'A call needs arguments.');
         else v.args.forEach((x, i) => expr(x, id, `argument ${i + 1}`));
         break;
+      case 'compositeExpr':
+        if (primitiveOnly) r.error(id, 'STRUCTURE', 'Expression actions must be desugared before running or exporting.');
+        if (typeof v.name !== 'string' || !(COMPOSITE_EXPR_NAMES as readonly string[]).includes(v.name)) {
+          r.error(id, 'UNKNOWN_COMPOSITE', `Unknown expression action "${String(v.name)}".`);
+        }
+        for (const key of ['fields', 'inputs', 'binds'] as const) {
+          if (!isObj(v[key])) r.error(id, 'STRUCTURE', `Expression action is missing "${key}".`);
+        }
+        if (isObj(v.inputs)) for (const [k, x] of Object.entries(v.inputs)) expr(x, id, `input "${k}"`);
+        break;
     }
   };
   const stmt = (v: unknown): void => {
@@ -223,8 +238,8 @@ function checkStructure(p: unknown, r: Reporter, primitiveOnly: boolean, allowHo
         if (primitiveOnly) {
           r.error(id, 'STRUCTURE', 'Task blocks must be desugared before running or exporting.');
         }
-        if (typeof v.name !== 'string' || !(COMPOSITE_NAMES as readonly string[]).includes(v.name)) {
-          r.error(id, 'UNKNOWN_COMPOSITE', `Unknown task block "${String(v.name)}".`);
+        if (typeof v.name !== 'string' || !(COMPOSITE_NAMES as readonly string[]).includes(v.name) && !(ACTION_NAMES as readonly string[]).includes(v.name)) {
+          r.error(id, 'UNKNOWN_COMPOSITE', `Unknown composite block "${String(v.name)}".`);
         }
         for (const key of ['fields', 'inputs', 'bodies', 'binds'] as const) {
           if (!isObj(v[key])) r.error(id, 'STRUCTURE', `Task block is missing "${key}".`);
@@ -513,7 +528,7 @@ class Checker {
   // ----------------------------------------------------------- composites
 
   private composite(s: CompositeStmt, scope: Scope, defined: Set<string>): void {
-    const schema: CompositeSchema | undefined = COMPOSITE_SCHEMAS[s.name];
+    const schema: CompositeSchema | undefined = schemaFor(s.name);
     if (!schema) return;
 
     // Fields.
@@ -819,7 +834,51 @@ class Checker {
         }
         return f.returns;
       }
+      case 'compositeExpr': {
+        const schema: CompositeExprSchema | undefined = COMPOSITE_EXPR_SCHEMAS[e.name];
+        if (!schema) this.fail(e.id, 'UNKNOWN_COMPOSITE', `Unknown expression action "${e.name}".`);
+        this.compositeExpr(e, schema, scope, defined);
+        return schema.returns;
+      }
     }
+  }
+
+  private compositeExpr(
+    e: CompositeExpr,
+    schema: CompositeExprSchema,
+    scope: Scope,
+    defined: Set<string>,
+  ): void {
+    const known = new Set(schema.fields.map((f) => f.key));
+    for (const key of Object.keys(e.fields)) if (!known.has(key)) this.r.error(e.id, 'BAD_FIELD', `Unknown setting "${key}".`);
+    for (const f of schema.fields) this.fieldLike(e.id, e.fields, f);
+    const bindNames = new Map<string, string>();
+    for (const b of schema.binds) {
+      const name = typeof e.binds[b.key] === 'string' && e.binds[b.key] ? e.binds[b.key]! : b.defaultName;
+      this.declare(scope, name, b.type, e.id);
+      bindNames.set(b.key, name);
+    }
+    const visibleIn = (slot: string): Set<string> => {
+      const d = new Set(defined);
+      for (const b of schema.binds) if (b.visibleIn.includes(slot)) d.add(bindNames.get(b.key)!);
+      return d;
+    };
+    for (const key of Object.keys(e.inputs)) if (!schema.inputs.some((i) => i.key === key)) this.r.error(e.id, 'BAD_FIELD', `Unknown input "${key}".`);
+    for (const inp of schema.inputs) {
+      const x = e.inputs[inp.key];
+      if (!x) {
+        if (!inp.optional) this.r.error(e.id, 'MISSING_INPUT', `Please fill in "${inp.label}".`);
+        continue;
+      }
+      const t = this.exprSafe(x, scope, visibleIn(inp.key));
+      if (t && !typeEquals(t, inp.type)) this.r.error(x.id, 'TYPE_MISMATCH', `"${inp.label}" needs ${typeToPlain(inp.type)}, but got ${typeToPlain(t)}.`);
+    }
+    for (const key of Object.keys(e.binds)) if (!schema.binds.some((b) => b.key === key)) this.r.error(e.id, 'BAD_FIELD', `Unknown variable slot "${key}".`);
+  }
+
+  private fieldLike(nodeId: NodeId, fields: Record<string, unknown>, f: FieldSchema): void {
+    const value = f.key in fields ? fields[f.key] : f.default;
+    this.field({ id: nodeId, fields: { [f.key]: value } } as CompositeStmt, f);
   }
 }
 
@@ -841,7 +900,62 @@ export function typecheck(program: Program, opts: ValidateOptions = {}): Typeche
 
 /** Validates a program. Returns errors and warnings (empty = valid). Never throws. */
 export function validateProgram(program: Program, opts: ValidateOptions = {}): ValidationError[] {
-  return typecheck(program, opts).issues;
+  const result = typecheck(program, opts);
+  if (!result.issues.some((i) => i.severity === 'error')) validateMarkers(program, result.issues);
+  return result.issues;
+}
+
+function validateMarkers(program: Program, issues: ValidationError[]): void {
+  const error = (nodeId: NodeId, code: 'MISPLACED_BLOCK' | 'INCOMPLETE_SEARCH', message: string) =>
+    issues.push({ nodeId, code, message, severity: 'error' });
+  const visitExpr = (e: Expr, insideSearch = false): void => {
+    if (e.kind === 'compositeExpr') Object.values(e.inputs).forEach((x) => visitExpr(x, insideSearch));
+    else if (e.kind === 'list') e.items.forEach((x) => visitExpr(x, insideSearch));
+    else if (e.kind === 'binary') { visitExpr(e.left, insideSearch); visitExpr(e.right, insideSearch); }
+    else if (e.kind === 'unary') visitExpr(e.arg, insideSearch);
+    else if (e.kind === 'op' || e.kind === 'call') e.args.forEach((x) => visitExpr(x, insideSearch));
+  };
+  const visit = (stmts: readonly Stmt[], searchDecide: boolean, inLoopOrComposite: boolean): boolean => {
+    let endsWithMarker = false;
+    for (const s of stmts) {
+      if (s.kind === 'composite' && (s.name === 'keepLeftHalf' || s.name === 'keepRightHalf')) {
+        if (!searchDecide || inLoopOrComposite) error(s.id, 'MISPLACED_BLOCK', 'This half marker is only allowed directly in a halving search decision.');
+        endsWithMarker = true;
+        continue;
+      }
+      endsWithMarker = false;
+      switch (s.kind) {
+        case 'assign': visitExpr(s.value, searchDecide); break;
+        case 'if': {
+          visitExpr(s.cond, searchDecide);
+          const a = visit(s.then, searchDecide, inLoopOrComposite);
+          const b = visit(s.else, searchDecide, inLoopOrComposite);
+          if (searchDecide && (!a || !b)) error(s.id, 'INCOMPLETE_SEARCH', 'Every path in a halving search decision must end with a half marker.');
+          endsWithMarker = searchDecide && a && b;
+          break;
+        }
+        case 'while':
+        case 'forEach':
+          visitExpr(s.kind === 'while' ? s.cond : s.list, searchDecide);
+          visit(s.body, false, true);
+          break;
+        case 'return': if (s.value) visitExpr(s.value, searchDecide); break;
+        case 'do': visitExpr(s.expr, searchDecide); break;
+        case 'print': visitExpr(s.value, searchDecide); break;
+        case 'composite':
+          Object.values(s.inputs).forEach((x) => visitExpr(x, false));
+          Object.values(s.bodies).forEach((b) => visit(b, false, true));
+          if (s.name === 'halvingSearch') {
+            const decide = s.bodies.decide ?? [];
+            if (!visit(decide, true, false)) error(s.id, 'INCOMPLETE_SEARCH', 'Every path in a halving search decision must end with a half marker.');
+          }
+          break;
+      }
+    }
+    return endsWithMarker;
+  };
+  visit(program.body, false, false);
+  for (const fn of program.functions) visit(fn.body, false, false);
 }
 
 /**

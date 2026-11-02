@@ -723,16 +723,16 @@ describe('desugarProgram', () => {
     expect(desugarProgram(nested())).toEqual(desugarProgram(nested()));
   });
 
-  it('desugars nested composites (innermost first) and ids stay unique and derived', () => {
+  it('desugars nested composites outermost first and ids stay unique and derived', () => {
     const d = desugarOk(nested());
     expect(hasComposite(d.body)).toBe(false);
     const all = ids(d.body);
     expect(new Set(all).size).toBe(all.length);
     expect(all.filter((i) => i.startsWith('inner/')).length).toBeGreaterThan(0);
-    // Innermost first: the inner composite got the unsuffixed temps.
+    // Outer-first: the outer composite gets the unsuffixed temps.
     const text = show(d.body);
-    expect(text).toContain('    for item in fs.list(fs.parent(match)):');
-    expect(text).toContain('for item_2 in fs.list(fs.root()):');
+    expect(text).toContain('for item in fs.list(fs.root()):');
+    expect(text).toContain('    for item_2 in fs.list(fs.parent(match)):');
     // Desugared ids map back to their composite.
     for (const id of all) {
       expect(

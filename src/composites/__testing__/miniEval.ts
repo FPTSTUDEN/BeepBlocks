@@ -242,6 +242,8 @@ export function runMini(program: Program, init: readonly MiniEntry[]): MiniResul
       }
       case 'call':
         throw new Error('functions are not supported by the mini evaluator');
+      case 'compositeExpr':
+        throw new Error('expression composites must be desugared first');
       case 'op': {
         const a = e.args.map(ev);
         const at = e.id;
