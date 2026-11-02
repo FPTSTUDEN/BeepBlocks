@@ -121,3 +121,48 @@ describe('App shell', () => {
     expect(store.getState().project.title).toBe('Untitled project');
   });
 });
+
+describe('App shell keyboard access', () => {
+  it('offers skip links to both panes', () => {
+    renderApp();
+    const nav = screen.getByRole('navigation', { name: 'Skip links' });
+    const links = within(nav).getAllByRole('link');
+    expect(links.map((a) => a.getAttribute('href'))).toEqual(['#bp-editor-pane', '#bp-playground-pane']);
+    for (const a of links) {
+      const target = document.querySelector(a.getAttribute('href')!) as HTMLElement | null;
+      expect(target?.tabIndex).toBe(-1);
+    }
+  });
+
+  it('closes the settings popover with Escape and returns focus to its button', () => {
+    renderApp();
+    const summary = screen.getByText('Settings');
+    const details = summary.closest('details')!;
+    details.open = true;
+    const dark = screen.getByRole('radio', { name: 'Dark' });
+    dark.focus();
+    fireEvent.keyDown(dark, { key: 'Escape' });
+    expect(details.open).toBe(false);
+    expect(document.activeElement).toBe(summary);
+  });
+
+  it('keeps focus in the settings panel after Reset disables itself', () => {
+    const store = renderApp();
+    act(() => store.getState().setSettings({ accent: '#ff0000' }));
+    const details = screen.getByText('Settings').closest('details')!;
+    details.open = true;
+    const reset = within(details).getByRole('button', { name: 'Reset' });
+    reset.focus();
+    fireEvent.click(reset);
+    expect(store.getState().settings.accent).toBe('#2563eb');
+    expect(document.activeElement).toBe(screen.getByLabelText('Accent colour'));
+  });
+
+  it('labels the scenario editing toggle by its action only', () => {
+    renderApp();
+    const btn = screen.getByRole('button', { name: 'Edit scenario' });
+    expect(btn.getAttribute('aria-pressed')).toBeNull();
+    fireEvent.click(btn);
+    expect(screen.getByRole('button', { name: 'Done editing' })).toBeTruthy();
+  });
+});

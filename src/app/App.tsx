@@ -126,6 +126,10 @@ function Shell({ store }: { store: AppStore }) {
 
   return (
     <div className="app">
+      <nav className="skip-links" aria-label="Skip links">
+        <a href="#bp-editor-pane">Skip to the block editor</a>
+        <a href="#bp-playground-pane">Skip to the playground</a>
+      </nav>
       <header className="topbar">
         <h1>BeepBlocks</h1>
         <input
@@ -149,10 +153,10 @@ function Shell({ store }: { store: AppStore }) {
           {scenarioEdited && builtin && <span className="hint">(edited)</span>}
           <button
             type="button"
-            className="btn"
-            aria-pressed={editingScenario}
+            className={editingScenario ? 'btn primary' : 'btn'}
             onClick={() => actions.setEditingScenario(!editingScenario)}
           >
+            {/* The label states the action; no aria-pressed as well (it would contradict it). */}
             {editingScenario ? 'Done editing' : 'Edit scenario'}
           </button>
         </div>
@@ -204,7 +208,7 @@ function Shell({ store }: { store: AppStore }) {
         </div>
       </header>
 
-      <div className="banners" aria-live="polite">
+      <div className="banners">
         {runProblem?.kind === 'invalid' && (
           <div className="banner danger" role="alert">
             <strong>Can’t run yet:</strong>
@@ -227,7 +231,7 @@ function Shell({ store }: { store: AppStore }) {
           </div>
         )}
         {saveFailed && (
-          <div className="banner warning" role="status">
+          <div className="banner warning" role="alert">
             <strong>Not saved:</strong>
             <span>
               The browser refused to store this project. Use “Save file” to keep a copy.
@@ -237,7 +241,7 @@ function Shell({ store }: { store: AppStore }) {
       </div>
 
       <main className="workspace">
-        <div className="pane editor">
+        <div className="pane editor" id="bp-editor-pane" tabIndex={-1}>
           <BlockEditor
             program={project.program}
             layout={project.layout}
@@ -248,7 +252,7 @@ function Shell({ store }: { store: AppStore }) {
             themeKey={`${settings.mode}:${settings.accent}`}
           />
         </div>
-        <div className="pane">
+        <div className="pane" id="bp-playground-pane" tabIndex={-1}>
           <Playground
             initial={project.scenario.tree}
             timeline={timeline}

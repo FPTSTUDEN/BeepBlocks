@@ -12,6 +12,8 @@ import {
 
 const MODES: Mode[] = ['light', 'dark'];
 const TEXT_VARS = ['--bp-fg', '--bp-muted', '--bp-danger', '--bp-warning', '--bp-success'];
+/** Everything text is drawn on (the active row uses highlight-bg). */
+const BACKGROUNDS = ['--bp-bg', '--bp-surface', '--bp-highlight-bg'];
 
 describe('visual themes', () => {
   it('matches WCAG reference values', () => {
@@ -19,12 +21,18 @@ describe('visual themes', () => {
     expect(contrast('#777777', '#ffffff')).toBeCloseTo(4.48, 2);
   });
 
-  it.each(MODES)('%s preset text colours reach 4.5:1 on bg and surface', (mode) => {
+  it.each(MODES)('%s preset text colours reach 4.5:1 on every text background', (mode) => {
     const p = PRESETS[mode];
     for (const v of TEXT_VARS) {
-      expect(contrast(p[v]!, p['--bp-bg']!), `${v} on bg`).toBeGreaterThanOrEqual(4.5);
-      expect(contrast(p[v]!, p['--bp-surface']!), `${v} on surface`).toBeGreaterThanOrEqual(4.5);
+      for (const bg of BACKGROUNDS) {
+        expect(contrast(p[v]!, p[bg]!), `${v} on ${bg}`).toBeGreaterThanOrEqual(4.5);
+      }
     }
+  });
+
+  it.each(MODES)('%s preset highlight (stroke, marker) reaches 3:1 (non-text) on bg', (mode) => {
+    const p = PRESETS[mode];
+    expect(contrast(p['--bp-highlight']!, p['--bp-bg']!)).toBeGreaterThanOrEqual(3);
   });
 
   it.each(MODES)('%s preset border reaches 3:1 (non-text) on bg and surface', (mode) => {
@@ -38,7 +46,9 @@ describe('visual themes', () => {
     '%s mode keeps accent %s legible',
     (mode, accent) => {
       const vars = themeVars({ mode, accent });
-      expect(contrast(vars['--bp-accent']!, vars['--bp-bg']!)).toBeGreaterThanOrEqual(4.5);
+      for (const bg of BACKGROUNDS) {
+        expect(contrast(vars['--bp-accent']!, vars[bg]!), `accent on ${bg}`).toBeGreaterThanOrEqual(4.5);
+      }
       expect(contrast(vars['--bp-accent-fg']!, vars['--bp-accent']!)).toBeGreaterThanOrEqual(4.5);
     },
   );

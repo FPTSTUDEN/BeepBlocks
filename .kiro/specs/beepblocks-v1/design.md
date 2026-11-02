@@ -707,10 +707,13 @@ v1 registers one theme, `fileExplorer`. The IR core, interpreter loop, and expor
 ### 10.2 Visual themes
 
 - CSS custom properties hold the light and dark presets.
-- The accent color is user-chosen. It is used for text, tags and focus rings, so the applied accent is the user's color blended toward the preset foreground just enough to reach 4.5:1 against the background (the settings menu shows the adjusted color when that happens). Foreground-on-accent is black or white, whichever contrasts more, which is always at least 4.58:1.
-- Preset text colors reach 4.5:1 and borders 3:1 on both background and surface (unit-tested).
+- Text sits on three backgrounds: `--bp-bg`, `--bp-surface`, and `--bp-highlight-bg` (the active row's tint). `--bp-highlight` is a stroke/marker colour only (running block, keyboard cursor), never behind text; it reaches 3:1 on bg.
+- The accent color is user-chosen. It is used for text, tags and focus rings, so the applied accent is the user's color blended toward the preset foreground just enough to reach 4.5:1 against all three text backgrounds (the settings menu shows the adjusted color when that happens). Foreground-on-accent is black or white, whichever contrasts more, which is always at least 4.58:1.
+- Preset text colors reach 4.5:1 on all three backgrounds, and borders 3:1 on bg and surface (unit-tested, including 10 extreme accents per mode).
+- No text is dimmed with `opacity` (it would undo the contrast guarantees): deleted rows use the muted colour plus strike-through, and the stale state uses grayscale plus the "Program changed" message.
 - The Blockly theme is derived from the same variables.
 - Settings persist in `localStorage` under the key `beepblocks.settings`.
+- `pnpm smoke` runs axe-core (WCAG 2.1 A/AA rules) in several page states in both presets and fails on any violation.
 
 ## 11. Conformance Suite
 

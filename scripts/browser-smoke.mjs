@@ -8,7 +8,8 @@
  * BP_BROWSER overrides the browser executable. Exits 1 on any failed check or page error.
  */
 import { spawn } from 'node:child_process';
-import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { preview } from 'vite';
@@ -76,6 +77,9 @@ const browser = spawn(
 
 const problems = [];
 const pageErrors = [];
+/** Page states the axe audit ran on. */
+const audits = [];
+const axeSource = readFileSync(createRequire(import.meta.url).resolve('axe-core/axe.min.js'), 'utf8');
 let ws;
 try {
   let page;
@@ -124,6 +128,30 @@ try {
     }
     throw new Error(`Timed out waiting for ${what}`);
   };
+  /**
+   * WCAG 2.1 A/AA audit of the current page state with axe-core. Violations are collected as
+   * problems (one line per rule and element).
+   */
+  const audit = async (label) => {
+    if (!(await evaluate('!!window.axe'))) await evaluate(axeSource);
+    const result = await evaluate(`(async () => {
+      const r = await axe.run(document, {
+        runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'] },
+        resultTypes: ['violations'],
+      });
+      return r.violations.map((v) => ({
+        id: v.id,
+        help: v.help,
+        nodes: v.nodes.slice(0, 5).map((n) => n.target.join(' ') + (n.failureSummary ? ' :: ' + n.failureSummary.split('\\n').slice(1, 2).join('').trim() : '')),
+        count: v.nodes.length,
+      }));
+    })()`);
+    audits.push(label);
+    for (const v of result) {
+      problems.push(`axe [${label}] ${v.id} (${v.count}): ${v.help}`);
+      for (const n of v.nodes) problems.push(`    ${n}`);
+    }
+  };
   listeners.push((m) => {
     if (m.method === 'Runtime.exceptionThrown') {
       pageErrors.push(m.params.exceptionDetails.exception?.description ?? m.params.exceptionDetails.text);
@@ -146,6 +174,8 @@ try {
 
   // 1b. First run opens a starter; every starter opens from the New dialog and renders its blocks.
   await waitFor(`document.querySelector('.title-input')?.value === 'Sort my downloads'`, 'the first-run starter');
+  await waitFor(`document.querySelectorAll('.blocklyDraggable').length >= 1`, 'the first-run blocks');
+  await audit('first run, light');
   const starters = [
     ['Sort my downloads', 'Messy Downloads folder'],
     ['Rename camera photos', 'Camera photos'],
@@ -155,6 +185,7 @@ try {
   for (const [title, scenario] of starters) {
     await evaluate(`[...document.querySelectorAll('button')].find(b => b.textContent === 'New…').click()`);
     await waitFor(`!!document.querySelector('dialog[open]')`, 'the New dialog');
+    if (title === starters[0][0]) await audit('New dialog, light');
     await evaluate(
       `document.querySelector('dialog[open] button[aria-label=' + JSON.stringify(${JSON.stringify(`Open example “${title}”`)}) + ']').click()`,
     );
@@ -172,6 +203,14 @@ try {
   );
   await evaluate(`[...document.querySelectorAll('button')].find(b => b.textContent.trim().endsWith('Run')).click()`);
   await waitFor(`/Step \\d+ of \\d+|Done/.test(document.body.innerText)`, 'the bisect timeline');
+  // Pause partway (active row, tags, position gutter on screen) for an audit.
+  await evaluate(`(async () => {
+    const pause = [...document.querySelectorAll('button')].find(b => b.textContent.trim().endsWith('Pause'));
+    pause?.click();
+    const fwd = [...document.querySelectorAll('button')].find(b => b.textContent.includes('Step forward'));
+    for (let i = 0; i < 150 && !fwd.disabled; i++) { fwd.click(); await new Promise(r => setTimeout(r, 0)); }
+  })()`);
+  await audit('bisect mid-run, light');
   await evaluate(`(async () => {
     const fwd = [...document.querySelectorAll('button')].find(b => b.textContent.includes('Step forward'));
     for (let i = 0; i < 2000 && !fwd.disabled; i++) { fwd.click(); await new Promise(r => setTimeout(r, 0)); }
@@ -233,10 +272,19 @@ try {
   await waitFor(`!!document.querySelector('dialog[open] pre')`, 'the export dialog');
   const script = await evaluate(`document.querySelector('dialog[open] pre').textContent`);
   if (!script.includes('--apply') || !script.includes('smoke start')) problems.push('export preview looks wrong');
+  await audit('export dialog, light');
 
-  // 5. Dark theme applies.
-  await evaluate(`(() => { document.querySelector('dialog[open]')?.close(); document.querySelector('input[value=dark]').click(); })()`);
+  // 5. Dark theme applies; audit the finished run and a step with diff badges in dark mode.
+  await evaluate(`[...document.querySelectorAll('dialog[open] button')].find(b => b.textContent === 'Close').click()`);
+  await waitFor(`!document.querySelector('dialog[open]')`, 'the export dialog to close');
+  await evaluate(`document.querySelector('input[value=dark]').click()`);
   await waitFor(`document.documentElement.dataset.bpMode === 'dark'`, 'dark mode');
+  await audit('run done, dark');
+  await evaluate(`(async () => {
+    const back = [...document.querySelectorAll('button')].find(b => b.textContent.includes('Step back'));
+    for (let i = 0; i < 6 && !back.disabled; i++) { back.click(); await new Promise(r => setTimeout(r, 0)); }
+  })()`);
+  await audit('mid-run with diffs, dark');
 } catch (err) {
   problems.push(err instanceof Error ? err.message : String(err));
 } finally {
@@ -253,4 +301,4 @@ if (problems.length > 0) {
   for (const p of problems) console.log(`  - ${p}`);
   process.exit(1);
 }
-console.log(`PASS browser smoke test (${browserPath.split(/[\\/]/).pop()})`);
+console.log(`PASS browser smoke test (${browserPath.split(/[\\/]/).pop()}; axe clean in: ${audits.join(', ')})`);

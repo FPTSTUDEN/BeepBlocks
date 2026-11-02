@@ -20,7 +20,11 @@ const FONTS = {
   '--bp-mono': 'ui-monospace, "Cascadia Mono", Consolas, monospace',
 };
 
-/** Presets for every variable except the accent pair. Text colours are ≥ 4.5:1 on bg and surface. */
+/**
+ * Presets for every variable except the accent pair (design.md §10.2). Text colours are
+ * ≥ 4.5:1 on every background: bg, surface, and highlight-bg (the active row). The highlight
+ * itself is a stroke/marker colour (≥ 3:1 on bg); it is never used behind text.
+ */
 export const PRESETS: Record<Mode, Record<string, string>> = {
   light: {
     '--bp-bg': '#ffffff',
@@ -32,6 +36,7 @@ export const PRESETS: Record<Mode, Record<string, string>> = {
     '--bp-warning': '#92400e',
     '--bp-success': '#047857',
     '--bp-highlight': '#d97706',
+    '--bp-highlight-bg': '#fef3c7',
     ...FONTS,
   },
   dark: {
@@ -44,6 +49,7 @@ export const PRESETS: Record<Mode, Record<string, string>> = {
     '--bp-warning': '#fcd34d',
     '--bp-success': '#6ee7b7',
     '--bp-highlight': '#fbbf24',
+    '--bp-highlight-bg': '#5c3d0e',
     ...FONTS,
   },
 };
@@ -85,18 +91,21 @@ export function foregroundOn(bg: string): '#000000' | '#ffffff' {
   return contrast(bg, '#000000') >= contrast(bg, '#ffffff') ? '#000000' : '#ffffff';
 }
 
+/** Backgrounds that text can sit on. */
+const TEXT_BACKGROUNDS = ['--bp-bg', '--bp-surface', '--bp-highlight-bg'] as const;
+
 /**
  * The accent as applied: the user's colour, blended towards the preset foreground just enough
- * to reach 4.5:1 against the background (it is used for text, tags and focus rings).
+ * to reach 4.5:1 against every text background (it is used for text, tags and focus rings).
  */
 export function legibleAccent(accent: string, mode: Mode): string {
-  const bg = PRESETS[mode]['--bp-bg']!;
+  const bgs = TEXT_BACKGROUNDS.map((k) => PRESETS[mode][k]!);
   const target = rgb(PRESETS[mode]['--bp-fg']!);
   const from = rgb(accent);
   for (let step = 0; step <= 20; step++) {
     const t = step / 20;
     const mixed = toHex(from.map((c, i) => c + (target[i]! - c) * t) as [number, number, number]);
-    if (contrast(mixed, bg) >= 4.5) return mixed;
+    if (bgs.every((bg) => contrast(mixed, bg) >= 4.5)) return mixed;
   }
   return PRESETS[mode]['--bp-fg']!;
 }
