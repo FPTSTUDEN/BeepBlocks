@@ -14,6 +14,16 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+it('keeps focus on the replacement playback control', () => {
+  render(<Harness timeline={rename} />);
+  const run = screen.getByRole('button', { name: /Run/ });
+  run.focus();
+  fireEvent.click(run);
+  expect(document.activeElement).toBe(screen.getByRole('button', { name: /Pause/ }));
+  fireEvent.click(screen.getByRole('button', { name: /Pause/ }));
+  expect(document.activeElement).toBe(screen.getByRole('button', { name: /Run/ }));
+});
+
 const { rename, sort, bisect, error } = MOCK_TIMELINES;
 const { cleanup: cleanupTl } = EXTRA_TIMELINES;
 
@@ -68,8 +78,26 @@ describe('Playground renders every mock timeline', () => {
           container.querySelectorAll('[data-kind="print"], [data-kind="action"]'),
         ).toHaveLength(s.output);
       });
+
     },
   );
+});
+
+it('uses APG keys in the file list without invoking timeline shortcuts', () => {
+  const onTrace = vi.fn();
+  const onIndexChange = vi.fn();
+  render(<Harness timeline={sort} onTrace={onTrace} onIndexChange={onIndexChange} />);
+  const list = screen.getByRole('listbox', { name: 'Files in Top folder' });
+  const options = within(list).getAllByRole('option');
+  options.at(-1)!.focus();
+  fireEvent.keyDown(options.at(-1)!, { key: 'Home' });
+  expect(document.activeElement).toBe(options[0]);
+  fireEvent.keyDown(options[0]!, { key: 'End' });
+  expect(document.activeElement).toBe(options.at(-1));
+  fireEvent.keyDown(options.at(-1)!, { key: ' ' });
+  expect(onTrace).toHaveBeenCalled();
+  expect(onIndexChange).not.toHaveBeenCalled();
+  expect(status()).toContain('Step 1 of');
 });
 
 function baseProps(t: Timeline<SandboxFS> | null): PlaygroundProps {
@@ -180,6 +208,20 @@ describe('controls', () => {
       `Step 8 of ${String(rename.snapshots.length)}: RENAME IMG_0001.JPG -> photo_001.JPG.`,
     );
   });
+
+  it('does not announce each automatic playback step', () => {
+    vi.useFakeTimers();
+    render(<Harness timeline={rename} />);
+    const live = screen.getByRole('region', { name: 'Playground' }).querySelector(
+      '[aria-live="polite"]',
+    )!;
+    const initial = live.textContent;
+    fireEvent.click(screen.getByRole('button', { name: /Run/ }));
+    act(() => vi.advanceTimersByTime(250));
+    expect(live.textContent).toBe(initial);
+    fireEvent.click(screen.getByRole('button', { name: /Pause/ }));
+    expect(live.textContent).toContain('Step 2 of');
+  });
 });
 
 describe('keyboard shortcuts', () => {
@@ -219,10 +261,13 @@ describe('keyboard shortcuts', () => {
 
 describe('error banner, stale overlay', () => {
   it('shows the error message and the block id', () => {
-    render(<Harness timeline={error} index={1} />);
+    const onShowBlock = vi.fn();
+    render(<Harness timeline={error} index={1} onShowBlock={onShowBlock} />);
     const alert = screen.getByRole('alert');
     expect(alert.textContent).toContain('"y.txt" already exists');
     expect(alert.textContent).toContain('at block rn');
+    fireEvent.click(screen.getByRole('button', { name: 'Show block' }));
+    expect(onShowBlock).toHaveBeenCalledWith('rn');
     expect(status()).toBe('Stopped with an error');
   });
 
@@ -230,6 +275,9 @@ describe('error banner, stale overlay', () => {
     const onRun = vi.fn();
     render(<Harness timeline={rename} index={3} stale onRun={onRun} />);
     expect(screen.getByText('Program changed — run again')).toBeTruthy();
+    const staleId = screen.getByText('Program changed — run again').id;
+    const list = screen.getByRole('listbox');
+    expect(list.parentElement?.parentElement?.getAttribute('aria-describedby')).toContain(staleId);
     fireEvent.click(screen.getByRole('button', { name: /Run/ }));
     expect(onRun).toHaveBeenCalledTimes(1);
   });
@@ -249,7 +297,7 @@ describe('diff labels are text, not just color', () => {
     r1.unmount();
     const mv = indexOf(sort, (s) => s.action?.op === 'MOVE');
     const { container } = render(<Harness timeline={sort} index={mv} />);
-    expect(screen.getByRole('listbox', { name: 'Files in ./Documents' })).toBeTruthy();
+    expect(screen.getByRole('region', { name: 'Files in ./Documents' })).toBeTruthy();
     expect(row(container, 'Documents/report.pdf').textContent).toContain(
       'moved, from ./report.pdf',
     );
@@ -348,6 +396,15 @@ describe('click-to-trace', () => {
     expect(first.tabIndex).toBe(-1);
     // The list handled ↓, so the region did not step.
     expect(status()).toBe(`Step 1 of ${String(rename.snapshots.length)}`);
+  });
+
+  it('ArrowRight opens a folder row', () => {
+    const mkdir = indexOf(sort, (s) => s.action?.op === 'MKDIR');
+    const { container } = render(<Harness timeline={sort} index={mkdir} />);
+    const folder = row(container, 'Documents');
+    folder.focus();
+    fireEvent.keyDown(folder, { key: 'ArrowRight' });
+    expect(screen.getByRole('region', { name: 'Files in ./Documents' })).toBeTruthy();
   });
 });
 

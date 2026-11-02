@@ -58,6 +58,11 @@
   color: var(--bp-fg, #1f2328);
 }
 
+.errorBanner:empty {
+  border: 0;
+  padding: 0;
+}
+
 .errorBanner strong {
   color: var(--bp-danger, #b42318);
 }
@@ -85,6 +90,10 @@
   border-radius: 6px;
   padding: 0.5rem 1rem;
   font-weight: 600;
+}
+
+.staleMessage:empty {
+  visibility: hidden;
 }
 
 .stale .explorer,
@@ -126,6 +135,10 @@
 .treeItem[aria-selected='true'] > .treeLabel {
   background: var(--bp-accent, #0b5cad);
   color: var(--bp-accent-fg, #ffffff);
+}
+
+.treeItem[aria-selected='true'] .badge {
+  color: inherit;
 }
 
 .twisty {

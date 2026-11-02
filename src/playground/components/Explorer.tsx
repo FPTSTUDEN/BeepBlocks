@@ -66,6 +66,8 @@ export interface ExplorerProps {
   selectedKey?: string | null;
   /** Extra controls shown above the file list (list/folder toggle, editor buttons). */
   toolbar?: ReactNode;
+  /** Accessible description shared by the explorer surfaces, such as a stale-state notice. */
+  describedBy?: string;
 }
 
 export function folderTitle(folder: string): string {
@@ -87,7 +89,7 @@ export function Explorer(p: ExplorerProps) {
     ...(p.active ? { active: p.active } : {}),
   };
   return (
-    <div className={styles.explorer}>
+    <div className={styles.explorer} aria-describedby={p.describedBy}>
       <nav aria-label="Folder tree" className={styles.surface}>
         <FolderTree {...treeProps} />
       </nav>

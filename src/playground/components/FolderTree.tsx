@@ -2,7 +2,7 @@
  * Folder tree (task E.1): ARIA tree with roving focus. ↑/↓ move, → expands or enters,
  * ← collapses or goes to the parent, Enter/Space selects the folder.
  */
-import { useState, type KeyboardEvent } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import type { SandboxFS } from '../../domains/fileExplorer/fsTypes.ts';
 import type { Diff } from '../lib/diff.ts';
 import { treeRows } from '../lib/explorer.ts';
@@ -31,6 +31,8 @@ export function FolderTree(props: FolderTreeProps) {
   const [focusKey, setFocusKey] = useState<string | null>(null);
 
   const keys = rows.map((r) => pathKey(r.path));
+  const previousKeys = useRef(keys);
+  const treeRef = useRef<HTMLUListElement>(null);
   const current =
     focusKey !== null && keys.includes(focusKey)
       ? focusKey
@@ -43,6 +45,17 @@ export function FolderTree(props: FolderTreeProps) {
     const items = tree.querySelectorAll<HTMLElement>('[data-rowkey]');
     [...items].find((el) => el.dataset['rowkey'] === key)?.focus();
   };
+  useEffect(() => {
+    if (focusKey !== null && !keys.includes(focusKey) && keys.length > 0) {
+      const oldIndex = previousKeys.current.indexOf(focusKey);
+      const next = keys[Math.min(Math.max(oldIndex, 0), keys.length - 1)]!;
+      setFocusKey(next);
+      [...(treeRef.current?.querySelectorAll<HTMLElement>('[data-rowkey]') ?? [])]
+        .find((el) => el.dataset['rowkey'] === next)
+        ?.focus();
+    }
+    previousKeys.current = keys;
+  }, [focusKey, keys]);
 
   const onKeyDown = (e: KeyboardEvent<HTMLUListElement>) => {
     const own = keyOfTarget(e.target);
@@ -66,6 +79,12 @@ export function FolderTree(props: FolderTreeProps) {
         if (row.expanded && row.hasSubfolders) onToggle(row.path, false);
         else if (row.path !== '') focusRow(e.currentTarget, pathKey(parentPath(row.path)));
         break;
+      case 'Home':
+        focusRow(e.currentTarget, keys[0]!);
+        break;
+      case 'End':
+        focusRow(e.currentTarget, keys.at(-1)!);
+        break;
       case 'Enter':
       case ' ':
         onSelect(row.path);
@@ -77,7 +96,7 @@ export function FolderTree(props: FolderTreeProps) {
   };
 
   return (
-    <ul role="tree" aria-label="Folders" className={styles.tree} onKeyDown={onKeyDown}>
+    <ul ref={treeRef} role="tree" aria-label="Folders" className={styles.tree} onKeyDown={onKeyDown}>
       {rows.map((r) => {
         const key = pathKey(r.path);
         const d = props.diff?.get(key);
