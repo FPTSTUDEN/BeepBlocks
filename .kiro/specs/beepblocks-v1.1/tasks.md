@@ -4,7 +4,7 @@
 - Same gates as v1 for every task that changes code: `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:py`, `pnpm conformance --strict`; plus `pnpm smoke` and `pnpm e2e` before each phase checkpoint.
 - Every expected conformance result is derived by hand (never copied from the simulator), as in v1.
 
-**Status:** Phases 0–1 and Phase 2 implemented and validated; see the per-task marks. Still open: C.4's per-`anchorRole` expression Expand and the final Phase 3 review.
+**Status:** Phases 0–2 and all of Workstream C implemented and validated. C.4 was merged from a reviewed Copilot branch: the one-step expansion provably equals `desugarProgram` for the before / whileCond / shortCircuit positions, undo is a single step, and task→actions vs →basic-blocks was confirmed by hand. Full suite green: 3962 tests, conformance 56/56 with complete coverage. Remaining: the final Phase 3 (3.3) requirements review.
 
 Verified on this pass (not a self-report): `pnpm typecheck`, `pnpm lint`, `pnpm test` (3955 tests), `pnpm test:py`, `pnpm conformance --strict` (56/56, coverage complete). The earlier `phase2-coverage` mega-fixture (empty tree, empty golden) was replaced with 27 real `act-`/`expr-`/`hoist-` fixtures whose goldens are hand-derived and were shown to catch a wrong expected result. Expression actions now render and round-trip in the editor (they previously dropped with a "not supported" warning).
 
@@ -49,7 +49,7 @@ Each workstream writes only in its folder and reads the contract. Good candidate
 - [x] C.1 Blocks for expression composites and markers (generated from schemas like v1's composite blocks). _Req: 2.1_
 - [x] C.2 Views from §8.1–8.3: "its …" properties, ready-made conditions, all of / any of, else if, compact text list, size units; exact round-trip tests per view. _Req: 4.1–4.5, 6.1–6.3_
 - [x] C.3 Palette (§8.4) with a `showAdvanced` prop. _Req: 7.1, 7.3_
-- [ ] C.4 Expand menu items ("Expand into actions" / "Expand into basic blocks" / "Expand one level") and expression Expand for each `anchorRole`; single undo step. _Req: 1.3, 1.4, 1.6, 5.5_
+- [x] C.4 Expand menu items ("Expand into actions" one level on a task, "Expand into basic blocks" full, "Expand one level" on an action with nested composites) and expression Expand for each `anchorRole` (before / whileCond / shortCircuit); single undo step. _Req: 1.3, 1.4, 1.6, 5.5_
 
 ### Workstream D — Playground and exporter [`src/playground/`, `src/export/`]
 - [x] D.1 `stepStops` prop and the "Step: by block / every detail" select; tests with a mock timeline and stops. _Req: 8.1, 8.3_
@@ -68,7 +68,7 @@ Each workstream writes only in its folder and reads the contract. Good candidate
 
 - [x] 3.1 Wording pass over every action label and help text against §5.3, read aloud as instructions.
 - [x] 3.2 Accessibility for the new blocks and the step-mode select (keyboard, axe in smoke).
-- [ ] 3.3 Review against this requirements.md. BLOCKED: C.4 (per-anchorRole expression Expand) is not implemented, so Req 5 is not fully met. The earlier "Requirements 1-10 implemented" note was incorrect.
+- [ ] 3.3 Review against this requirements.md: tick each criterion or record why it's deferred. (C.2 and C.4 now implemented, so Req 4, 5 and 6 are met; ready to run.)
 
 ### Phase 3 review notes
 
