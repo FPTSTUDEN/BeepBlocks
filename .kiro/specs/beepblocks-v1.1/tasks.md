@@ -4,54 +4,56 @@
 - Same gates as v1 for every task that changes code: `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:py`, `pnpm conformance --strict`; plus `pnpm smoke` and `pnpm e2e` before each phase checkpoint.
 - Every expected conformance result is derived by hand (never copied from the simulator), as in v1.
 
-**Status:** Phases 0–2 implemented and validated; Phase 3 review remains.
+**Status:** Phases 0–1 (except the §8 readability views) and Phase 2 implemented and validated; see the per-task marks. Still open: Workstream C.2 (else-if / all-of / "its …" / compact list / size-unit views) and C.4's per-`anchorRole` expression Expand; Phase 3 review.
+
+Verified on this pass (not a self-report): `pnpm typecheck`, `pnpm lint`, `pnpm test` (3955 tests), `pnpm test:py`, `pnpm conformance --strict` (56/56, coverage complete). The earlier `phase2-coverage` mega-fixture (empty tree, empty golden) was replaced with 27 real `act-`/`expr-`/`hoist-` fixtures whose goldens are hand-derived and were shown to catch a wrong expected result. Expression actions now render and round-trip in the editor (they previously dropped with a "not supported" warning).
 
 ---
 
 ## Phase 0 — Contract v2 [SEQ, integrator]
 
-- [ ] 0.1 IR types (§3.1–3.3, §3.5)
+- [x] 0.1 IR types (§3.1–3.3, §3.5)
   - `CompositeExpr` in `Expr`, `PrimitiveExpr`, `CompositeExprName`.
   - Schema additions: `level`, `rank`, `returns` (expression), `stepPoints`.
   - Schemas for all 11 actions and the 2 markers (§5), with labels and help per the §5.3 wording rules.
   - `Program.version: 1 | 2`; `parseProgram` normalizes to 2. `b.compositeExpr` builder.
   - _Req: 1.1, 2.1–2.4, 5.1, 10.4_
-- [ ] 0.2 Validator (§3.4)
+- [x] 0.2 Validator (§3.4)
   - Typing of expression composites and their binds.
   - `MISPLACED_BLOCK`, `INCOMPLETE_SEARCH`; `primitiveOnly` rejects `compositeExpr`.
   - One passing and one failing test per new rule.
-- [ ] 0.3 Desugaring loop and hoisting (§4)
+- [x] 0.3 Desugaring loop and hoisting (§4)
   - Outer-first loop that repeats until no composite is left; `desugarOne` returns `DesugarOneResult`; `desugarFully`.
   - Hoisting for every position in §4.2, including the `while` copy and the short-circuit rewrite.
   - Tested with a stub expression composite before any real action exists: §4.3 invariants per position, plus the rank check from §2.
   - The 4 v1 desugarings keep working unchanged at this point (rank 3, emitting primitives).
-- [ ] 0.4 Coverage: add the §11 `REQUIRED_VARIANTS` (reported as missing until Phase 1 lands).
-- [ ] 0.5 Checkpoint: tag `contract-v2`; all v1 gates green (v1 fixtures still pass through the new loop).
+- [x] 0.4 Coverage: add the §11 `REQUIRED_VARIANTS` (reported as missing until Phase 1 lands).
+- [x] 0.5 Checkpoint: tag `contract-v2`; all v1 gates green (v1 fixtures still pass through the new loop).
 
 ## Phase 1 — Parallel workstreams [PAR, separate worktrees]
 
 Each workstream writes only in its folder and reads the contract. Good candidates for Copilot CLI agents, as in v1 Phase 2 and 3.1.
 
 ### Workstream A — Statement actions [`src/composites/` + `act-` fixtures]
-- [ ] A.1 `makeFolderIfMissing`, `everyFile` (all 4 actions, subfolders, makeFolder, template `{n}`), `goThrough`. _Req: 3.2, 3.4_
-- [ ] A.2 `repeatTimes`, `keepDoingUntil` (check-first). _Req: 3.3_
-- [ ] A.3 `findFile` (5 kinds, ties, found/notFound). _Req: 2.1_
-- [ ] A.4 `act-` fixtures with hand-derived expected results for every A variant.
+- [x] A.1 `makeFolderIfMissing`, `everyFile` (all 4 actions, subfolders, makeFolder, template `{n}`), `goThrough`. _Req: 3.2, 3.4_
+- [x] A.2 `repeatTimes`, `keepDoingUntil` (check-first). _Req: 3.3_
+- [x] A.3 `findFile` (5 kinds, ties, found/notFound). _Req: 2.1_
+- [x] A.4 `act-` fixtures with hand-derived expected results for every A variant.
 
 ### Workstream B — Expression actions and search [`src/composites/` + `expr-`/`hoist-` fixtures]
-- [ ] B.1 `filesIn`, `countFiles`, `typeOf` (v1 tables reused). _Req: 5.1_
-- [ ] B.2 `halvingSearch` with markers; v1 hints on `low`/`high`/`mid`. _Req: 2.1_
-- [ ] B.3 `expr-` fixtures for every B variant; `hoist-` fixtures for every §4.2 position, including an expression action that would fail if evaluated (proves short-circuit, Req 5.4).
+- [x] B.1 `filesIn`, `countFiles`, `typeOf` (v1 tables reused). _Req: 5.1_
+- [x] B.2 `halvingSearch` with markers; v1 hints on `low`/`high`/`mid`. _Req: 2.1_
+- [x] B.3 `expr-` fixtures for every B variant; `hoist-` fixtures for every §4.2 position, including an expression action that would fail if evaluated (proves short-circuit, Req 5.4).
 
 ### Workstream C — Editor [`src/editor/`]
-- [ ] C.1 Blocks for expression composites and markers (generated from schemas like v1's composite blocks). _Req: 2.1_
+- [x] C.1 Blocks for expression composites and markers (generated from schemas like v1's composite blocks). _Req: 2.1_
 - [ ] C.2 Views from §8.1–8.3: "its …" properties, ready-made conditions, all of / any of, else if, compact text list, size units; exact round-trip tests per view. _Req: 4.1–4.5, 6.1–6.3_
-- [ ] C.3 Palette (§8.4) with a `showAdvanced` prop. _Req: 7.1, 7.3_
+- [x] C.3 Palette (§8.4) with a `showAdvanced` prop. _Req: 7.1, 7.3_
 - [ ] C.4 Expand menu items ("Expand into actions" / "Expand into basic blocks" / "Expand one level") and expression Expand for each `anchorRole`; single undo step. _Req: 1.3, 1.4, 1.6, 5.5_
 
 ### Workstream D — Playground and exporter [`src/playground/`, `src/export/`]
-- [ ] D.1 `stepStops` prop and the "Step: by block / every detail" select; tests with a mock timeline and stops. _Req: 8.1, 8.3_
-- [ ] D.2 Per-composite comments in the exporter; updated goldens reviewed by hand. _Req: 9.1_
+- [x] D.1 `stepStops` prop and the "Step: by block / every detail" select; tests with a mock timeline and stops. _Req: 8.1, 8.3_
+- [x] D.2 Per-composite comments in the exporter; updated goldens reviewed by hand. _Req: 9.1_
 
 ## Phase 2 — Integration [SEQ, integrator]
 
@@ -66,7 +68,7 @@ Each workstream writes only in its folder and reads the contract. Good candidate
 
 - [x] 3.1 Wording pass over every action label and help text against §5.3, read aloud as instructions.
 - [x] 3.2 Accessibility for the new blocks and the step-mode select (keyboard, axe in smoke).
-- [x] 3.3 Review against this requirements.md: tick each criterion or record why it's deferred.
+- [ ] 3.3 Review against this requirements.md. BLOCKED: C.2 (readability views) and C.4 (per-anchorRole expression Expand) are not implemented, so Req 4 and Req 6 are not met. The earlier "Requirements 1-10 implemented" note was incorrect.
 
 ### Phase 3 review notes
 
