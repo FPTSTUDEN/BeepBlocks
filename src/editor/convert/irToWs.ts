@@ -8,10 +8,10 @@
 import * as Blockly from 'blockly/core';
 import type { Expr, FunctionDef, NodeId, OpExpr, Program, Stmt, Type } from '../../ir/types.ts';
 import { OPS } from '../../ir/ops.ts';
-import { schemaFor, getBind, type CompositeStmt } from '../../ir/composites.ts';
+import { schemaFor, getBind, COMPOSITE_EXPR_SCHEMAS, type CompositeStmt, type CompositeExpr } from '../../ir/composites.ts';
 import { typecheck } from '../../ir/validate.ts';
 import type { Layout } from '../layout.ts';
-import { B, compositeBlockType, opBlockType } from '../blocks/blockTypes.ts';
+import { B, compositeBlockType, compositeExprBlockType, opBlockType } from '../blocks/blockTypes.ts';
 import { RUN_BLOCK_ID, setNodeIdFor } from '../blocks/common.ts';
 import { fieldToBlockly } from '../blocks/composites.ts';
 import { formatNumber, setFloatFlag } from '../blocks/expressions.ts';
@@ -266,9 +266,23 @@ export class BlockBuilder {
       case 'call':
         return this.call(e.fn, e.args, scope, B.call, e.id);
       case 'compositeExpr':
-        this.warnings.push(`Expression action "${e.id}" is not supported by the v1 editor yet.`);
-        return null;
+        return this.compositeExpr(e, scope);
     }
+  }
+
+  private compositeExpr(e: CompositeExpr, scope: Scope): Blockly.Block {
+    const schema = COMPOSITE_EXPR_SCHEMAS[e.name];
+    const b = this.make(compositeExprBlockType(e.name), e.id);
+    for (const f of schema.fields) {
+      const v = f.key in e.fields ? (e.fields[f.key] ?? null) : f.default;
+      b.setFieldValue(fieldToBlockly(f, v), `F_${f.key}`);
+    }
+    for (const inp of schema.inputs) {
+      const child = e.inputs[inp.key];
+      if (child) this.attachValue(b, `I_${inp.key}`, this.expr(child, scope));
+    }
+    for (const bind of schema.binds) b.setFieldValue(getBind(e, bind.key), `B_${bind.key}`);
+    return b;
   }
 
   private op(e: OpExpr, scope: Scope, blockId: NodeId): Blockly.Block {

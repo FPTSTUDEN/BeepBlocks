@@ -25,9 +25,9 @@ import type {
 } from '../../ir/types.ts';
 import type { ValidationError } from '../../ir/errors.ts';
 import { OPS, type OpName } from '../../ir/ops.ts';
-import { schemaFor, type CompositeStmt, type FieldValue } from '../../ir/composites.ts';
+import { schemaFor, COMPOSITE_EXPR_SCHEMAS, type CompositeStmt, type CompositeExpr, type CompositeExprName, type FieldValue } from '../../ir/composites.ts';
 import type { Layout } from '../layout.ts';
-import { B, compositeOfBlockType, opOfBlockType } from '../blocks/blockTypes.ts';
+import { B, compositeOfBlockType, compositeExprOfBlockType, opOfBlockType } from '../blocks/blockTypes.ts';
 import { RUN_BLOCK_ID, nodeIdFor } from '../blocks/common.ts';
 import { fieldFromBlockly } from '../blocks/composites.ts';
 import { getFloatFlag, listItemCount, parseNumber } from '../blocks/expressions.ts';
@@ -231,6 +231,8 @@ class Reader {
       case B.call:
         return this.call(b, id);
     }
+    const compositeExpr = compositeExprOfBlockType(b.type);
+    if (compositeExpr) return this.compositeExpr(b, compositeExpr, id);
     const op = opOfBlockType(b.type);
     if (op) return this.op(b, op, id);
     this.warnings.push({ blockId: id, message: `Unknown block "${b.type}" was skipped.` });
@@ -257,6 +259,20 @@ class Reader {
     const spec = getCallSpec(b);
     const args = spec.params.map((p, i) => this.expr(b, `ARG${i}`, `"${p.name}"`));
     return { id, kind: 'call', fn: spec.fn, args };
+  }
+
+  compositeExpr(b: Blockly.Block, name: CompositeExprName, id: NodeId): CompositeExpr {
+    const schema = COMPOSITE_EXPR_SCHEMAS[name];
+    const fields: Record<string, FieldValue> = {};
+    for (const f of schema.fields) fields[f.key] = fieldFromBlockly(f, b.getFieldValue(`F_${f.key}`));
+    const inputs: Record<string, Expr> = {};
+    for (const inp of schema.inputs) {
+      const target = this.target(b, `I_${inp.key}`);
+      if (target) inputs[inp.key] = this.exprOf(target);
+    }
+    const binds: Record<string, string> = {};
+    for (const bind of schema.binds) binds[bind.key] = String(b.getFieldValue(`B_${bind.key}`) ?? '');
+    return { id, kind: 'compositeExpr', name, fields, inputs, binds };
   }
 
   // ------------------------------------------------------------- functions

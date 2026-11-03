@@ -3,9 +3,9 @@
  * Variables and Functions are dynamic categories.
  */
 import * as Blockly from 'blockly/core';
-import { ACTION_NAMES, COMPOSITE_NAMES } from '../ir/composites.ts';
 import { OP_NAMES, type OpName } from '../ir/ops.ts';
-import { B, compositeBlockType, opBlockType } from './blocks/blockTypes.ts';
+import { B, compositeBlockType, compositeExprBlockType, opBlockType } from './blocks/blockTypes.ts';
+import { ACTION_NAMES, COMPOSITE_NAMES, COMPOSITE_EXPR_NAMES } from '../ir/composites.ts';
 import { STYLE } from './blocks/common.ts';
 import { callSpecForDef, NO_RETURN } from './blocks/functions.ts';
 import { isStatementOp, opStyle } from './blocks/ops.ts';
@@ -132,6 +132,9 @@ export function buildToolbox(showAdvanced = true): Blockly.utils.toolbox.Toolbox
         ]),
         category('Groups', STYLE.tasks, [
           ...ACTION_NAMES.filter((n) => ['goThrough', 'findFile'].includes(n)).map((n) => block(compositeBlockType(n))),
+          ...COMPOSITE_EXPR_NAMES.map((n) =>
+            block(compositeExprBlockType(n), { inputs: n === 'typeOf' ? {} : { I_folder: root() } }),
+          ),
         ]),
         category('Search', STYLE.tasks, [
           ...ACTION_NAMES.filter((n) => ['halvingSearch', 'keepLeftHalf', 'keepRightHalf'].includes(n)).map((n) => block(compositeBlockType(n))),

@@ -27,7 +27,9 @@ const hasComposite = (v: unknown): boolean =>
   Array.isArray(v)
     ? v.some(hasComposite)
     : typeof v === 'object' && v !== null &&
-      ((v as { kind?: unknown }).kind === 'composite' || Object.values(v).some(hasComposite));
+      ((v as { kind?: unknown }).kind === 'composite' ||
+        (v as { kind?: unknown }).kind === 'compositeExpr' ||
+        Object.values(v).some(hasComposite));
 
 describe('seed conformance fixtures', () => {
   it('found the seed fixtures', () => {

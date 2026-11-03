@@ -1,5 +1,5 @@
 /** Blockly block type names, one per IR construct (design.md §9). */
-import { ACTION_NAMES, COMPOSITE_NAMES, type CompositeName } from '../../ir/composites.ts';
+import { ACTION_NAMES, COMPOSITE_NAMES, COMPOSITE_EXPR_NAMES, type CompositeName, type CompositeExprName } from '../../ir/composites.ts';
 import { OP_NAMES, type OpName } from '../../ir/ops.ts';
 
 export const B = {
@@ -38,9 +38,16 @@ export function compositeBlockType(name: CompositeName): string {
   return `bp_task_${name}`;
 }
 
+export function compositeExprBlockType(name: CompositeExprName): string {
+  return `bp_expr_${name}`;
+}
+
 const OP_BY_TYPE = new Map<string, OpName>(OP_NAMES.map((op) => [opBlockType(op), op]));
 const COMPOSITE_BY_TYPE = new Map<string, CompositeName>(
   [...COMPOSITE_NAMES, ...ACTION_NAMES].map((n) => [compositeBlockType(n), n]),
+);
+const COMPOSITE_EXPR_BY_TYPE = new Map<string, CompositeExprName>(
+  COMPOSITE_EXPR_NAMES.map((n) => [compositeExprBlockType(n), n]),
 );
 
 export function opOfBlockType(type: string): OpName | null {
@@ -49,4 +56,8 @@ export function opOfBlockType(type: string): OpName | null {
 
 export function compositeOfBlockType(type: string): CompositeName | null {
   return COMPOSITE_BY_TYPE.get(type) ?? null;
+}
+
+export function compositeExprOfBlockType(type: string): CompositeExprName | null {
+  return COMPOSITE_EXPR_BY_TYPE.get(type) ?? null;
 }

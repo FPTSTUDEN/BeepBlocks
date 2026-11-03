@@ -9,14 +9,17 @@ import * as Blockly from 'blockly/core';
 import {
   COMPOSITE_NAMES,
   ACTION_NAMES,
+  COMPOSITE_EXPR_NAMES,
+  COMPOSITE_EXPR_SCHEMAS,
   schemaFor,
   type CompositeName,
+  type CompositeExprName,
   type FieldSchema,
   type FieldValue,
 } from '../../ir/composites.ts';
-import { compositeBlockType } from './blockTypes.ts';
+import { compositeBlockType, compositeExprBlockType } from './blockTypes.ts';
 import { STYLE, defineBlock } from './common.ts';
-import { inputCheck } from './typeKeys.ts';
+import { inputCheck, outputCheck } from './typeKeys.ts';
 
 /** Dropdown value for an optional enum field left unset. */
 export const ENUM_UNSET = '__unset__';
@@ -121,6 +124,44 @@ function defineComposite(name: CompositeName): void {
   });
 }
 
+function defineCompositeExpr(name: CompositeExprName): void {
+  const schema = COMPOSITE_EXPR_SCHEMAS[name];
+  defineBlock(compositeExprBlockType(name), {
+    init(b) {
+      b.appendDummyInput('HEAD').appendField(schema.label);
+      const placed = new Set<string>();
+      const bindsBefore = (slot: string) => {
+        for (const bind of schema.binds) {
+          if (placed.has(bind.key) || bind.visibleIn[0] !== slot) continue;
+          placed.add(bind.key);
+          b.appendDummyInput(`BIND_${bind.key}`)
+            .appendField(bindLabel(bind.key))
+            .appendField(new Blockly.FieldTextInput(bind.defaultName), `B_${bind.key}`);
+        }
+      };
+      for (const inp of schema.inputs) {
+        bindsBefore(inp.key);
+        b.appendValueInput(`I_${inp.key}`)
+          .setCheck(inputCheck(inp.type))
+          .setAlign(Blockly.inputs.Align.RIGHT)
+          .appendField(inp.optional ? `${inp.label} (optional)` : inp.label);
+      }
+      for (const f of schema.fields) {
+        b.appendDummyInput(`FIELD_${f.key}`)
+          .setAlign(Blockly.inputs.Align.RIGHT)
+          .appendField(f.optional ? `${f.label} (optional)` : f.label)
+          .appendField(makeField(f), `F_${f.key}`);
+      }
+      for (const bind of schema.binds) bindsBefore(bind.visibleIn[0] ?? '');
+      b.setOutput(true, outputCheck(schema.returns));
+      b.setInputsInline(false);
+      b.setStyle(STYLE.tasks);
+      b.setTooltip(schema.help);
+    },
+  });
+}
+
 export function defineCompositeBlocks(): void {
   for (const name of [...COMPOSITE_NAMES, ...ACTION_NAMES]) defineComposite(name);
+  for (const name of COMPOSITE_EXPR_NAMES) defineCompositeExpr(name);
 }

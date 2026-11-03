@@ -13,7 +13,6 @@ import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { b } from '../src/ir/build.ts';
 import type { Program, Stmt } from '../src/ir/types.ts';
-import { T } from '../src/ir/types.ts';
 import type { FsNode, SandboxFS } from '../src/domains/fileExplorer/fsTypes.ts';
 
 const FIXTURES = resolve(import.meta.dirname, 'fixtures');
