@@ -4,7 +4,14 @@ import type { CompositeName, CompositeStmt, FieldValue } from '../ir/composites.
 import { COMPOSITE_NAMES, COMPOSITE_SCHEMAS } from '../ir/composites.ts';
 import { T, type Expr, type Program, type Stmt } from '../ir/types.ts';
 import { validateProgram } from '../ir/validate.ts';
-import { COMPOSITES, categoryOf, desugarOne, desugarProgram } from './index.ts';
+import {
+  COMPOSITES,
+  categoryOf,
+  desugarExpressionOne,
+  desugarOne,
+  desugarProgram,
+  expandExpressionOne,
+} from './index.ts';
 import { makeCtx } from './ctx.ts';
 import { show } from './__testing__/pretty.ts';
 import { runMini, type MiniEntry } from './__testing__/miniEval.ts';
@@ -21,6 +28,25 @@ function desugarOk(p: Program): Program {
   expect(errors(d, true)).toEqual([]);
   return d;
 }
+
+describe('expression expansion positions', () => {
+  const expression = (id: string) =>
+    b.compositeExpr('countFiles', { inputs: { folder: b.root(`${id}/folder`) } }, id);
+
+  it.each([
+    ['before', b.assign('n', expression('value'), 'assign'), 'value'],
+    ['whileCond', b.while(b.bin('>', expression('while'), b.lit(0, 'zero'), 'greater'), [], 'loop'), 'while'],
+    ['shortCircuit', b.assign('ok', b.bin('and', b.lit(false, 'left'), b.bin('>', expression('right'), b.lit(0, 'zero'), 'greater'), 'and'), 'short'), 'right'],
+  ] as const)('reports and applies the %s anchor', (role, stmt, id) => {
+    const p = b.program([stmt]);
+    expect(desugarExpressionOne(p, id)).toMatchObject({
+      kind: 'expr',
+      anchor: stmt.id,
+      anchorRole: role,
+    });
+    expect(expandExpressionOne(p, id).program).toEqual(desugarProgram(p));
+  });
+});
 
 type Parts = {
   fields?: Record<string, FieldValue>;

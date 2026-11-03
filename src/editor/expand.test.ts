@@ -8,6 +8,7 @@ import { registerBlocks } from './blocks/index.ts';
 import { irToWs } from './convert/irToWs.ts';
 import { wsToIr } from './convert/wsToIr.ts';
 import { expandComposite, replaceStmt } from './expand.ts';
+import { desugarProgram } from '../composites/index.ts';
 
 beforeAll(() => registerBlocks());
 
@@ -152,5 +153,24 @@ describe('expandComposite', () => {
     expect(ws.getBlockById('cf')).not.toBeNull();
     ws.getBlockById('cf')!.unplug(true);
     expect(expandComposite(ws, 'cf', fakeDesugarOne).ok).toBe(false);
+  });
+
+  test.each([
+    ['value', b.assign('n', b.compositeExpr('countFiles', { inputs: { folder: b.root('value/folder') } }, 'value'), 'assign')],
+    ['while', b.while(b.bin('>', b.compositeExpr('countFiles', { inputs: { folder: b.root('while/folder') } }, 'while'), b.lit(0, 'zero'), 'greater'), [], 'loop')],
+    ['right', b.assign('ok', b.bin('and', b.lit(false, 'left'), b.bin('>', b.compositeExpr('countFiles', { inputs: { folder: b.root('right/folder') } }, 'right'), b.lit(0, 'zero'), 'greater'), 'and'), 'short')],
+  ] as const)('expands expression in the %s position and undoes as one step', async (_name, stmt) => {
+    const ws = new Blockly.Workspace();
+    const p = b.program([stmt]);
+    irToWs(p, {}, ws);
+    const original = wsToIr(ws).program;
+    const exprId = _name;
+    const expanded = expandComposite(ws, exprId, () => []);
+    if (!expanded.ok) throw new Error(expanded.error);
+    expect(wsToIr(ws).program).toEqual(desugarProgram(p));
+    await tick();
+    ws.undo(false);
+    await tick();
+    expect(wsToIr(ws).program).toEqual(original);
   });
 });
