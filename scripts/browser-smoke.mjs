@@ -10,6 +10,7 @@
 import { spawn } from 'node:child_process';
 import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { preview } from 'vite';
@@ -29,6 +30,53 @@ if (!browserPath) {
 }
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function getFreePort() {
+  const server = createServer();
+  await new Promise((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(0, '127.0.0.1', resolve);
+  });
+  const address = server.address();
+  const port = typeof address === 'object' && address ? address.port : 0;
+  await new Promise((resolve, reject) => server.close((err) => (err ? reject(err) : resolve())));
+  return port;
+}
+
+async function waitForExit(child, timeoutMs = 5000) {
+  if (child.exitCode !== null || child.signalCode !== null) return;
+  await Promise.race([
+    new Promise((resolve) => child.once('exit', resolve)),
+    sleep(timeoutMs),
+  ]);
+}
+
+async function terminateBrowser(child) {
+  if (child.exitCode !== null || child.signalCode !== null) return;
+  if (process.platform === 'win32') {
+    await new Promise((resolve) => {
+      const killer = spawn('taskkill', ['/pid', String(child.pid), '/t', '/f'], { stdio: 'ignore' });
+      killer.once('close', resolve);
+      killer.once('error', resolve);
+    });
+  } else {
+    child.kill();
+  }
+  await waitForExit(child);
+}
+
+async function removeProfile(path) {
+  for (let attempt = 0; attempt < 20; attempt++) {
+    try {
+      rmSync(path, { recursive: true, force: true });
+      return;
+    } catch (err) {
+      if (err?.code !== 'EBUSY' && err?.code !== 'EPERM') throw err;
+      await sleep(250);
+    }
+  }
+  rmSync(path, { recursive: true, force: true, maxRetries: 20, retryDelay: 500 });
+}
 
 /** A project that prints, then sorts the messy-downloads folder with a task block. */
 function seedProject() {
@@ -62,11 +110,12 @@ function seedProject() {
 const server = await preview({ preview: { port: 4317, strictPort: true }, logLevel: 'silent' });
 const url = 'http://localhost:4317/';
 const profile = mkdtempSync(join(tmpdir(), 'bp-smoke-'));
+const debugPort = await getFreePort();
 const browser = spawn(
   browserPath,
   [
     '--headless=new',
-    '--remote-debugging-port=9333',
+    `--remote-debugging-port=${debugPort}`,
     `--user-data-dir=${profile}`,
     '--no-first-run',
     '--no-default-browser-check',
@@ -81,12 +130,13 @@ const pageErrors = [];
 const audits = [];
 const axeSource = readFileSync(createRequire(import.meta.url).resolve('axe-core/axe.min.js'), 'utf8');
 let ws;
+let closeBrowser;
 try {
   let page;
   for (let i = 0; i < 50 && !page; i++) {
     await sleep(200);
     try {
-      const targets = await (await fetch('http://127.0.0.1:9333/json/list')).json();
+      const targets = await (await fetch(`http://127.0.0.1:${debugPort}/json/list`)).json();
       page = targets.find((t) => t.type === 'page');
     } catch {
       /* not up yet */
@@ -115,6 +165,7 @@ try {
       pending.set(id, res);
       ws.send(JSON.stringify({ id, method, params }));
     });
+  closeBrowser = () => send('Browser.close');
   const evaluate = async (expression) => {
     const r = await send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true });
     if (r.result?.exceptionDetails) throw new Error(r.result.exceptionDetails.text);
@@ -383,11 +434,15 @@ try {
 } catch (err) {
   problems.push(err instanceof Error ? err.message : String(err));
 } finally {
+  try {
+    await closeBrowser?.();
+  } catch {
+    /* Browser may already have exited after a failed smoke assertion. */
+  }
   ws?.close();
-  browser.kill();
+  await terminateBrowser(browser);
   await server.close();
-  await sleep(300);
-  rmSync(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+  await removeProfile(profile);
 }
 
 for (const e of pageErrors) problems.push(`page error: ${e}`);
