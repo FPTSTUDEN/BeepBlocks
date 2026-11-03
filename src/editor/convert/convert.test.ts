@@ -160,6 +160,44 @@ describe('round trip wsToIr(irToWs(p)) == p', () => {
 });
 
 describe('wsToIr', () => {
+  test('readability views preserve nested condition, text-list, and ready-condition IR', () => {
+    const c1 = b.op(
+      'text.wildcard',
+      [b.op('fs.name', [b.v('file', 'v1')], 'prop1'), b.lit('*.tmp', 'pat')],
+      'c1',
+    );
+    const c2 = b.op(
+      'text.contains',
+      [b.op('fs.readText', [b.v('file', 'v2')], 'prop2'), b.lit('needle', 'needle')],
+      'c2',
+    );
+    const c3 = b.op('fs.isFolder', [b.v('file', 'v3')], 'c3');
+    const all = b.bin('and', b.bin('and', c1, c2, 'and1'), c3, 'and2');
+    const p = b.program([
+      b.assign('xs', b.list(T.text, [b.lit('a,b', 'i1'), b.lit('two', 'i2')], 'list')),
+      b.if(
+        all,
+        [b.print(b.lit('yes', 'yes'), 'p1')],
+        [
+          b.if(
+            b.bin('>', b.op('fs.size', [b.v('file', 'v4')], 'size'), b.lit(1000, 'bytes'), 'big'),
+            [],
+            [b.print(b.lit('no', 'no'), 'p2')],
+            'arm2',
+          ),
+        ],
+        'root',
+      ),
+    ]);
+    const { ws, out } = roundTrip(p);
+    expect(out.warnings).toEqual([]);
+    expect(out.issues).toEqual([]);
+    expect(out.program).toEqual(p);
+    expect(ws.getBlockById('list')?.type).toBe('bp_text_list');
+    expect(ws.getBlockById('root')?.getInput('ELSE_IF_COND1')).not.toBeNull();
+    expect(ws.getBlockById('and2')?.type).toBe('bp_all_of');
+  });
+
   test('ignores disconnected stacks with a warning', () => {
     const ws = new Blockly.Workspace();
     irToWs(b.program([b.print(b.lit('a', 'l1'), 'p1')]), {}, ws);

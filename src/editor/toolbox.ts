@@ -122,29 +122,66 @@ export function buildToolbox(showAdvanced = true): Blockly.utils.toolbox.Toolbox
     return {
       kind: 'categoryToolbox',
       contents: [
-        category('Tasks', STYLE.tasks, COMPOSITE_NAMES.map((n) => block(compositeBlockType(n), { inputs: { I_folder: root() } }))),
+        category(
+          'Tasks',
+          STYLE.tasks,
+          COMPOSITE_NAMES.map((n) =>
+            block(compositeBlockType(n), { inputs: { I_folder: root() } }),
+          ),
+        ),
         category('Files', STYLE.files, [
-          ...ACTION_NAMES.filter((n) => ['everyFile', 'makeFolderIfMissing'].includes(n)).map((n) => block(compositeBlockType(n))),
+          ...ACTION_NAMES.filter((n) => ['everyFile', 'makeFolderIfMissing'].includes(n)).map((n) =>
+            block(compositeBlockType(n)),
+          ),
           ...fsOps.filter(isStatementOp).map(opBlock),
           doOp('fs.rename'),
           doOp('fs.move'),
           doOp('fs.copy'),
         ]),
         category('Groups', STYLE.tasks, [
-          ...ACTION_NAMES.filter((n) => ['goThrough', 'findFile'].includes(n)).map((n) => block(compositeBlockType(n))),
+          ...ACTION_NAMES.filter((n) => ['goThrough', 'findFile'].includes(n)).map((n) =>
+            block(compositeBlockType(n)),
+          ),
           ...COMPOSITE_EXPR_NAMES.map((n) =>
-            block(compositeExprBlockType(n), { inputs: n === 'typeOf' ? {} : { I_folder: root() } }),
+            block(compositeExprBlockType(n), {
+              inputs: n === 'typeOf' ? {} : { I_folder: root() },
+            }),
           ),
         ]),
         category('Search', STYLE.tasks, [
-          ...ACTION_NAMES.filter((n) => ['halvingSearch', 'keepLeftHalf', 'keepRightHalf'].includes(n)).map((n) => block(compositeBlockType(n))),
+          ...ACTION_NAMES.filter((n) =>
+            ['halvingSearch', 'keepLeftHalf', 'keepRightHalf'].includes(n),
+          ).map((n) => block(compositeBlockType(n))),
         ]),
         category('Repeat', STYLE.loops, [
-          ...ACTION_NAMES.filter((n) => ['repeatTimes', 'keepDoingUntil'].includes(n)).map((n) => block(compositeBlockType(n))),
+          ...ACTION_NAMES.filter((n) => ['repeatTimes', 'keepDoingUntil'].includes(n)).map((n) =>
+            block(compositeBlockType(n)),
+          ),
         ]),
-        category('Decisions', STYLE.logic, [block(B.if), block(B.compare), block(B.logic), block(B.not), block(B.bool)]),
-        category('Remember', STYLE.variables, [block(B.assign), block(B.var), block(B.print, { inputs: { VALUE: text('Hello!') } })]),
-        category('Values', STYLE.text, [block(B.text), block(B.number), block(B.date), opBlock('fs.root')]),
+        category('Decisions', STYLE.logic, [
+          block(B.if),
+          block(B.compare),
+          block(B.logic),
+          block(B.allOf),
+          block(B.anyOf),
+          block(B.property),
+          block(B.readyCondition),
+          block(B.not),
+          block(B.bool),
+        ]),
+        category('Remember', STYLE.variables, [
+          block(B.assign),
+          block(B.var),
+          block(B.print, { inputs: { VALUE: text('Hello!') } }),
+        ]),
+        category('Values', STYLE.text, [
+          block(B.text),
+          block(B.textList),
+          block(B.number),
+          block(B.size),
+          block(B.date),
+          opBlock('fs.root'),
+        ]),
       ],
     };
   }
@@ -168,6 +205,10 @@ export function buildToolbox(showAdvanced = true): Blockly.utils.toolbox.Toolbox
         block(B.if, { extraState: { else: true } }),
         block(B.compare),
         block(B.logic),
+        block(B.allOf),
+        block(B.anyOf),
+        block(B.property),
+        block(B.readyCondition),
         block(B.not),
         block(B.bool),
       ]),
@@ -180,6 +221,7 @@ export function buildToolbox(showAdvanced = true): Blockly.utils.toolbox.Toolbox
       dynamic('Variables', STYLE.variables, VARIABLES_CATEGORY),
       category('Lists', STYLE.lists, [
         block(B.list, { extraState: { items: 2 } }),
+        block(B.textList),
         ...opsWhere((op) => opStyle(op) === STYLE.lists),
       ]),
       category('Text', STYLE.text, [
@@ -189,6 +231,7 @@ export function buildToolbox(showAdvanced = true): Blockly.utils.toolbox.Toolbox
       ]),
       category('Math', STYLE.math, [
         block(B.number),
+        block(B.size),
         block(B.arith, { inputs: { A: num('1'), B: num('1') } }),
         block(B.neg),
         block(B.date),

@@ -25,15 +25,37 @@ import type {
 } from '../../ir/types.ts';
 import type { ValidationError } from '../../ir/errors.ts';
 import { OPS, type OpName } from '../../ir/ops.ts';
-import { schemaFor, COMPOSITE_EXPR_SCHEMAS, type CompositeStmt, type CompositeExpr, type CompositeExprName, type FieldValue } from '../../ir/composites.ts';
+import {
+  schemaFor,
+  COMPOSITE_EXPR_SCHEMAS,
+  type CompositeStmt,
+  type CompositeExpr,
+  type CompositeExprName,
+  type FieldValue,
+} from '../../ir/composites.ts';
 import type { Layout } from '../layout.ts';
-import { B, compositeOfBlockType, compositeExprOfBlockType, opOfBlockType } from '../blocks/blockTypes.ts';
+import {
+  B,
+  compositeOfBlockType,
+  compositeExprOfBlockType,
+  opOfBlockType,
+} from '../blocks/blockTypes.ts';
 import { RUN_BLOCK_ID, nodeIdFor } from '../blocks/common.ts';
 import { fieldFromBlockly } from '../blocks/composites.ts';
 import { getFloatFlag, listItemCount, parseNumber } from '../blocks/expressions.ts';
 import { NO_RETURN, getCallSpec, getDefParams } from '../blocks/functions.ts';
 import { isStatementOp } from '../blocks/ops.ts';
 import { getAssignHint } from '../blocks/statements.ts';
+import { getIfArmIds } from '../blocks/statements.ts';
+import {
+  allOfCount,
+  allOfIds,
+  propertyIds,
+  readyIds,
+  sizeBytes,
+  textListIds,
+  textListItems,
+} from '../blocks/views.ts';
 import { parseTypeKey } from '../blocks/typeKeys.ts';
 import { variableNameOf } from '../blocks/variables.ts';
 
@@ -118,7 +140,7 @@ class Reader {
           kind: 'if',
           cond: this.expr(b, 'COND', 'the condition'),
           then: this.body(b, 'THEN'),
-          else: this.body(b, 'ELSE'),
+          else: this.ifElse(b),
         };
       case B.while:
         return {
@@ -156,6 +178,18 @@ class Reader {
     if (composite) return this.composite(b, composite);
     this.warnings.push({ blockId: id, message: `Unknown block "${b.type}" was skipped.` });
     return null;
+  }
+
+  ifElse(b: Blockly.Block): Stmt[] {
+    const arms = getIfArmIds(b);
+    if (!arms.length) return this.body(b, 'ELSE');
+    let tail: Stmt[] = this.body(b, 'ELSE');
+    for (let i = arms.length - 1; i >= 0; i--) {
+      const cond = this.expr(b, `ELSE_IF_COND${i + 1}`, 'the condition');
+      const then = this.body(b, `ELSE_IF_THEN${i + 1}`);
+      tail = [{ id: arms[i]!, kind: 'if', cond, then, else: tail }];
+    }
+    return tail;
   }
 
   composite(b: Blockly.Block, name: CompositeStmt['name']): CompositeStmt {
@@ -212,6 +246,93 @@ class Reader {
         const itemType = parseTypeKey(String(b.getFieldValue('TYPE') ?? '')) ?? NUMBER;
         return { id, kind: 'list', itemType, items };
       }
+      case B.textList: {
+        const values = textListItems(b);
+        const ids = textListIds(b);
+        ids.forEach((nodeId) => this.alias(nodeId, b));
+        return {
+          id,
+          kind: 'list',
+          itemType: { t: 'text' },
+          items: values.map((value, i) => ({ id: ids[i] ?? `${id}/item${i}`, kind: 'lit', value })),
+        };
+      }
+      case B.size:
+        return { id, kind: 'lit', value: sizeBytes(b) };
+      case B.property: {
+        const op = String(b.getFieldValue('PROPERTY') ?? 'name');
+        this.alias(propertyIds(b).variable, b);
+        return {
+          id,
+          kind: 'op',
+          op: `fs.${op}` as OpName,
+          args: [{ id: propertyIds(b).variable, kind: 'var', name: variableNameOf(b, 'VAR') }],
+        };
+      }
+      case B.readyCondition: {
+        const test = String(b.getFieldValue('TEST') ?? 'nameMatches');
+        const ids = readyIds(b);
+        this.alias(ids.property, b);
+        this.alias(ids.variable, b);
+        this.alias(ids.value, b);
+        if (ids.wrapper) this.alias(ids.wrapper, b);
+        const variable = { id: ids.variable, kind: 'var' as const, name: variableNameOf(b, 'VAR') };
+        const value = String(b.getFieldValue('VALUE') ?? '');
+        const lit = ['sizeGt', 'sizeGe', 'sizeLt', 'sizeLe'].includes(test)
+          ? { id: ids.value, kind: 'lit' as const, value: sizeBytes(b) }
+          : test.startsWith('modified')
+            ? { id: ids.value, kind: 'date' as const, iso: value }
+            : { id: ids.value, kind: 'lit' as const, value };
+        const propName =
+          test === 'nameMatches'
+            ? 'name'
+            : test === 'extensionIs'
+              ? 'ext'
+              : test.startsWith('size')
+                ? 'size'
+                : test.startsWith('modified')
+                  ? 'modified'
+                  : 'readText';
+        const prop = {
+          id: ids.property,
+          kind: 'op' as const,
+          op: `fs.${propName}` as OpName,
+          args: [variable],
+        };
+        if (test === 'nameMatches')
+          return { id, kind: 'op', op: 'text.wildcard', args: [prop, lit] };
+        if (test === 'textContains')
+          return { id, kind: 'op', op: 'text.contains', args: [prop, lit] };
+        if (test === 'extensionIs')
+          return {
+            id,
+            kind: 'binary',
+            op: '==',
+            left: { id: ids.wrapper ?? `${id}/lower`, kind: 'op', op: 'text.lower', args: [prop] },
+            right: lit,
+          };
+        const cmp = test.endsWith('Gt')
+          ? '>'
+          : test.endsWith('Ge')
+            ? '>='
+            : test.endsWith('Lt')
+              ? '<'
+              : '<=';
+        return { id, kind: 'binary', op: cmp, left: prop, right: lit };
+      }
+      case B.allOf:
+      case B.anyOf: {
+        const count = allOfCount(b);
+        const ids = allOfIds(b);
+        const op = b.type === B.allOf ? 'and' : 'or';
+        let out = this.expr(b, 'C0', 'the first condition');
+        for (let i = 1; i < count; i++) {
+          const right = this.expr(b, `C${i}`, `condition ${i + 1}`);
+          out = { id: ids[i - 1] ?? `${id}/${op}${i}`, kind: 'binary', op, left: out, right };
+          this.alias(out.id, b);
+        }
+        return out;
+      }
       case B.var:
         return { id, kind: 'var', name: variableNameOf(b, 'VAR') };
       case B.arith:
@@ -264,14 +385,16 @@ class Reader {
   compositeExpr(b: Blockly.Block, name: CompositeExprName, id: NodeId): CompositeExpr {
     const schema = COMPOSITE_EXPR_SCHEMAS[name];
     const fields: Record<string, FieldValue> = {};
-    for (const f of schema.fields) fields[f.key] = fieldFromBlockly(f, b.getFieldValue(`F_${f.key}`));
+    for (const f of schema.fields)
+      fields[f.key] = fieldFromBlockly(f, b.getFieldValue(`F_${f.key}`));
     const inputs: Record<string, Expr> = {};
     for (const inp of schema.inputs) {
       const target = this.target(b, `I_${inp.key}`);
       if (target) inputs[inp.key] = this.exprOf(target);
     }
     const binds: Record<string, string> = {};
-    for (const bind of schema.binds) binds[bind.key] = String(b.getFieldValue(`B_${bind.key}`) ?? '');
+    for (const bind of schema.binds)
+      binds[bind.key] = String(b.getFieldValue(`B_${bind.key}`) ?? '');
     return { id, kind: 'compositeExpr', name, fields, inputs, binds };
   }
 

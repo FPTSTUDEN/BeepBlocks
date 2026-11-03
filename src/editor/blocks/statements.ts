@@ -21,11 +21,33 @@ export function setAssignHint(b: Blockly.Block, hint: VarHint | undefined): void
 }
 
 const hasElse = new WeakMap<Blockly.Block, boolean>();
+const armIds = new WeakMap<Blockly.Block, string[]>();
 export function setIfElse(block: Blockly.Block, on: boolean): void {
   hasElse.set(block, on);
   const present = block.getInput('ELSE') !== null;
   if (on && !present) block.appendStatementInput('ELSE').appendField('else');
   if (!on && present) block.removeInput('ELSE');
+}
+
+export function setIfArms(block: Blockly.Block, ids: readonly string[]): void {
+  const count = ids.length;
+  for (let i = 1; i <= 20; i++) {
+    const cond = `ELSE_IF_COND${i}`;
+    const then = `ELSE_IF_THEN${i}`;
+    if (i <= count) {
+      if (!block.getInput(cond))
+        block.appendValueInput(cond).setCheck(['bool']).appendField('else if');
+      if (!block.getInput(then)) block.appendStatementInput(then).appendField('then');
+    } else {
+      if (block.getInput(cond)) block.removeInput(cond);
+      if (block.getInput(then)) block.removeInput(then);
+    }
+  }
+  setIfElse(block, true);
+  armIds.set(block, [...ids]);
+}
+export function getIfArmIds(block: Blockly.Block): string[] {
+  return armIds.get(block) ?? [];
 }
 
 export function defineStatementBlocks(): void {
@@ -75,11 +97,17 @@ export function defineStatementBlocks(): void {
         'Runs the "then" blocks only when the condition is yes, otherwise the "else" blocks.',
       );
     },
-    save(b) {
-      return hasElse.get(b) ? { else: true } : null;
-    },
     load(b, s) {
       setIfElse(b, s.else === true);
+      if (Array.isArray(s.armIds))
+        setIfArms(
+          b,
+          s.armIds.filter((x): x is string => typeof x === 'string'),
+        );
+    },
+    save(b) {
+      const ids = getIfArmIds(b);
+      return ids.length ? { else: true, armIds: ids } : hasElse.get(b) ? { else: true } : null;
     },
     menu(b, options) {
       const on = hasElse.get(b) === true;

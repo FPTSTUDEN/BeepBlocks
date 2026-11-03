@@ -1,5 +1,11 @@
 /** Blockly block type names, one per IR construct (design.md §9). */
-import { ACTION_NAMES, COMPOSITE_NAMES, COMPOSITE_EXPR_NAMES, type CompositeName, type CompositeExprName } from '../../ir/composites.ts';
+import {
+  ACTION_NAMES,
+  COMPOSITE_NAMES,
+  COMPOSITE_EXPR_NAMES,
+  type CompositeName,
+  type CompositeExprName,
+} from '../../ir/composites.ts';
 import { OP_NAMES, type OpName } from '../../ir/ops.ts';
 
 export const B = {
@@ -24,6 +30,12 @@ export const B = {
   logic: 'bp_logic',
   not: 'bp_not',
   neg: 'bp_negate',
+  textList: 'bp_text_list',
+  size: 'bp_size',
+  property: 'bp_its_property',
+  readyCondition: 'bp_ready_condition',
+  allOf: 'bp_all_of',
+  anyOf: 'bp_any_of',
   // functions
   function: 'bp_function',
   call: 'bp_call',

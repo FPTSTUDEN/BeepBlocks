@@ -6,6 +6,7 @@ import { defineExpressionBlocks } from './expressions.ts';
 import { defineFunctionBlocks } from './functions.ts';
 import { defineOpBlocks } from './ops.ts';
 import { defineStatementBlocks } from './statements.ts';
+import { defineViewBlocks } from './views.ts';
 
 let registered = false;
 
@@ -15,6 +16,7 @@ export function registerBlocks(): void {
   Blockly.setLocale(En as unknown as Record<string, string>);
   defineStatementBlocks();
   defineExpressionBlocks();
+  defineViewBlocks();
   defineOpBlocks();
   defineFunctionBlocks();
   defineCompositeBlocks();

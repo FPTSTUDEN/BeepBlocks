@@ -4,7 +4,7 @@
 - Same gates as v1 for every task that changes code: `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:py`, `pnpm conformance --strict`; plus `pnpm smoke` and `pnpm e2e` before each phase checkpoint.
 - Every expected conformance result is derived by hand (never copied from the simulator), as in v1.
 
-**Status:** Phases 0–1 (except the §8 readability views) and Phase 2 implemented and validated; see the per-task marks. Still open: Workstream C.2 (else-if / all-of / "its …" / compact list / size-unit views) and C.4's per-`anchorRole` expression Expand; Phase 3 review.
+**Status:** Phases 0–1 and Phase 2 implemented and validated; see the per-task marks. Still open: C.4's per-`anchorRole` expression Expand and the final Phase 3 review.
 
 Verified on this pass (not a self-report): `pnpm typecheck`, `pnpm lint`, `pnpm test` (3955 tests), `pnpm test:py`, `pnpm conformance --strict` (56/56, coverage complete). The earlier `phase2-coverage` mega-fixture (empty tree, empty golden) was replaced with 27 real `act-`/`expr-`/`hoist-` fixtures whose goldens are hand-derived and were shown to catch a wrong expected result. Expression actions now render and round-trip in the editor (they previously dropped with a "not supported" warning).
 
@@ -47,7 +47,7 @@ Each workstream writes only in its folder and reads the contract. Good candidate
 
 ### Workstream C — Editor [`src/editor/`]
 - [x] C.1 Blocks for expression composites and markers (generated from schemas like v1's composite blocks). _Req: 2.1_
-- [ ] C.2 Views from §8.1–8.3: "its …" properties, ready-made conditions, all of / any of, else if, compact text list, size units; exact round-trip tests per view. _Req: 4.1–4.5, 6.1–6.3_
+- [x] C.2 Views from §8.1–8.3: "its …" properties, ready-made conditions, all of / any of, else if, compact text list, size units; exact round-trip tests per view. _Req: 4.1–4.5, 6.1–6.3_
 - [x] C.3 Palette (§8.4) with a `showAdvanced` prop. _Req: 7.1, 7.3_
 - [ ] C.4 Expand menu items ("Expand into actions" / "Expand into basic blocks" / "Expand one level") and expression Expand for each `anchorRole`; single undo step. _Req: 1.3, 1.4, 1.6, 5.5_
 
@@ -68,7 +68,7 @@ Each workstream writes only in its folder and reads the contract. Good candidate
 
 - [x] 3.1 Wording pass over every action label and help text against §5.3, read aloud as instructions.
 - [x] 3.2 Accessibility for the new blocks and the step-mode select (keyboard, axe in smoke).
-- [ ] 3.3 Review against this requirements.md. BLOCKED: C.2 (readability views) and C.4 (per-anchorRole expression Expand) are not implemented, so Req 4 and Req 6 are not met. The earlier "Requirements 1-10 implemented" note was incorrect.
+- [ ] 3.3 Review against this requirements.md. BLOCKED: C.4 (per-anchorRole expression Expand) is not implemented, so Req 5 is not fully met. The earlier "Requirements 1-10 implemented" note was incorrect.
 
 ### Phase 3 review notes
 

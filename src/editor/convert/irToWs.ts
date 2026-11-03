@@ -6,17 +6,38 @@
  * (only possible for ill-typed IR) are left as loose blocks, with a warning.
  */
 import * as Blockly from 'blockly/core';
-import type { Expr, FunctionDef, NodeId, OpExpr, Program, Stmt, Type } from '../../ir/types.ts';
+import type {
+  Expr,
+  FunctionDef,
+  Lit,
+  NodeId,
+  OpExpr,
+  Program,
+  Stmt,
+  Type,
+} from '../../ir/types.ts';
 import { OPS } from '../../ir/ops.ts';
-import { schemaFor, getBind, COMPOSITE_EXPR_SCHEMAS, type CompositeStmt, type CompositeExpr } from '../../ir/composites.ts';
+import {
+  schemaFor,
+  getBind,
+  COMPOSITE_EXPR_SCHEMAS,
+  type CompositeStmt,
+  type CompositeExpr,
+} from '../../ir/composites.ts';
 import { typecheck } from '../../ir/validate.ts';
 import type { Layout } from '../layout.ts';
-import { B, compositeBlockType, compositeExprBlockType, opBlockType } from '../blocks/blockTypes.ts';
+import {
+  B,
+  compositeBlockType,
+  compositeExprBlockType,
+  opBlockType,
+} from '../blocks/blockTypes.ts';
 import { RUN_BLOCK_ID, setNodeIdFor } from '../blocks/common.ts';
 import { fieldToBlockly } from '../blocks/composites.ts';
 import { formatNumber, setFloatFlag } from '../blocks/expressions.ts';
 import { NO_RETURN, setCallSpec, setDefParams, type CallSpec } from '../blocks/functions.ts';
-import { setAssignHint, setIfElse } from '../blocks/statements.ts';
+import { setAssignHint, setIfArms, setIfElse } from '../blocks/statements.ts';
+import { setPropertyIds, setReadyIds, setSizeBytes, setTextListItems } from '../blocks/views.ts';
 import { typeKey } from '../blocks/typeKeys.ts';
 import { setVariableField } from '../blocks/variables.ts';
 
@@ -113,10 +134,27 @@ export class BlockBuilder {
       }
       case 'if': {
         const b = this.make(B.if, s.id);
-        setIfElse(b, (s.else ?? []).length > 0);
+        const arms: (typeof s)[] = [];
+        let finalElse: Stmt[] = s.else;
+        let next = finalElse.length === 1 && finalElse[0]?.kind === 'if' ? finalElse[0] : null;
+        while (next) {
+          arms.push(next);
+          finalElse = next.else;
+          next = finalElse.length === 1 && finalElse[0]?.kind === 'if' ? finalElse[0] : null;
+        }
+        if (arms.length)
+          setIfArms(
+            b,
+            arms.map((x) => x.id),
+          );
+        else setIfElse(b, (s.else ?? []).length > 0);
         this.attachValue(b, 'COND', this.expr(s.cond, scope));
         this.body(b, 'THEN', s.then, scope);
-        this.body(b, 'ELSE', s.else, scope);
+        arms.forEach((arm, i) => {
+          this.attachValue(b, `ELSE_IF_COND${i + 1}`, this.expr(arm.cond, scope));
+          this.body(b, `ELSE_IF_THEN${i + 1}`, arm.then, scope);
+        });
+        this.body(b, 'ELSE', arms.length ? finalElse : s.else, scope);
         return b;
       }
       case 'while': {
@@ -200,6 +238,105 @@ export class BlockBuilder {
 
   expr(e: Expr | null, scope: Scope): Blockly.Block | null {
     if (!e) return null;
+    if (
+      e.kind === 'op' &&
+      ['name', 'stem', 'ext', 'size', 'modified', 'readText', 'isFolder'].some(
+        (x) => e.op === `fs.${x}`,
+      )
+    ) {
+      const arg = e.args[0];
+      if (arg?.kind === 'var') {
+        const b = this.make(B.property, e.id);
+        b.setFieldValue(e.op.slice(3), 'PROPERTY');
+        this.setVar(b, 'VAR', arg.name, scope);
+        setPropertyIds(b, { variable: arg.id });
+        return b;
+      }
+    }
+    if (
+      e.kind === 'op' &&
+      e.op === 'text.wildcard' &&
+      e.args[0]?.kind === 'op' &&
+      e.args[1]?.kind === 'lit' &&
+      typeof e.args[1].value === 'string'
+    ) {
+      const p = e.args[0];
+      if (p.op === 'fs.name' && p.args[0]?.kind === 'var') {
+        const b = this.make(B.readyCondition, e.id);
+        b.setFieldValue('nameMatches', 'TEST');
+        this.setVar(b, 'VAR', p.args[0].name, scope);
+        b.setFieldValue(e.args[1].value, 'VALUE');
+        setReadyIds(b, { property: p.id, variable: p.args[0].id, value: e.args[1].id });
+        return b;
+      }
+    }
+    if (
+      e.kind === 'op' &&
+      e.op === 'text.contains' &&
+      e.args[0]?.kind === 'op' &&
+      e.args[0].op === 'fs.readText' &&
+      e.args[0].args[0]?.kind === 'var' &&
+      e.args[1]?.kind === 'lit' &&
+      typeof e.args[1].value === 'string'
+    ) {
+      const b = this.make(B.readyCondition, e.id);
+      b.setFieldValue('textContains', 'TEST');
+      this.setVar(b, 'VAR', e.args[0].args[0].name, scope);
+      b.setFieldValue(e.args[1].value, 'VALUE');
+      setReadyIds(b, {
+        property: e.args[0].id,
+        variable: e.args[0].args[0].id,
+        value: e.args[1].id,
+      });
+      return b;
+    }
+    if (
+      e.kind === 'binary' &&
+      e.op === '==' &&
+      e.left.kind === 'op' &&
+      e.left.op === 'text.lower' &&
+      e.left.args[0]?.kind === 'op' &&
+      e.left.args[0].op === 'fs.ext' &&
+      e.left.args[0].args[0]?.kind === 'var' &&
+      e.right.kind === 'lit' &&
+      typeof e.right.value === 'string'
+    ) {
+      const b = this.make(B.readyCondition, e.id);
+      b.setFieldValue('extensionIs', 'TEST');
+      this.setVar(b, 'VAR', e.left.args[0].args[0].name, scope);
+      b.setFieldValue(e.right.value, 'VALUE');
+      setReadyIds(b, {
+        property: e.left.args[0].id,
+        wrapper: e.left.id,
+        variable: e.left.args[0].args[0].id,
+        value: e.right.id,
+      });
+      return b;
+    }
+    if (
+      e.kind === 'binary' &&
+      ['>', '>=', '<', '<='].includes(e.op) &&
+      e.left.kind === 'op' &&
+      e.left.op === 'fs.modified' &&
+      e.left.args[0]?.kind === 'var' &&
+      e.right.kind === 'date'
+    ) {
+      const b = this.make(B.readyCondition, e.id);
+      b.setFieldValue(
+        e.op === '>'
+          ? 'modifiedGt'
+          : e.op === '>='
+            ? 'modifiedGe'
+            : e.op === '<'
+              ? 'modifiedLt'
+              : 'modifiedLe',
+        'TEST',
+      );
+      this.setVar(b, 'VAR', e.left.args[0].name, scope);
+      b.setFieldValue(e.right.iso, 'VALUE');
+      setReadyIds(b, { property: e.left.id, variable: e.left.args[0].id, value: e.right.id });
+      return b;
+    }
     switch (e.kind) {
       case 'lit': {
         if (typeof e.value === 'number') {
@@ -224,6 +361,18 @@ export class BlockBuilder {
         return b;
       }
       case 'list': {
+        const textItems = e.items.filter(
+          (x): x is Lit => x.kind === 'lit' && typeof x.value === 'string',
+        );
+        if (e.itemType.t === 'text' && textItems.length === e.items.length) {
+          const b = this.make(B.textList, e.id);
+          setTextListItems(
+            b,
+            textItems.map((x) => String(x.value)),
+            textItems.map((x) => x.id),
+          );
+          return b;
+        }
         const b = this.make(B.list, e.id);
         b.loadExtraState?.({ items: e.items.length });
         const key = typeKey(e.itemType);
@@ -240,6 +389,41 @@ export class BlockBuilder {
         return b;
       }
       case 'binary': {
+        if (e.op === 'and' || e.op === 'or') {
+          const parts: Expr[] = [];
+          const ids: string[] = [];
+          const collect = (x: Expr): void => {
+            if (x.kind === 'binary' && x.op === e.op) {
+              collect(x.left);
+              parts.push(x.right);
+              ids.push(x.id);
+            } else if (parts.length === 0) parts.push(x);
+          };
+          collect(e);
+          if (parts.length >= 2) {
+            const b = this.make(e.op === 'and' ? B.allOf : B.anyOf, e.id);
+            b.loadExtraState?.({ count: parts.length, ids });
+            parts.forEach((x, i) => this.attachValue(b, `C${i}`, this.expr(x, scope)));
+            return b;
+          }
+        }
+        if (
+          ['>', '>=', '<', '<='].includes(e.op) &&
+          e.left.kind === 'op' &&
+          e.left.op === 'fs.size' &&
+          e.left.args[0]?.kind === 'var' &&
+          e.right.kind === 'lit' &&
+          typeof e.right.value === 'number'
+        ) {
+          const b = this.make(B.readyCondition, e.id);
+          const test =
+            e.op === '>' ? 'sizeGt' : e.op === '>=' ? 'sizeGe' : e.op === '<' ? 'sizeLt' : 'sizeLe';
+          b.setFieldValue(test, 'TEST');
+          this.setVar(b, 'VAR', e.left.args[0].name, scope);
+          setSizeBytes(b, e.right.value);
+          setReadyIds(b, { property: e.left.id, variable: e.left.args[0].id, value: e.right.id });
+          return b;
+        }
         const type =
           e.op === 'and' || e.op === 'or'
             ? B.logic
