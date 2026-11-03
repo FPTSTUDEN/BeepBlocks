@@ -14,7 +14,20 @@ function desugar(node: CompositeExpr, ctx: DesugarCtx): { pre: Stmt[]; value: Ex
   const pre: Stmt[] = [
     b.assign(ext, b.op('text.lower', [b.op('fs.ext', [file], id('ext.raw'))], id('ext.lower')), id('ext')),
   ];
-  if (by === 'extension') return { pre, value: b.v(ext, id('value')) };
+  if (by === 'extension') {
+    return {
+      pre: [
+        ...pre,
+        b.if(
+          b.bin('==', b.v(ext, id('empty.ext')), b.lit('', id('empty.value')), id('empty')),
+          [b.assign(type, b.lit('No extension', id('noExtension.value')), id('noExtension'))],
+          [b.assign(type, b.v(ext, id('extension.value')), id('extension'))],
+          id('extension.if'),
+        ),
+      ],
+      value: b.v(type, id('value')),
+    };
+  }
   let rest: Stmt[] = [b.assign(type, b.lit(OTHER_CATEGORY, id('other.value')), id('other'))];
   for (let i = CATEGORIES.length - 1; i >= 0; i--) {
     const category = CATEGORIES[i]!;

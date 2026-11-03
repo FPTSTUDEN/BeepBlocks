@@ -4,7 +4,7 @@
  * Presentational: the timeline, the current index, staleness and the scenario all come from
  * props. Local state is UI-only (playing, speed, folder selection/expansion, list toggle).
  */
-import { useEffect, useId, useState, type KeyboardEvent } from 'react';
+import { useCallback, useEffect, useId, useState, type KeyboardEvent } from 'react';
 import type { NodeId } from '../ir/types.ts';
 import type { Snapshot, Timeline } from '../ir/timeline.ts';
 import type { SandboxFS } from '../domains/fileExplorer/fsTypes.ts';
@@ -50,6 +50,8 @@ export interface PlaygroundProps {
   runBlockedReason?: string | null;
   /** Optional callback for focusing the editor block that caused a runtime error. */
   onShowBlock?: (nodeId: NodeId) => void;
+  /** Snapshot indices computed by the app for block-level playback. */
+  stepStops?: readonly number[] | null;
 }
 
 const EMPTY_DIFF: Diff = new Map();
@@ -69,6 +71,7 @@ export function Playground(props: PlaygroundProps) {
   const [showList, setShowList] = useState(true);
   /** Set when Run asked the parent for a fresh timeline; playback starts once it arrives. */
   const [pendingPlay, setPendingPlay] = useState(false);
+  const [stepMode, setStepMode] = useState<'block' | 'detail'>('block');
   const [announcement, setAnnouncement] = useState(() => announce(timeline, index));
   const staleId = useId();
   const [seenTimeline, setSeenTimeline] = useState(timeline);
@@ -80,17 +83,24 @@ export function Playground(props: PlaygroundProps) {
   }
 
   const playing = playingFlag && timeline !== null && !stale && !editingScenario && index < last;
+  const stops = props.stepStops && stepMode === 'block' ? props.stepStops : null;
+  const nextStop = useCallback((from: number, direction: 1 | -1): number => {
+    if (!stops || stops.length === 0) return clampIndex(from + direction, timeline);
+    if (direction > 0) return stops.find((stop) => stop > from) ?? from;
+    return [...stops].reverse().find((stop) => stop < from) ?? from;
+  }, [stops, timeline]);
 
   // Playback: one step per tick while playing (about 4 steps/s at 1×).
   const { onIndexChange } = props;
   useEffect(() => {
     if (!playing) return;
     const t = setTimeout(() => {
-      onIndexChange(index + 1);
-      if (index + 1 >= last) setPlaying(false);
+      const next = nextStop(index, 1);
+      onIndexChange(next);
+      if (next >= last) setPlaying(false);
     }, stepDelayMs(speed));
     return () => clearTimeout(t);
-  }, [playing, index, last, speed, onIndexChange]);
+  }, [playing, index, last, speed, onIndexChange, nextStop]);
 
   const explorer = useExplorerState(fs, snapshot, folderForSnapshot(snapshot));
 
@@ -214,11 +224,14 @@ export function Playground(props: PlaygroundProps) {
         done={done && !editingScenario}
         onRun={run}
         onPause={pause}
-        onBack={() => go(index - 1)}
-        onForward={() => go(index + 1)}
+        onBack={() => go(nextStop(index, -1))}
+        onForward={() => go(nextStop(index, 1))}
         onReset={reset}
         onScrub={go}
         onSpeed={setSpeed}
+        stepStops={props.stepStops}
+        stepMode={stepMode}
+        onStepMode={setStepMode}
         runBlockedReason={editingScenario ? null : (props.runBlockedReason ?? null)}
       />
       <p className={styles.srOnly} aria-live="polite" aria-atomic="true">

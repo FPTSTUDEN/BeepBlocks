@@ -379,7 +379,7 @@ export interface DesugarCtx {
 }
 ```
 
-`desugarProgram(program)` replaces composites recursively, innermost first, and is pure and deterministic. Hygiene works like this: the temporaries a composite introduces (`n`, `items`, `low`…) get names from `freshName`, which avoids every name already used in the enclosing scope. `binds` names are chosen by the user, so the user can reference them.
+`desugarProgram(program)` replaces composites recursively, innermost first, and is pure and deterministic. v1.1 supersedes this order with an outer-first repeated desugaring pass so action composites can introduce and control the positions where expression actions are hoisted. Hygiene works like this: the temporaries a composite introduces (`n`, `items`, `low`…) get names from `freshName`, which avoids every name already used in the enclosing scope. `binds` names are chosen by the user, so the user can reference them.
 
 Further desugaring rules (contract-v1):
 - **Each input expression is emitted exactly once.** If the desugaring needs an input value in more than one place (e.g. `folder` in both `fs.list(folder)` and `fs.join(folder, group)`), it first assigns it to a fresh temporary and uses the temporary everywhere. Copying an expression subtree would duplicate node IDs (`DUPLICATE_ID`) and evaluate it more than once. Inputs that are evaluated repeatedly *by design* (the `findFirst` condition, evaluated once per probe) are placed once inside the loop body.
@@ -647,18 +647,18 @@ This is a real `.py` file, so it can be linted and unit-tested with Python direc
 ## 9. Block Editor
 
 - **Block ↔ IR mapping.** There's one Blockly block type per statement kind, expression kind, op, and composite, generated from `ir/ops.ts` signatures plus per-op label strings. Output and input `check`s use the type names (`number`, `text`, `bool`, `path`, `list`), so most type errors are prevented while dragging.
-- **Palette order:** Tasks (composites), Files, Logic, Loops, Variables, Lists, Text, Math, Functions.
+- **Palette order:** In v1, Tasks (composites), Files, Logic, Loops, Variables, Lists, Text, Math, Functions. v1.1 uses a human-action default palette and appends the v1 primitive categories when `showAdvanced` is enabled.
 - **`wsToIr(workspace)`** is a custom traversal (not a Blockly code generator). Disconnected stacks other than the main "when run" stack are ignored, and the user gets a warning.
 - **`irToWs(program, layout)`** is used for loading projects and for Expand.
-- **Expand:**
-  1. `desugar` the single composite with the program's current names.
+- **Expand:** v1.1 replaces this with level-aware expansion:
+  1. `desugarOne` expands one composite level, while `desugarFully` expands all levels.
   2. Convert the resulting primitive subtree to blocks with `irToWs`, keeping desugared IDs.
   3. Splice the blocks in place inside one Blockly event group, so a single undo reverts it.
 - **Validation:** runs on workspace change, debounced at 300 ms. Blocks with errors get a Blockly warning icon and the plain-language message.
 - **Variables:** Blockly variables carry their type. Blocks that create bound names (`candidate`, `match`) show those names as editable fields.
 - **Keyboard** (`@blockly/keyboard-navigation`, verified with real key events in `pnpm smoke`):
   - Tab moves palette → palette flyout → workspace. Arrow keys move the cursor between blocks, inputs, and fields; → enters a block's inputs.
-  - T opens the palette, / shows all shortcuts. Enter on a field opens its editor (dropdown, text, checkbox, date). Ctrl+Enter (Alt/⌘+Enter) opens the block's menu, which includes "Expand into basic blocks" on composites.
+  - T opens the palette, / shows all shortcuts. Enter on a field opens its editor (dropdown, text, checkbox, date). Ctrl+Enter (Alt/⌘+Enter) opens the block's menu, which includes the v1.1 level-aware expand actions on composites.
   - Blockly binds keydown on its injection div (and the dropdown div), not on `document`, so keys pressed elsewhere in the page never trigger editor shortcuts (tests pin this; there is deliberately no global key guard).
 - **Non-colour cues:** the running block has a solid 5 px outline, blocks marked by "Show block"/click-to-trace a dashed 3 px outline, and the keyboard-focused block or field a dotted 3 px outline (`.blocklyActiveFocus`). "Show block" scrolls the first marked block into view and announces "Showing the block." in the editor's status region; during playback the running block is scrolled into view only when it is completely off-screen. Block colours keep white text ≥ 4.5:1 (unit-tested).
 

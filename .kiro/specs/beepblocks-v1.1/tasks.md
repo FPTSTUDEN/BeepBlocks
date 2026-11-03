@@ -4,7 +4,7 @@
 - Same gates as v1 for every task that changes code: `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:py`, `pnpm conformance --strict`; plus `pnpm smoke` and `pnpm e2e` before each phase checkpoint.
 - Every expected conformance result is derived by hand (never copied from the simulator), as in v1.
 
-**Status:** spec written, awaiting review. Nothing implemented yet.
+**Status:** Phases 0–2 implemented and validated; Phase 3 review remains.
 
 ---
 
@@ -55,12 +55,12 @@ Each workstream writes only in its folder and reads the contract. Good candidate
 
 ## Phase 2 — Integration [SEQ, integrator]
 
-- [ ] 2.1 Re-express the 4 v1 tasks through actions (§6). All 29 v1 fixtures must still pass with identical trees and output. _Req: 10.1, 10.2_
-- [ ] 2.2 App: stop computation (§9), `showAdvanced` setting in the settings menu, `desugarFully` wiring. _Req: 7.2, 8.2_
-- [ ] 2.3 `pnpm smoke`: keyboard path to "Expand into actions"; step by block on the bisect starter (each Step lands on a new middle). `pnpm e2e`: expand one level, then fully; same output both times.
-- [ ] 2.4 Measure the expanded starters again (blocks, depth) and record them next to v1's 147/64/50/35.
-- [ ] 2.5 Update v1 design.md where v1.1 supersedes it (desugaring order v1 §6.1, palette v1 §9, `DesugarOne` type).
-- [ ] 2.6 Checkpoint: all gates green; coverage complete including the new variants.
+- [x] 2.1 Re-express the 4 v1 tasks through actions (§6). All 29 v1 fixtures must still pass with identical trees and output. _Req: 10.1, 10.2_
+- [x] 2.2 App: stop computation (§9), `showAdvanced` setting in the settings menu, `desugarFully` wiring. _Req: 7.2, 8.2_
+- [x] 2.3 `pnpm smoke`: keyboard path to "Expand into actions"; step by block on the bisect starter (each Step lands on a new middle). `pnpm e2e`: expand one level, then fully; same output both times.
+- [x] 2.4 Measure the expanded starters again (blocks, depth) and record them next to v1's 147/64/50/35.
+- [x] 2.5 Update v1 design.md where v1.1 supersedes it (desugaring order v1 §6.1, palette v1 §9, `DesugarOne` type).
+- [x] 2.6 Checkpoint: all gates green; coverage complete including the new variants.
 
 ## Phase 3 — Review [SEQ]
 

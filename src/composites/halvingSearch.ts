@@ -43,13 +43,14 @@ function desugar(node: CompositeStmt, ctx: DesugarCtx): Stmt[] {
   const high = ctx.freshName('high');
   const mid = ctx.freshName('mid');
   const line = input(node, 'line');
-  const lineName = ctx.freshName('line');
-  const lineVar = b.v(lineName, id('line.value'));
-  const transformed = decide(node.bodies.decide ?? [], high, low, mid, lineVar, ctx);
+  const lineName = ctx.freshName('items');
+  let lineRef = 0;
+  const lineVar = () => b.v(lineName, id(`line.value.${++lineRef}`));
+  const transformed = decide(node.bodies.decide ?? [], high, low, mid, lineVar(), ctx);
   return [
     b.assign(lineName, line, id('line')),
-    b.assign(low, b.lit(0, id('low.value')), id('low'), { indexInto: 'line' }),
-    b.assign(high, b.op('list.length', [line], id('high.value')), id('high'), { indexInto: 'line' }),
+    b.assign(low, b.lit(0, id('low.value')), id('low'), { indexInto: lineName }),
+    b.assign(high, b.op('list.length', [lineVar()], id('high.value')), id('high'), { indexInto: lineName }),
     b.while(
       b.bin('<', b.v(low, id('loop.low')), b.v(high, id('loop.high')), id('loop.test')),
       [
@@ -62,17 +63,17 @@ function desugar(node: CompositeStmt, ctx: DesugarCtx): Stmt[] {
             id('mid.value'),
           ),
           id('mid'),
-          { indexInto: 'line' },
+          { indexInto: lineName },
         ),
-        b.assign(middle, b.op('list.get', [line, b.v(mid, id('middle.mid'))], id('middle.value')), id('middle')),
+        b.assign(middle,                 b.op('list.get', [lineVar(), b.v(mid, id('middle.mid'))], id('middle.value')), id('middle')),
         ...transformed,
       ],
       id('loop'),
     ),
     b.if(
-      b.bin('<', b.v(low, id('result.low')), b.op('list.length', [line], id('result.length')), id('result.test')),
+      b.bin('<', b.v(low, id('result.low')),             b.op('list.length', [lineVar()], id('result.length')), id('result.test')),
       [
-        b.assign(answer, b.op('list.get', [line, b.v(low, id('answer.low'))], id('answer.value')), id('answer')),
+        b.assign(answer,                 b.op('list.get', [lineVar(), b.v(low, id('answer.low'))], id('answer.value')), id('answer')),
         ...(node.bodies.found ?? []),
       ],
       node.bodies.notFound ?? [],

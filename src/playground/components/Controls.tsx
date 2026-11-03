@@ -23,6 +23,9 @@ export interface ControlsProps {
   onReset: () => void;
   onScrub: (index: number) => void;
   onSpeed: (speed: Speed) => void;
+  stepStops?: readonly number[] | null;
+  stepMode?: 'block' | 'detail';
+  onStepMode?: (mode: 'block' | 'detail') => void;
   /** When set, Run is disabled and this reason is shown next to it (e.g. invalid program). */
   runBlockedReason?: string | null;
 }
@@ -168,6 +171,22 @@ export function Controls(p: ControlsProps) {
           </option>
         ))}
       </select>
+      {p.stepStops && p.onStepMode && (
+        <>
+          <label htmlFor={`${speedId}-mode`}>Step</label>
+          <select
+            id={`${speedId}-mode`}
+            className={styles.select}
+            value={p.stepMode ?? 'block'}
+            onChange={(e) => {
+              if (e.target.value === 'block' || e.target.value === 'detail') p.onStepMode?.(e.target.value);
+            }}
+          >
+            <option value="block">by block</option>
+            <option value="detail">every detail</option>
+          </select>
+        </>
+      )}
       <span className={cx(styles.status, p.done && styles.done)} data-testid="status">
         {p.done && <span aria-hidden="true">✓ </span>}
         {p.status}

@@ -63,8 +63,16 @@ describe('visual themes', () => {
   });
 
   it('parses saved settings defensively', () => {
-    expect(parseSettings({ mode: 'dark', accent: '#ABCDEF' })).toEqual({ mode: 'dark', accent: '#abcdef' });
-    expect(parseSettings({ mode: 'neon', accent: 'red' })).toEqual({ mode: 'light', accent: '#2563eb' });
+    expect(parseSettings({ mode: 'dark', accent: '#ABCDEF' })).toEqual({
+      mode: 'dark',
+      accent: '#abcdef',
+      showAdvanced: false,
+    });
+    expect(parseSettings({ mode: 'neon', accent: 'red' })).toEqual({
+      mode: 'light',
+      accent: '#2563eb',
+      showAdvanced: false,
+    });
     expect(parseSettings(null).mode).toBe('light');
     expect(loadSettings(undefined, true).mode).toBe('dark');
   });

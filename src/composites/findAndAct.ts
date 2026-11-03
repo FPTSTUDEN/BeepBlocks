@@ -23,7 +23,6 @@ import type { CompositeDef, CompositeStmt, DesugarCtx } from '../ir/composites.t
 import { COMPOSITE_SCHEMAS } from '../ir/composites.ts';
 import { b } from '../ir/build.ts';
 import type { Expr, Stmt } from '../ir/types.ts';
-import { counterInit, counterNext, planTemplate, renameStmts } from './template.ts';
 import { andAll, boolField, enumField, input, optNumberField, optTextField } from './util.ts';
 
 const ACTIONS = ['move', 'copy', 'delete', 'rename'] as const;
@@ -43,38 +42,11 @@ function desugar(node: CompositeStmt, ctx: DesugarCtx): Stmt[] {
   const maxSize = optNumberField(node, 'maxSize');
   const after = optTextField(node, 'modifiedAfter');
   const before = optTextField(node, 'modifiedBefore');
-  const plan =
-    action === 'rename' ? planTemplate(optTextField(node, 'renameTemplate') ?? '') : null;
-
-  const out: Stmt[] = [];
-
-  // Inputs in schema order: folder, then destination.
-  const items = ctx.freshName('items');
-  out.push(
-    b.assign(
-      items,
-      b.op(recursive ? 'fs.walk' : 'fs.list', [input(node, 'folder')], id('items.list')),
-      id('items'),
-    ),
-  );
-  let destination: string | null = null;
-  if (action === 'move' || action === 'copy') {
-    destination = ctx.freshName('destination');
-    out.push(b.assign(destination, input(node, 'destination'), id('destination')));
-  }
-  const counter = plan?.usesCounter ? ctx.freshName('n') : null;
-  if (counter) out.push(counterInit(ctx, counter));
-
-  const item = ctx.freshName('item');
-  const v = (local: string) => b.v(item, id(local));
+  const file = ctx.freshName('item');
+  const v = (local: string) => b.v(file, id(local));
 
   // ---- criteria
   const conds: Expr[] = [];
-  if (!recursive) {
-    conds.push(
-      b.not(b.op('fs.isFolder', [v('crit.file.item')], id('crit.file.isFolder')), id('crit.file')),
-    );
-  }
   if (namePattern !== null) {
     conds.push(
       b.op(
@@ -142,51 +114,29 @@ function desugar(node: CompositeStmt, ctx: DesugarCtx): Stmt[] {
     );
   }
 
-  // ---- action
-  let act: Stmt[];
-  switch (action) {
-    case 'move':
-    case 'copy': {
-      const dest = destination!;
-      act = [
-        b.if(
-          b.bin(
-            '!=',
-            b.op('fs.parent', [v('act.guard.item')], id('act.guard.parent')),
-            b.v(dest, id('act.guard.dest')),
-            id('act.guard.test'),
-          ),
-          [
-            b.do(
-              b.op(
-                action === 'move' ? 'fs.move' : 'fs.copy',
-                [v('act.item'), b.v(dest, id('act.dest'))],
-                id('act.op'),
-              ),
-              id('act'),
-            ),
-          ],
-          [],
-          id('act.guard'),
-        ),
-      ];
-      break;
-    }
-    case 'delete':
-      act = [b.do(b.op('fs.delete', [v('act.item')], id('act.op')), id('act'))];
-      break;
-    case 'rename':
-      act = [
-        ...(counter ? [counterNext(ctx, counter)] : []),
-        ...renameStmts(plan!, { ctx, item, counter }),
-      ];
-      break;
-  }
-
-  const cond = andAll(conds, ctx, 'crit');
-  const loopBody = cond ? [b.if(cond, act, [], id('check'))] : act;
-  out.push(b.forEach(item, b.v(items, id('loop.items')), loopBody, id('loop')));
-  return out;
+  const condition = andAll(conds, ctx, 'crit');
+  return [
+    b.composite(
+      'everyFile',
+      {
+        fields: {
+          action,
+          includeSubfolders: recursive,
+          makeFolder: false,
+          renameTemplate: action === 'rename' ? optTextField(node, 'renameTemplate') : null,
+        },
+        inputs: {
+          folder: input(node, 'folder'),
+          ...(condition ? { condition } : {}),
+          ...(action === 'move' || action === 'copy'
+            ? { destination: input(node, 'destination') }
+            : {}),
+        },
+        binds: { file },
+      },
+      id('everyFile'),
+    ),
+  ];
 }
 
 export const findAndAct: CompositeDef = { ...COMPOSITE_SCHEMAS.findAndAct, desugar };

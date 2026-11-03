@@ -172,8 +172,16 @@ describe('app store', () => {
     const storage = memoryStorage();
     const { s } = setup(realSimulate, storage);
     s().setSettings({ mode: 'dark', accent: '#ff0000' });
-    expect(JSON.parse(storage.getItem(SETTINGS_KEY)!)).toEqual({ mode: 'dark', accent: '#ff0000' });
-    expect(setup(realSimulate, storage).s().settings).toEqual({ mode: 'dark', accent: '#ff0000' });
+    expect(JSON.parse(storage.getItem(SETTINGS_KEY)!)).toEqual({
+      mode: 'dark',
+      accent: '#ff0000',
+      showAdvanced: false,
+    });
+    expect(setup(realSimulate, storage).s().settings).toEqual({
+      mode: 'dark',
+      accent: '#ff0000',
+      showAdvanced: false,
+    });
   });
 
   it('migrates an autosave from the pre-rename keys once', () => {

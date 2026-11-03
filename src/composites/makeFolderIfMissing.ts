@@ -1,5 +1,5 @@
 import type { CompositeDef, CompositeStmt, DesugarCtx } from '../ir/composites.ts';
-import { ACTION_SCHEMAS, getField } from '../ir/composites.ts';
+import { ACTION_SCHEMAS } from '../ir/composites.ts';
 import { b } from '../ir/build.ts';
 import type { Stmt } from '../ir/types.ts';
 import { input } from './util.ts';

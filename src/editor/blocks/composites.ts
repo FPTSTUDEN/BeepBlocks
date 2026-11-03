@@ -9,8 +9,6 @@ import * as Blockly from 'blockly/core';
 import {
   COMPOSITE_NAMES,
   ACTION_NAMES,
-  ACTION_SCHEMAS,
-  COMPOSITE_SCHEMAS,
   schemaFor,
   type CompositeName,
   type FieldSchema,

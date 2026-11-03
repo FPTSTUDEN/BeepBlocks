@@ -13,11 +13,11 @@ function desugar(node: CompositeStmt, ctx: DesugarCtx): Stmt[] {
   const recursive = boolField(node, 'includeSubfolders');
   const makeFolder = boolField(node, 'makeFolder');
   const file = getBind(node, 'file');
-  const items = ctx.freshName('items');
   const counterPlan = action === 'rename' ? planTemplate(String(node.fields.renameTemplate ?? '{name}{ext}')) : null;
   const counter = counterPlan?.usesCounter ? ctx.freshName('n') : null;
-  const conditions: Expr[] = [];
-  if (!recursive) conditions.push(b.not(b.op('fs.isFolder', [b.v(file, id('file.folder'))], id('file.isFolder')), id('file.test')));
+  const conditions: Expr[] = [
+    b.not(b.op('fs.isFolder', [b.v(file, id('file.folder'))], id('file.isFolder')), id('file.test')),
+  ];
   const condition = node.inputs.condition;
   if (condition) conditions.push(condition);
   const body: Stmt[] = [];
@@ -27,8 +27,8 @@ function desugar(node: CompositeStmt, ctx: DesugarCtx): Stmt[] {
     if (makeFolder) {
       body.push(
         b.if(
-          b.not(b.op('fs.exists', [b.v(destination, id('destination.exists'))], id('destination.exists')), id('destination.missing')),
-          [b.do(b.op('fs.makeFolder', [b.v(destination, id('destination.make'))], id('destination.made')), id('destination.made'))],
+          b.not(b.op('fs.exists', [b.v(destination, id('destination.exists.value'))], id('destination.exists')), id('destination.missing')),
+          [b.do(b.op('fs.makeFolder', [b.v(destination, id('destination.make'))], id('destination.made.op')), id('destination.made'))],
           [],
           id('destination.if'),
         ),

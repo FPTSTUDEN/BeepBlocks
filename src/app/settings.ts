@@ -9,11 +9,12 @@ export interface Settings {
   mode: Mode;
   /** User-chosen accent, `#rrggbb`. The applied accent may be adjusted for contrast. */
   accent: string;
+  showAdvanced?: boolean;
 }
 
 export const SETTINGS_KEY = 'beepblocks.settings';
 export const DEFAULT_ACCENT = '#2563eb';
-export const DEFAULT_SETTINGS: Settings = { mode: 'light', accent: DEFAULT_ACCENT };
+export const DEFAULT_SETTINGS: Settings = { mode: 'light', accent: DEFAULT_ACCENT, showAdvanced: false };
 
 const FONTS = {
   '--bp-font': 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
@@ -130,6 +131,7 @@ export function parseSettings(raw: unknown): Settings {
   return {
     mode: r.mode === 'dark' ? 'dark' : 'light',
     accent: isHexColor(r.accent) ? r.accent.toLowerCase() : DEFAULT_ACCENT,
+    showAdvanced: r.showAdvanced === true,
   };
 }
 

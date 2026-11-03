@@ -122,6 +122,29 @@ function allStmts(p: Program): Stmt[] {
   return [...p.body, ...p.functions.flatMap((f) => f.body)];
 }
 
+function containsCompositeExpr(e: Expr): boolean {
+  if (e.kind === 'compositeExpr') return true;
+  if (e.kind === 'binary') return containsCompositeExpr(e.left) || containsCompositeExpr(e.right);
+  if (e.kind === 'unary') return containsCompositeExpr(e.arg);
+  if (e.kind === 'list' || e.kind === 'op' || e.kind === 'call') return e.kind === 'list'
+    ? e.items.some(containsCompositeExpr)
+    : e.args.some(containsCompositeExpr);
+  return false;
+}
+
+function containsShortCircuitComposite(e: Expr): boolean {
+  if (e.kind === 'binary') {
+    return (e.op === 'and' || e.op === 'or') && containsCompositeExpr(e.right)
+      || containsShortCircuitComposite(e.left)
+      || containsShortCircuitComposite(e.right);
+  }
+  if (e.kind === 'unary') return containsShortCircuitComposite(e.arg);
+  if (e.kind === 'list' || e.kind === 'op' || e.kind === 'call') return e.kind === 'list'
+    ? e.items.some(containsShortCircuitComposite)
+    : e.args.some(containsShortCircuitComposite);
+  return false;
+}
+
 function variantsOf(c: CompositeStmt): string[] {
   const out: string[] = [];
   switch (c.name) {
@@ -183,7 +206,22 @@ export function coverageReport(records: FixtureRecord[]): { complete: boolean; t
     walkStmts(allStmts(r.desugared), () => {}, (e) => e.kind === 'op' && ops.add(e.op));
     walkStmts(
       allStmts(r.source),
-      (s) => s.kind === 'composite' && variantsOf(s).forEach((v) => variants.add(v)),
+      (s) => {
+        if (s.kind === 'composite') variantsOf(s).forEach((v) => variants.add(v));
+        const exprs: Expr[] =
+          s.kind === 'assign' ? [s.value] :
+          s.kind === 'if' ? [s.cond] :
+          s.kind === 'while' ? [s.cond] :
+          s.kind === 'forEach' ? [s.list] :
+          s.kind === 'return' && s.value ? [s.value] :
+          s.kind === 'do' ? [s.expr] :
+          s.kind === 'print' ? [s.value] : [];
+        for (const e of exprs) {
+          if (s.kind === 'while' && containsCompositeExpr(e)) variants.add('hoist while condition');
+          else if (containsShortCircuitComposite(e)) variants.add('hoist short circuit');
+          else if (containsCompositeExpr(e)) variants.add('hoist statement');
+        }
+      },
       (e) => {
         if (e.kind === 'op') ops.add(e.op);
         if (e.kind === 'compositeExpr') {

@@ -3,7 +3,7 @@
  * of its desugaring, keeping the desugared node ids, as one undoable event group.
  */
 import * as Blockly from 'blockly/core';
-import type { DesugarOne } from '../ir/composites.ts';
+import type { DesugarFully, DesugarOne } from '../ir/composites.ts';
 import type { NodeId, Program, Stmt } from '../ir/types.ts';
 import { B, compositeOfBlockType } from './blocks/blockTypes.ts';
 import { grouped } from './blocks/common.ts';
@@ -127,11 +127,18 @@ export function expandComposite(
 
 const EXPAND_ITEM = 'bp_expand_composite';
 const handlers = new WeakMap<Blockly.Workspace, (blockId: NodeId) => void>();
+const fullHandlers = new WeakMap<Blockly.Workspace, DesugarFully>();
 
 /** Enables the "Expand into basic blocks" context menu item for `ws`. */
 export function setExpandHandler(ws: Blockly.Workspace, handler: ((id: NodeId) => void) | null) {
   if (handler) handlers.set(ws, handler);
   else handlers.delete(ws);
+  registerExpandMenuItem();
+}
+
+export function setFullExpandHandler(ws: Blockly.Workspace, handler: DesugarFully | null): void {
+  if (handler) fullHandlers.set(ws, handler);
+  else fullHandlers.delete(ws);
   registerExpandMenuItem();
 }
 
@@ -151,7 +158,22 @@ export function registerExpandMenuItem(): void {
     },
     callback: (scope) => {
       const b = scope.block;
-      if (b) handlers.get(b.workspace)?.(b.id);
+      if (!b) return;
+      const full = fullHandlers.get(b.workspace);
+      if (full) {
+        try {
+          const result = full(wsToIr(b.workspace).program, b.id);
+          if (result.kind === 'stmt') {
+            const expanded = expandComposite(b.workspace, b.id, () => result.stmts);
+            if (!expanded.ok) Blockly.dialog.alert(expanded.error);
+            return;
+          }
+        } catch (err) {
+          Blockly.dialog.alert(err instanceof Error ? err.message : String(err));
+          return;
+        }
+      }
+      handlers.get(b.workspace)?.(b.id);
     },
   });
 }

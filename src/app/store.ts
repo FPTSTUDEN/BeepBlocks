@@ -4,7 +4,7 @@
  */
 import { createStore, type StoreApi } from 'zustand/vanilla';
 import type { NodeId, Program } from '../ir/types.ts';
-import type { DesugarOne, DesugarProgram } from '../ir/composites.ts';
+import type { DesugarFully, DesugarOne, DesugarProgram } from '../ir/composites.ts';
 import type { ValidationError } from '../ir/errors.ts';
 import type { SimulateOptions, Timeline } from '../ir/timeline.ts';
 import { validateProgram } from '../ir/validate.ts';
@@ -30,6 +30,7 @@ export interface AppDeps {
   simulate: SimulateFn;
   desugarProgram: DesugarProgram;
   desugarOne: DesugarOne;
+  desugarFully?: DesugarFully;
   storage?: Storage;
   prefersDark?: boolean;
   /** Autosave debounce (design.md §13: 1 s). */

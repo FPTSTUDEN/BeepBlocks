@@ -11,14 +11,14 @@ import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import * as Blockly from 'blockly/core';
 import { KeyboardNavigation } from '@blockly/keyboard-navigation';
 import type { NodeId, Program } from '../ir/types.ts';
-import type { DesugarOne } from '../ir/composites.ts';
+import type { DesugarFully, DesugarOne } from '../ir/composites.ts';
 import type { ValidationError } from '../ir/errors.ts';
 import { resolveToExisting } from '../ir/ids.ts';
 import type { Layout } from './layout.ts';
 import { registerBlocks } from './blocks/index.ts';
 import { irToWs } from './convert/irToWs.ts';
 import { wsToIr } from './convert/wsToIr.ts';
-import { expandComposite, setExpandHandler } from './expand.ts';
+import { expandComposite, setExpandHandler, setFullExpandHandler } from './expand.ts';
 import { attachSync } from './sync.ts';
 import { buildBlocklyTheme, ensureEditorCss, readThemeVars, rebuildTheme } from './theme.ts';
 import { buildToolbox, registerDynamicCategories } from './toolbox.ts';
@@ -38,6 +38,9 @@ export interface BlockEditorProps {
   onChange: (program: Program, layout: Layout, issues: ValidationError[]) => void;
   /** Injected by app/ for the Expand action. */
   desugarOne: DesugarOne;
+  desugarFully?: DesugarFully;
+  /** Whether loop/variable/list/text/math/function primitives are shown in the flyout. */
+  showAdvanced?: boolean;
   /** Currently executing block(s) — already resolved to existing block ids. */
   highlightIds?: readonly NodeId[];
   /** Blocks to mark (e.g. click-to-trace results). */
@@ -192,7 +195,7 @@ export function BlockEditor(props: BlockEditorProps) {
     ensureEditorCss(host.ownerDocument);
     ensureShortcutHost(host.ownerDocument);
     const ws = Blockly.inject(host, {
-      toolbox: buildToolbox(),
+      toolbox: buildToolbox(propsRef.current.showAdvanced ?? true),
       theme: buildBlocklyTheme(readThemeVars(host)),
       renderer: 'geras',
       trashcan: true,
@@ -216,6 +219,7 @@ export function BlockEditor(props: BlockEditorProps) {
       const res = expandComposite(ws, id, propsRef.current.desugarOne);
       if (!res.ok) Blockly.dialog.alert(res.error);
     });
+    setFullExpandHandler(ws, propsRef.current.desugarFully ?? null);
     const p = propsRef.current;
     ws.setIsReadOnly(p.readOnly === true);
     load(p.program, p.layout);
@@ -226,11 +230,18 @@ export function BlockEditor(props: BlockEditorProps) {
       validatorRef.current = null;
       detachSync();
       setExpandHandler(ws, null);
+      setFullExpandHandler(ws, null);
       keyboardNav?.dispose();
       wsRef.current = null;
       ws.dispose();
     };
   }, [emit, load]);
+
+  useEffect(() => {
+    const ws = wsRef.current;
+    if (!ws) return;
+    ws.updateToolbox(buildToolbox(props.showAdvanced ?? true));
+  }, [props.showAdvanced]);
 
   // Reload when the program changes from outside.
   useEffect(() => {

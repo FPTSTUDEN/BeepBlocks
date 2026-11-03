@@ -90,7 +90,7 @@ function rewriteExpr(e: Expr, used: Set<string>): RewrittenExpr {
     if ((e.op === 'and' || e.op === 'or') && right.pre.length > 0) {
       const temp = usedName(used, 'ok');
       const guarded = e.op === 'and'
-        ? b.if(b.v(temp, `${e.id}/sc.if`), [...right.pre, b.assign(temp, right.expr, `${e.id}/sc.right`)], [], `${e.id}/sc.if`)
+        ? b.if(b.v(temp, `${e.id}/sc.cond`), [...right.pre, b.assign(temp, right.expr, `${e.id}/sc.right`)], [], `${e.id}/sc.if`)
         : b.if(b.not(b.v(temp, `${e.id}/sc.not`), `${e.id}/sc.not`), [...right.pre, b.assign(temp, right.expr, `${e.id}/sc.right`)], [], `${e.id}/sc.if`);
       return {
         expr: b.v(temp, `${e.id}/sc.value`),
@@ -113,6 +113,56 @@ function usedName(used: Set<string>, base: string): string {
   throw new Error(`Cannot create a temporary name from "${base}".`);
 }
 
+function deriveExpr(e: Expr, suffix: string): Expr {
+  const id = `${e.id}/${suffix}`;
+  switch (e.kind) {
+    case 'list':
+      return { ...e, id, items: e.items.map((item) => deriveExpr(item, suffix)) };
+    case 'binary':
+      return { ...e, id, left: deriveExpr(e.left, suffix), right: deriveExpr(e.right, suffix) };
+    case 'unary':
+      return { ...e, id, arg: deriveExpr(e.arg, suffix) };
+    case 'op':
+    case 'call':
+      return { ...e, id, args: e.args.map((arg) => deriveExpr(arg, suffix)) };
+    case 'compositeExpr':
+      return {
+        ...e,
+        id,
+        inputs: Object.fromEntries(Object.entries(e.inputs).map(([key, value]) => [key, deriveExpr(value, suffix)])),
+      };
+    default:
+      return { ...e, id };
+  }
+}
+
+function deriveStmt(s: Stmt, suffix: string): Stmt {
+  const id = `${s.id}/${suffix}`;
+  switch (s.kind) {
+    case 'assign':
+      return { ...s, id, value: deriveExpr(s.value, suffix) };
+    case 'if':
+      return { ...s, id, cond: deriveExpr(s.cond, suffix), then: s.then.map((x) => deriveStmt(x, suffix)), else: s.else.map((x) => deriveStmt(x, suffix)) };
+    case 'while':
+      return { ...s, id, cond: deriveExpr(s.cond, suffix), body: s.body.map((x) => deriveStmt(x, suffix)) };
+    case 'forEach':
+      return { ...s, id, list: deriveExpr(s.list, suffix), body: s.body.map((x) => deriveStmt(x, suffix)) };
+    case 'return':
+      return { ...s, id, value: s.value === null ? null : deriveExpr(s.value, suffix) };
+    case 'do':
+      return { ...s, id, expr: deriveExpr(s.expr, suffix) as typeof s.expr };
+    case 'print':
+      return { ...s, id, value: deriveExpr(s.value, suffix) };
+    case 'composite':
+      return {
+        ...s,
+        id,
+        inputs: Object.fromEntries(Object.entries(s.inputs).map(([key, value]) => [key, deriveExpr(value, suffix)])),
+        bodies: Object.fromEntries(Object.entries(s.bodies).map(([key, body]) => [key, body.map((x) => deriveStmt(x, suffix))])),
+      };
+  }
+}
+
 function rewriteStmtExpressions(s: Stmt, used: Set<string>): { pre: Stmt[]; stmt: Stmt } {
   const one = (e: Expr): RewrittenExpr => rewriteExpr(e, used);
   switch (s.kind) {
@@ -128,7 +178,7 @@ function rewriteStmtExpressions(s: Stmt, used: Set<string>): { pre: Stmt[]; stmt
       const x = one(s.cond);
       const body = desugarStmts(s.body, used);
       if (x.pre.length === 0) return { pre: [], stmt: { ...s, cond: x.expr, body } };
-      const again = structuredClone(x.pre).map((child, i) => ({ ...child, id: `${child.id}/again/${i}` }));
+      const again = x.pre.map((child) => deriveStmt(child, 'again'));
       return { pre: x.pre, stmt: { ...s, cond: x.expr, body: [...body, ...again] } };
     }
     case 'forEach': {

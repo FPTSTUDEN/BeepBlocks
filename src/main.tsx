@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { App } from './app/App.tsx';
 import { createAppStore } from './app/store.ts';
 import { applyTheme } from './app/settings.ts';
-import { desugarOne, desugarProgram } from './composites/index.ts';
+import { desugarFully, desugarOne, desugarProgram } from './composites/index.ts';
 import { simulate } from './sim/index.ts';
 
 const storage = (() => {
@@ -18,6 +18,7 @@ const store = createAppStore({
   simulate,
   desugarProgram,
   desugarOne,
+  desugarFully,
   storage,
   prefersDark: window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false,
 });

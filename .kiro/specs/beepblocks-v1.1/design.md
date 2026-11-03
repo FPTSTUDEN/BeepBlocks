@@ -349,3 +349,23 @@ The only change is in comments: every composite in the original program (tasks a
 | `conformance/` | new variants, `act-`/`expr-`/`hoist-` fixtures |
 
 The simulator (`src/sim/`), the Python runtime (`runtime.py`) and the conformance runner logic are not changed.
+
+## 13. Integration measurements
+
+The v1 baseline starter measurements were 147/64/50/35 primitive blocks for the four
+starters. The v1.1 measurements below are labeled explicitly because the starter order
+and expansion shapes changed during integration.
+With v1.1, the corresponding counts are recorded as original program / one-level action
+expansion / fully primitive expansion:
+
+| Starter | Original | Actions | Primitive | Max depth (original/actions/primitive) |
+|---|---:|---:|---:|---:|
+| Sort my downloads | 2 | 8 | 152 | 2 / 4 / 11 |
+| Rename camera photos | 2 | 6 | 50 | 2 / 4 / 9 |
+| Clear out temporary files | 16 | 21 | 37 | 5 / 5 / 7 |
+| Find the first failing night | 13 | 20 | 64 | 5 / 5 / 5 |
+
+Counts include statement and expression nodes in the starter IR and were measured from
+`src/app/starters.ts` using the Phase 2 desugarings. The primitive counts can differ from
+the v1 baseline where the v1 starter used a different task expansion shape; behavior and
+conformance output remain unchanged.

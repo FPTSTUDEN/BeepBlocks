@@ -3,7 +3,7 @@
  * Variables and Functions are dynamic categories.
  */
 import * as Blockly from 'blockly/core';
-import { COMPOSITE_NAMES } from '../ir/composites.ts';
+import { ACTION_NAMES, COMPOSITE_NAMES } from '../ir/composites.ts';
 import { OP_NAMES, type OpName } from '../ir/ops.ts';
 import { B, compositeBlockType, opBlockType } from './blocks/blockTypes.ts';
 import { STYLE } from './blocks/common.ts';
@@ -116,8 +116,35 @@ function dynamic(
 
 const opsWhere = (pred: (op: OpName) => boolean) => OP_NAMES.filter(pred).map(opBlock);
 
-export function buildToolbox(): Blockly.utils.toolbox.ToolboxInfo {
+export function buildToolbox(showAdvanced = true): Blockly.utils.toolbox.ToolboxInfo {
   const fsOps = OP_NAMES.filter((op) => opStyle(op) === STYLE.files);
+  if (!showAdvanced) {
+    return {
+      kind: 'categoryToolbox',
+      contents: [
+        category('Tasks', STYLE.tasks, COMPOSITE_NAMES.map((n) => block(compositeBlockType(n), { inputs: { I_folder: root() } }))),
+        category('Files', STYLE.files, [
+          ...ACTION_NAMES.filter((n) => ['everyFile', 'makeFolderIfMissing'].includes(n)).map((n) => block(compositeBlockType(n))),
+          ...fsOps.filter(isStatementOp).map(opBlock),
+          doOp('fs.rename'),
+          doOp('fs.move'),
+          doOp('fs.copy'),
+        ]),
+        category('Groups', STYLE.tasks, [
+          ...ACTION_NAMES.filter((n) => ['goThrough', 'findFile'].includes(n)).map((n) => block(compositeBlockType(n))),
+        ]),
+        category('Search', STYLE.tasks, [
+          ...ACTION_NAMES.filter((n) => ['halvingSearch', 'keepLeftHalf', 'keepRightHalf'].includes(n)).map((n) => block(compositeBlockType(n))),
+        ]),
+        category('Repeat', STYLE.loops, [
+          ...ACTION_NAMES.filter((n) => ['repeatTimes', 'keepDoingUntil'].includes(n)).map((n) => block(compositeBlockType(n))),
+        ]),
+        category('Decisions', STYLE.logic, [block(B.if), block(B.compare), block(B.logic), block(B.not), block(B.bool)]),
+        category('Remember', STYLE.variables, [block(B.assign), block(B.var), block(B.print, { inputs: { VALUE: text('Hello!') } })]),
+        category('Values', STYLE.text, [block(B.text), block(B.number), block(B.date), opBlock('fs.root')]),
+      ],
+    };
+  }
   return {
     kind: 'categoryToolbox',
     contents: [

@@ -1,11 +1,10 @@
 import type { CompositeExprDef, CompositeExpr, DesugarCtx } from '../ir/composites.ts';
-import { COMPOSITE_EXPR_SCHEMAS, getField, getBind } from '../ir/composites.ts';
+import { COMPOSITE_EXPR_SCHEMAS, getField } from '../ir/composites.ts';
 import { b } from '../ir/build.ts';
 import { T, type Expr, type Stmt } from '../ir/types.ts';
 
 function desugar(node: CompositeExpr, ctx: DesugarCtx): { pre: Stmt[]; value: Expr } {
   const id = ctx.id;
-  const file = getBind(node, 'file');
   const files = ctx.freshName('files');
   const item = ctx.freshName('item');
   const include = getField(node, 'includeSubfolders') === true;

@@ -62,6 +62,14 @@ export function SettingsMenu({
             </label>
           ))}
         </fieldset>
+        <label className="row">
+          <input
+            type="checkbox"
+            checked={settings.showAdvanced}
+            onChange={(e) => onChange({ showAdvanced: e.target.checked })}
+          />
+          Show advanced blocks
+        </label>
         <div className="row">
           <label htmlFor={accentId}>Accent colour</label>
           <input

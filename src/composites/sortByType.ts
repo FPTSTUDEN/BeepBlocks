@@ -15,7 +15,7 @@
 import type { CompositeDef, CompositeStmt, DesugarCtx } from '../ir/composites.ts';
 import { COMPOSITE_SCHEMAS } from '../ir/composites.ts';
 import { b } from '../ir/build.ts';
-import { T, type Stmt } from '../ir/types.ts';
+import type { Stmt } from '../ir/types.ts';
 import { enumField, input } from './util.ts';
 
 /** Folder name for files without an extension, in `extension` mode. */
@@ -57,117 +57,32 @@ export function categoryOf(ext: string): string {
 function desugar(node: CompositeStmt, ctx: DesugarCtx): Stmt[] {
   const id = ctx.id;
   const grouping = enumField(node, 'grouping', ['category', 'extension'] as const);
-
   const folder = ctx.freshName('folder');
-  const item = ctx.freshName('item');
-  const ext = ctx.freshName('ext');
-  const group = ctx.freshName('group');
-  const target = ctx.freshName('target');
-
-  const setGroup = (name: string, local: string): Stmt =>
-    b.assign(group, b.lit(name, id(`${local}.value`)), id(local));
-
-  let groupStmt: Stmt;
-  if (grouping === 'extension') {
-    groupStmt = b.if(
-      b.bin(
-        '==',
-        b.v(ext, id('group.test.ext')),
-        b.lit('', id('group.test.empty')),
-        id('group.test'),
-      ),
-      [setGroup(NO_EXTENSION_FOLDER, 'group.none')],
-      [b.assign(group, b.v(ext, id('group.ext.value')), id('group.ext'))],
-      id('group.if'),
-    );
-  } else {
-    // Build the chain from the end: else-branch of the last category is 'Other'.
-    let rest: Stmt[] = [setGroup(OTHER_CATEGORY, 'group.other')];
-    for (let i = CATEGORIES.length - 1; i >= 0; i--) {
-      const cat = CATEGORIES[i]!;
-      const g = (s: string) => id(`group.c${i}${s}`);
-      rest = [
-        b.if(
-          b.op(
-            'list.contains',
-            [
-              b.list(
-                T.text,
-                cat.exts.map((e, j) => b.lit(e, g(`.exts${j}`))),
-                g('.exts'),
-              ),
-              b.v(ext, g('.ext')),
-            ],
-            g('.test'),
-          ),
-          [setGroup(cat.name, `group.c${i}.set`)],
-          rest,
-          g(''),
-        ),
-      ];
-    }
-    groupStmt = rest[0]!;
-  }
-
+  const file = ctx.freshName('item');
   return [
     b.assign(folder, input(node, 'folder'), id('folder')),
-    b.forEach(
-      item,
-      b.op('fs.list', [b.v(folder, id('loop.folder'))], id('loop.list')),
-      [
-        b.if(
-          b.not(
-            b.op('fs.isFolder', [b.v(item, id('check.item'))], id('check.isFolder')),
-            id('check.isFile'),
+    b.composite(
+      'everyFile',
+      {
+        fields: { action: 'move', includeSubfolders: false, makeFolder: true },
+        inputs: {
+          folder: b.v(folder, id('action.folder')),
+          destination: b.op(
+            'fs.join',
+            [
+              b.v(folder, id('destination.folder')),
+              b.compositeExpr(
+                'typeOf',
+                { fields: { by: grouping }, inputs: { file: b.v(file, id('type.file')) } },
+                id('destination.type'),
+              ),
+            ],
+            id('destination'),
           ),
-          [
-            b.assign(
-              ext,
-              b.op(
-                'text.lower',
-                [b.op('fs.ext', [b.v(item, id('ext.item'))], id('ext.raw'))],
-                id('ext.lower'),
-              ),
-              id('ext'),
-            ),
-            groupStmt,
-            b.assign(
-              target,
-              b.op(
-                'fs.join',
-                [b.v(folder, id('target.folder')), b.v(group, id('target.group'))],
-                id('target.join'),
-              ),
-              id('target'),
-            ),
-            b.if(
-              b.not(
-                b.op('fs.exists', [b.v(target, id('mkdir.test.target'))], id('mkdir.test.exists')),
-                id('mkdir.test'),
-              ),
-              [
-                b.do(
-                  b.op('fs.makeFolder', [b.v(target, id('mkdir.target'))], id('mkdir.op')),
-                  id('mkdir'),
-                ),
-              ],
-              [],
-              id('mkdir.if'),
-            ),
-            b.do(
-              b.op(
-                'fs.move',
-                [b.v(item, id('move.item')), b.v(target, id('move.target'))],
-                id('move.op'),
-              ),
-              id('move'),
-            ),
-          ],
-          [],
-          id('check'),
-        ),
-      ],
-      id('loop'),
+        },
+        binds: { file },
+      },
+      id('everyFile'),
     ),
   ];
 }

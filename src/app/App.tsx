@@ -32,6 +32,7 @@ import {
 import { applyTheme } from './settings.ts';
 import { SettingsMenu } from './SettingsMenu.tsx';
 import { activeNodeIds, isStale, type AppState, type AppStore } from './store.ts';
+import { computeStepStops } from './stepStops.ts';
 import './app.css';
 
 const StoreContext = createContext<AppStore | null>(null);
@@ -86,6 +87,7 @@ function Shell({ store }: { store: AppStore }) {
   const errorCount = issues.filter((i) => i.severity === 'error').length;
   const blocked = errorCount > 0;
   const highlight = timeline && !stale ? activeNodeIds({ timeline, index }) : [];
+  const stepStops = computeStepStops(timeline);
   const showBlock = (id: NodeId) => actions.mark([id]);
 
   const builtin = SCENARIOS.find((s) => s.id === project.scenario.id);
@@ -247,6 +249,8 @@ function Shell({ store }: { store: AppStore }) {
             layout={project.layout}
             onChange={actions.editorChanged}
             desugarOne={store.deps.desugarOne}
+            desugarFully={store.deps.desugarFully}
+            showAdvanced={settings.showAdvanced}
             highlightIds={highlight}
             markedIds={marked}
             themeKey={`${settings.mode}:${settings.accent}`}
@@ -269,6 +273,7 @@ function Shell({ store }: { store: AppStore }) {
             runBlockedReason={
               blocked ? 'Fix the problems marked in the editor to run.' : running ? 'Running…' : null
             }
+            stepStops={stepStops}
           />
         </div>
       </main>

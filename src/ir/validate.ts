@@ -944,11 +944,13 @@ function validateMarkers(program: Program, issues: ValidationError[]): void {
         case 'print': visitExpr(s.value, searchDecide); break;
         case 'composite':
           Object.values(s.inputs).forEach((x) => visitExpr(x, false));
-          Object.values(s.bodies).forEach((b) => visit(b, false, true));
           if (s.name === 'halvingSearch') {
+            for (const [key, body] of Object.entries(s.bodies)) {
+              if (key !== 'decide') visit(body, false, true);
+            }
             const decide = s.bodies.decide ?? [];
             if (!visit(decide, true, false)) error(s.id, 'INCOMPLETE_SEARCH', 'Every path in a halving search decision must end with a half marker.');
-          }
+          } else Object.values(s.bodies).forEach((b) => visit(b, false, true));
           break;
       }
     }
