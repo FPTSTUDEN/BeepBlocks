@@ -293,7 +293,9 @@ export const ACTION_SCHEMAS: Readonly<Record<ActionName, CompositeSchema>> = {
   everyFile: {
     ...actionBase('everyFile', 2),
     label: 'Do something to every file',
-    help: 'Does nothing when no file matches.',
+    help:
+      'Moves, copies, deletes, or renames each matching file. Does nothing when no file matches. ' +
+      'You can include subfolders and make a destination folder when it is missing.',
     fields: [
       { key: 'action', kind: 'enum', label: 'action', default: 'move', options: ['move', 'copy', 'delete', 'rename'] },
       { key: 'includeSubfolders', kind: 'bool', label: 'include subfolders', default: false },
@@ -342,7 +344,7 @@ export const ACTION_SCHEMAS: Readonly<Record<ActionName, CompositeSchema>> = {
   findFile: {
     ...actionBase('findFile'),
     label: 'Find a file',
-    help: 'Runs the matching steps, or the no-match steps when no file matches.',
+    help: 'Runs the matching steps for the chosen file, or the no-match steps when no file matches.',
     fields: [
       { key: 'which', kind: 'enum', label: 'which', default: 'first', options: ['first', 'biggest', 'smallest', 'newest', 'oldest'] },
       { key: 'includeSubfolders', kind: 'bool', label: 'include subfolders', default: false },
@@ -360,7 +362,7 @@ export const ACTION_SCHEMAS: Readonly<Record<ActionName, CompositeSchema>> = {
   halvingSearch: {
     ...actionBase('halvingSearch'),
     label: 'Search by halving',
-    help: 'Looks at the middle item repeatedly and runs the matching result steps.',
+    help: 'Looks at the middle item repeatedly, then runs the matching result steps or the no-match steps.',
     fields: [], inputs: [{ key: 'line', label: 'line', type: { t: 'list', of: PATH } }],
     bodies: [{ key: 'decide', label: 'decide' }, { key: 'found', label: 'if found' }, { key: 'notFound', label: 'if none is found' }],
     binds: [
@@ -374,7 +376,8 @@ export const ACTION_SCHEMAS: Readonly<Record<ActionName, CompositeSchema>> = {
 
 export const COMPOSITE_EXPR_SCHEMAS: Readonly<Record<CompositeExprName, CompositeExprSchema>> = {
   filesIn: {
-    name: 'filesIn', level: 'action', rank: 1, label: 'The files in', help: 'Returns matching files in the requested order.',
+    name: 'filesIn', level: 'action', rank: 1, label: 'The files in',
+    help: 'Returns matching files in the requested order, or an empty list when no files match.',
     returns: { t: 'list', of: PATH },
     fields: [
       { key: 'includeSubfolders', kind: 'bool', label: 'include subfolders', default: false },
@@ -384,7 +387,8 @@ export const COMPOSITE_EXPR_SCHEMAS: Readonly<Record<CompositeExprName, Composit
     binds: [{ key: 'file', type: PATH, defaultName: 'file', visibleIn: ['condition'] }],
   },
   countFiles: {
-    name: 'countFiles', level: 'action', rank: 1, label: 'How many files', help: 'Returns zero when no files match.',
+    name: 'countFiles', level: 'action', rank: 1, label: 'How many files',
+    help: 'Counts the matching files and returns zero when no files match.',
     returns: { t: 'number' },
     fields: [{ key: 'includeSubfolders', kind: 'bool', label: 'include subfolders', default: false }],
     inputs: [{ key: 'folder', label: 'folder', type: PATH }, { key: 'condition', label: 'where', type: BOOL, optional: true }],

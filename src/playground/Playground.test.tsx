@@ -146,6 +146,23 @@ describe('no timeline', () => {
 });
 
 describe('controls', () => {
+  it('exposes an accessible step-mode selector and reports its choice', () => {
+    render(
+      <Harness
+        timeline={rename}
+        stepStops={[0, 2, 4]}
+      />,
+    );
+    const mode = screen.getByRole<HTMLSelectElement>('combobox', { name: 'Step' });
+    expect(mode.value).toBe('block');
+    expect(within(mode).getAllByRole('option').map((option) => option.textContent)).toEqual([
+      'by block',
+      'every detail',
+    ]);
+    fireEvent.change(mode, { target: { value: 'detail' } });
+    expect(mode.value).toBe('detail');
+  });
+
   it('step forward / back / scrubber / reset', () => {
     const onReset = vi.fn();
     const onIndexChange = vi.fn();

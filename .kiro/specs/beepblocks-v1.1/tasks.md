@@ -64,6 +64,18 @@ Each workstream writes only in its folder and reads the contract. Good candidate
 
 ## Phase 3 — Review [SEQ]
 
-- [ ] 3.1 Wording pass over every action label and help text against §5.3, read aloud as instructions.
-- [ ] 3.2 Accessibility for the new blocks and the step-mode select (keyboard, axe in smoke).
-- [ ] 3.3 Review against this requirements.md: tick each criterion or record why it's deferred.
+- [x] 3.1 Wording pass over every action label and help text against §5.3, read aloud as instructions.
+- [x] 3.2 Accessibility for the new blocks and the step-mode select (keyboard, axe in smoke).
+- [x] 3.3 Review against this requirements.md: tick each criterion or record why it's deferred.
+
+### Phase 3 review notes
+
+- Action schemas use everyday verbs and role-based bind names; tooltips explicitly describe
+  the no-match behavior for bulk, find, search, list, and count actions.
+- Composite blocks expose their schema help through Blockly tooltips. The editor and
+  playground provide labeled regions, controls, live status text, keyboard shortcuts, and
+  focus-preserving control transitions; the step selector is covered by a labeled-control
+  regression test and the existing axe smoke suite.
+- Requirements 1–10 are implemented and covered by the Phase 0–2 validation gates. The
+  out-of-scope items remain intentionally deferred: new domains/export targets, natural
+  language input, and text replacement actions.
