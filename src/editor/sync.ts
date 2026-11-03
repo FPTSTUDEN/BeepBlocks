@@ -1,6 +1,6 @@
 /** Keeps derived workspace state consistent after user edits (call blocks, bound variables). */
 import * as Blockly from 'blockly/core';
-import { COMPOSITE_NAMES, COMPOSITE_SCHEMAS } from '../ir/composites.ts';
+import { ACTION_NAMES, COMPOSITE_NAMES, schemaFor } from '../ir/composites.ts';
 import { B, compositeBlockType } from './blocks/blockTypes.ts';
 import { getDefParams, syncCallBlocks } from './blocks/functions.ts';
 import { typeKey } from './blocks/typeKeys.ts';
@@ -8,8 +8,8 @@ import { ensureVariable } from './blocks/variables.ts';
 
 /** Makes sure every bind name and function input name exists as a (typed) variable. */
 export function ensureBoundVariables(ws: Blockly.Workspace): void {
-  for (const name of COMPOSITE_NAMES) {
-    const schema = COMPOSITE_SCHEMAS[name];
+  for (const name of [...COMPOSITE_NAMES, ...ACTION_NAMES]) {
+    const schema = schemaFor(name);
     for (const blk of ws.getBlocksByType(compositeBlockType(name), false)) {
       for (const bind of schema.binds) {
         const v = String(blk.getFieldValue(`B_${bind.key}`) ?? '');

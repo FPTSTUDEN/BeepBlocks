@@ -6,7 +6,7 @@
 import { useId } from 'react';
 import type { Scenario } from '../domains/fileExplorer/fsTypes.ts';
 import { SCENARIOS } from '../domains/fileExplorer/scenarios/index.ts';
-import { COMPOSITE_SCHEMAS } from '../ir/composites.ts';
+import { schemaFor } from '../ir/composites.ts';
 import { Dialog } from './Dialog.tsx';
 import { newProject, type ProjectFile } from './project.ts';
 import { STARTERS, starterProject } from './starters.ts';
@@ -40,7 +40,7 @@ export function NewProjectDialog({ blankScenario, onOpen, onClose }: NewProjectD
                 <span className="hint">
                   {' '}
                   — {scenario?.title}
-                  {composite?.kind === 'composite' && `, “${COMPOSITE_SCHEMAS[composite.name].label}”`}
+                  {composite?.kind === 'composite' && `, “${schemaFor(composite.name).label}”`}
                 </span>
                 <p>{s.summary}</p>
               </div>

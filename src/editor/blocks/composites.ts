@@ -8,7 +8,10 @@
 import * as Blockly from 'blockly/core';
 import {
   COMPOSITE_NAMES,
+  ACTION_NAMES,
+  ACTION_SCHEMAS,
   COMPOSITE_SCHEMAS,
+  schemaFor,
   type CompositeName,
   type FieldSchema,
   type FieldValue,
@@ -80,7 +83,7 @@ export function fieldFromBlockly(f: FieldSchema, raw: unknown): FieldValue {
 }
 
 function defineComposite(name: CompositeName): void {
-  const schema = COMPOSITE_SCHEMAS[name];
+  const schema = schemaFor(name);
   defineBlock(compositeBlockType(name), {
     init(b) {
       b.appendDummyInput('HEAD').appendField(schema.label);
@@ -121,5 +124,5 @@ function defineComposite(name: CompositeName): void {
 }
 
 export function defineCompositeBlocks(): void {
-  for (const name of COMPOSITE_NAMES) defineComposite(name);
+  for (const name of [...COMPOSITE_NAMES, ...ACTION_NAMES]) defineComposite(name);
 }

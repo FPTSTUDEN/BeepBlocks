@@ -11,6 +11,7 @@ import type {
   CompositeDef,
   CompositeExprDef,
   CompositeExpr,
+  CompositeExprName,
   CompositeName,
   CompositeStmt,
   DesugarOne,
@@ -25,6 +26,16 @@ import { findAndAct } from './findAndAct.ts';
 import { findFirst } from './findFirst.ts';
 import { renameByPattern } from './renameByPattern.ts';
 import { sortByType } from './sortByType.ts';
+import { everyFile } from './everyFile.ts';
+import { makeFolderIfMissing } from './makeFolderIfMissing.ts';
+import { goThrough } from './goThrough.ts';
+import { repeatTimes } from './repeatTimes.ts';
+import { keepDoingUntil } from './keepDoingUntil.ts';
+import { findFile } from './findFile.ts';
+import { halvingSearch } from './halvingSearch.ts';
+import { filesIn } from './filesIn.ts';
+import { countFiles } from './countFiles.ts';
+import { typeOf } from './typeOf.ts';
 
 export { CATEGORIES, NO_EXTENSION_FOLDER, OTHER_CATEGORY, categoryOf } from './sortByType.ts';
 
@@ -33,10 +44,21 @@ export const COMPOSITES: Partial<Record<CompositeName, CompositeDef>> = {
   sortByType,
   findAndAct,
   findFirst,
+  everyFile,
+  makeFolderIfMissing,
+  goThrough,
+  repeatTimes,
+  keepDoingUntil,
+  findFile,
+  halvingSearch,
 };
 
 /** Expression-action registry. Phase 0 keeps this open for action implementations. */
-export const EXPRESSION_COMPOSITES: Partial<Record<string, CompositeExprDef>> = {};
+export const EXPRESSION_COMPOSITES: Partial<Record<CompositeExprName, CompositeExprDef>> = {
+  filesIn,
+  countFiles,
+  typeOf,
+};
 
 interface RewrittenExpr {
   expr: Expr;

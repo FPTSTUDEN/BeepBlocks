@@ -307,6 +307,10 @@ export const ACTION_SCHEMAS: Readonly<Record<ActionName, CompositeSchema>> = {
     ],
     bodies: [],
     binds: [{ key: 'file', type: PATH, defaultName: 'file', visibleIn: ['condition', 'destination'] }],
+    requires: [
+      { when: { field: 'action', equals: ['move', 'copy'] }, need: ['destination'] },
+      { when: { field: 'action', equals: ['rename'] }, need: ['renameTemplate'] },
+    ],
   },
   makeFolderIfMissing: {
     ...actionBase('makeFolderIfMissing'),
@@ -402,18 +406,22 @@ export function schemaFor(name: AnyCompositeName): CompositeSchema {
 // ------------------------------------------------------------------ Helpers
 
 /** Field value with the schema default applied for missing keys. */
-export function getField(node: CompositeStmt, key: string): FieldValue {
+export function getField(node: CompositeStmt | CompositeExpr, key: string): FieldValue {
   if (key in node.fields) return node.fields[key] ?? null;
-  const schema = schemaFor(node.name).fields.find((f) => f.key === key);
+  const schema = node.kind === 'composite'
+    ? schemaFor(node.name).fields.find((f) => f.key === key)
+    : COMPOSITE_EXPR_SCHEMAS[node.name].fields.find((f) => f.key === key);
   if (!schema) throw new Error(`Composite ${node.name} has no field "${key}"`);
   return schema.default;
 }
 
 /** User-chosen name for a bound variable, or the schema default. */
-export function getBind(node: CompositeStmt, key: string): string {
+export function getBind(node: CompositeStmt | CompositeExpr, key: string): string {
   const name = node.binds[key];
   if (typeof name === 'string' && name.length > 0) return name;
-  const schema = schemaFor(node.name).binds.find((b) => b.key === key);
+  const schema = node.kind === 'composite'
+    ? schemaFor(node.name).binds.find((b) => b.key === key)
+    : COMPOSITE_EXPR_SCHEMAS[node.name].binds.find((b) => b.key === key);
   if (!schema) throw new Error(`Composite ${node.name} has no bind "${key}"`);
   return schema.defaultName;
 }

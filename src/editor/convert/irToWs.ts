@@ -8,7 +8,7 @@
 import * as Blockly from 'blockly/core';
 import type { Expr, FunctionDef, NodeId, OpExpr, Program, Stmt, Type } from '../../ir/types.ts';
 import { OPS } from '../../ir/ops.ts';
-import { COMPOSITE_SCHEMAS, getBind, type CompositeStmt } from '../../ir/composites.ts';
+import { schemaFor, getBind, type CompositeStmt } from '../../ir/composites.ts';
 import { typecheck } from '../../ir/validate.ts';
 import type { Layout } from '../layout.ts';
 import { B, compositeBlockType, opBlockType } from '../blocks/blockTypes.ts';
@@ -166,7 +166,7 @@ export class BlockBuilder {
   }
 
   private composite(s: CompositeStmt, scope: Scope): Blockly.Block {
-    const schema = COMPOSITE_SCHEMAS[s.name];
+    const schema = schemaFor(s.name);
     const b = this.make(compositeBlockType(s.name), s.id);
     for (const f of schema.fields) {
       const v = f.key in s.fields ? (s.fields[f.key] ?? null) : f.default;

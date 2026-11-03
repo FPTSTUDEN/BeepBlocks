@@ -25,7 +25,7 @@ import type {
 } from '../../ir/types.ts';
 import type { ValidationError } from '../../ir/errors.ts';
 import { OPS, type OpName } from '../../ir/ops.ts';
-import { COMPOSITE_SCHEMAS, type CompositeStmt, type FieldValue } from '../../ir/composites.ts';
+import { schemaFor, type CompositeStmt, type FieldValue } from '../../ir/composites.ts';
 import type { Layout } from '../layout.ts';
 import { B, compositeOfBlockType, opOfBlockType } from '../blocks/blockTypes.ts';
 import { RUN_BLOCK_ID, nodeIdFor } from '../blocks/common.ts';
@@ -159,7 +159,7 @@ class Reader {
   }
 
   composite(b: Blockly.Block, name: CompositeStmt['name']): CompositeStmt {
-    const schema = COMPOSITE_SCHEMAS[name];
+    const schema = schemaFor(name);
     const fields: Record<string, FieldValue> = {};
     for (const f of schema.fields)
       fields[f.key] = fieldFromBlockly(f, b.getFieldValue(`F_${f.key}`));

@@ -1,5 +1,5 @@
 /** Blockly block type names, one per IR construct (design.md §9). */
-import { COMPOSITE_NAMES, type CompositeName } from '../../ir/composites.ts';
+import { ACTION_NAMES, COMPOSITE_NAMES, type CompositeName } from '../../ir/composites.ts';
 import { OP_NAMES, type OpName } from '../../ir/ops.ts';
 
 export const B = {
@@ -40,7 +40,7 @@ export function compositeBlockType(name: CompositeName): string {
 
 const OP_BY_TYPE = new Map<string, OpName>(OP_NAMES.map((op) => [opBlockType(op), op]));
 const COMPOSITE_BY_TYPE = new Map<string, CompositeName>(
-  COMPOSITE_NAMES.map((n) => [compositeBlockType(n), n]),
+  [...COMPOSITE_NAMES, ...ACTION_NAMES].map((n) => [compositeBlockType(n), n]),
 );
 
 export function opOfBlockType(type: string): OpName | null {

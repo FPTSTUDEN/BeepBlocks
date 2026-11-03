@@ -4,7 +4,7 @@
  */
 import type { Expr, FunctionDef, Stmt } from '../../ir/types.ts';
 import { OPS, type OpArg, type OpName } from '../../ir/ops.ts';
-import { COMPOSITE_SCHEMAS, getField, type CompositeStmt } from '../../ir/composites.ts';
+import { schemaFor, getField, type CompositeStmt } from '../../ir/composites.ts';
 import { pyNumber, truncate } from './pysyntax.ts';
 
 const MAX_TEXT = 40;
@@ -110,7 +110,7 @@ export function describeComposite(c: CompositeStmt): string {
     case 'findFirst':
       return `Find the first file in ${input('folder')} (sorted by ${text('sortBy') ?? 'name'}) where ${input('condition')}`;
     default:
-      return COMPOSITE_SCHEMAS[(c as CompositeStmt).name]?.label ?? 'Task block';
+      return schemaFor((c as CompositeStmt).name)?.label ?? 'Task block';
   }
 }
 
