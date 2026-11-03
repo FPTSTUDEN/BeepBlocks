@@ -68,7 +68,7 @@ Each workstream writes only in its folder and reads the contract. Good candidate
 
 - [x] 3.1 Wording pass over every action label and help text against §5.3, read aloud as instructions.
 - [x] 3.2 Accessibility for the new blocks and the step-mode select (keyboard, axe in smoke).
-- [ ] 3.3 Review against this requirements.md: tick each criterion or record why it's deferred. (C.2 and C.4 now implemented, so Req 4, 5 and 6 are met; ready to run.)
+- [x] 3.3 Review against this requirements.md: tick each criterion or record why it's deferred. (C.2 and C.4 now implemented, so Req 4, 5 and 6 are met; ready to run.)
 
 ### Phase 3 review notes
 
@@ -81,3 +81,55 @@ Each workstream writes only in its folder and reads the contract. Good candidate
 - Requirements 1–10 are implemented and covered by the Phase 0–2 validation gates. The
   out-of-scope items remain intentionally deferred: new domains/export targets, natural
   language input, and text replacement actions.
+
+## Phase 3.3 review results
+
+Smoke: **pass** — `pnpm smoke` completed with an axe-clean browser smoke test.
+
+E2E: **pass** — `pnpm e2e` completed all 8/8 starter runs in Chromium and Firefox.
+
+| Req | Criterion | Status | Note |
+|-----|-----------|--------|------|
+| 1 | 1.1 | ✅ met | `level` classifies every task/action composite schema. |
+| 1 | 1.2 | ✅ met | `rank` is present and rank-lowering desugaring is covered by unit tests. |
+| 1 | 1.3 | ✅ met | `EXPAND_ACTIONS_ITEM` is task-only and performs one desugaring level. |
+| 1 | 1.4 | ✅ met | `EXPAND_ITEM` is available for composites and expands fully. |
+| 1 | 1.5 | ✅ met | Strict conformance passes 56/56 with complete action/hoisting coverage. |
+| 1 | 1.6 | ✅ met | Expand workspace mutations are wrapped in `grouped()`. |
+| 2 | 2.1 | ✅ met | Schemas and registries provide all specified action vocabulary and variants. |
+| 2 | 2.2 | ✅ met | Labels/help use plain-language wording without programming notation. |
+| 2 | 2.3 | ✅ met | Schemas expose role-based, user-renamable `binds` entries. |
+| 2 | 2.4 | ✅ met | Help text documents no-match/no-file behavior for bulk, find, search, list, and count. |
+| 2 | 2.5 | ✅ met | `everyFile` emits move/copy/delete/rename primitives directly. |
+| 3 | 3.1 | ✅ met | Built-in task action-level expansions use actions rather than loop blocks. |
+| 3 | 3.2 | ✅ met | `everyFile` covers four operations, conditions, subfolders, and make-folder options. |
+| 3 | 3.3 | ✅ met | `repeatTimes` and check-first `keepDoingUntil` are implemented and covered by fixtures. |
+| 3 | 3.4 | ✅ met | `goThrough` provides advanced one-file-at-a-time iteration. |
+| 4 | 4.1 | ✅ met | Property views provide all specified current-file properties. |
+| 4 | 4.2 | ✅ met | Ready-made condition views cover names, extensions, sizes, dates, and text. |
+| 4 | 4.3 | ✅ met | Size views accept decimal units and store whole bytes. |
+| 4 | 4.4 | ✅ met | `all of` and `any of` provide editable condition rows with short-circuit behavior. |
+| 4 | 4.5 | ✅ met | Condition blocks are views over ordinary variables/ops/`and`/`or` IR. |
+| 5 | 5.1 | ✅ met | `CompositeExpr` is supported in the IR and validator. |
+| 5 | 5.2 | ✅ met | Expression-action statements are hoisted before their enclosing statement. |
+| 5 | 5.3 | ✅ met | While-condition hoisting derives the pre-statements with the `again` path. |
+| 5 | 5.4 | ✅ met | Short-circuit rewriting guards RHS expression actions; the fixture covers it. |
+| 5 | 5.5 | ✅ met | `expandExpressionResult` inserts pre-statements and replaces the expression value. |
+| 6 | 6.1 | ✅ met | Nested-if view renders an else-if arm. |
+| 6 | 6.2 | ✅ met | Text-only lists render as a compact comma-separated text-list block. |
+| 6 | 6.3 | ✅ met | View conversion tests verify round-trip IR preservation. |
+| 7 | 7.1 | ✅ met | Default toolbox contains human-facing tasks/actions, file ops, decisions, and values. |
+| 7 | 7.2 | ✅ met | `showAdvanced` controls advanced categories and persists in settings. |
+| 7 | 7.3 | ✅ met | Advanced programs load and run independently of palette visibility. |
+| 8 | 8.1 | ✅ met | Playback offers by-block (default) and every-detail modes. |
+| 8 | 8.2 | ✅ met | `stepStops` drives block-level snapshots for stepping and running. |
+| 8 | 8.3 | ✅ met | Scrubber, counters, and output remain on the shared playback timeline. |
+| 9 | 9.1 | ✅ met | Python export emits nested per-composite `# [block …]` comments. |
+| 10 | 10.1 | ✅ met | The four v1 tasks retain their names/fields and desugar through actions. |
+| 10 | 10.2 | ✅ met | The 29 v1 fixtures retain their trees and output under the v1.1 desugarer. |
+| 10 | 10.3 | ✅ met | `REQUIRED_VARIANTS` covers every action variant and all three hoisting positions. |
+| 10 | 10.4 | ✅ met | `Program.version` accepts 1/2 and `parseProgram` normalizes v1 to v2. |
+
+**Verdict:** All v1.1 acceptance criteria are met and the final smoke/e2e checks pass. The
+items listed under “Out of Scope for v1.1” remain intentionally deferred: new domains or
+export targets, natural-language input, and text replacement actions.
