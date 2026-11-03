@@ -1,0 +1,45 @@
+{
+  "format": "beepblocks-ir",
+  "version": 2,
+  "functions": [],
+  "body": [
+    {
+      "id": "n",
+      "kind": "assign",
+      "name": "n",
+      "value": {
+        "id": "n3f",
+        "kind": "compositeExpr",
+        "name": "countFiles",
+        "fields": {
+          "includeSubfolders": true
+        },
+        "inputs": {
+          "folder": {
+            "id": "n3e",
+            "kind": "op",
+            "op": "fs.root",
+            "args": []
+          }
+        },
+        "binds": {}
+      }
+    },
+    {
+      "id": "n3i",
+      "kind": "print",
+      "value": {
+        "id": "n3h",
+        "kind": "op",
+        "op": "text.from",
+        "args": [
+          {
+            "id": "n3g",
+            "kind": "var",
+            "name": "n"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "format": "beepblocks-ir",
+  "version": 2,
+  "functions": [],
+  "body": [
+    {
+      "id": "k0",
+      "kind": "assign",
+      "name": "k",
+      "value": {
+        "id": "n15",
+        "kind": "lit",
+        "value": 0
+      }
+    },
+    {
+      "id": "n1f",
+      "kind": "composite",
+      "name": "keepDoingUntil",
+      "fields": {},
+      "inputs": {
+        "condition": {
+          "id": "n18",
+          "kind": "binary",
+          "op": "==",
+          "left": {
+            "id": "n16",
+            "kind": "var",
+            "name": "k"
+          },
+          "right": {
+            "id": "n17",
+            "kind": "lit",
+            "value": 3
+          }
+        }
+      },
+      "bodies": {
+        "body": [
+          {
+            "id": "n1b",
+            "kind": "print",
+            "value": {
+              "id": "n1a",
+              "kind": "op",
+              "op": "text.from",
+              "args": [
+                {
+                  "id": "n19",
+                  "kind": "var",
+                  "name": "k"
+                }
+              ]
+            }
+          },
+          {
+            "id": "kinc",
+            "kind": "assign",
+            "name": "k",
+            "value": {
+              "id": "n1e",
+              "kind": "binary",
+              "op": "+",
+              "left": {
+                "id": "n1c",
+                "kind": "var",
+                "name": "k"
+              },
+              "right": {
+                "id": "n1d",
+                "kind": "lit",
+                "value": 1
+              }
+            }
+          }
+        ]
+      },
+      "binds": {}
+    }
+  ]
+}

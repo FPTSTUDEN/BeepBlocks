@@ -1,0 +1,53 @@
+{
+  "format": "beepblocks-ir",
+  "version": 2,
+  "functions": [],
+  "body": [
+    {
+      "id": "ng",
+      "kind": "composite",
+      "name": "everyFile",
+      "fields": {
+        "action": "delete",
+        "includeSubfolders": false,
+        "makeFolder": false
+      },
+      "inputs": {
+        "folder": {
+          "id": "nb",
+          "kind": "op",
+          "op": "fs.root",
+          "args": []
+        },
+        "condition": {
+          "id": "nf",
+          "kind": "op",
+          "op": "text.wildcard",
+          "args": [
+            {
+              "id": "nd",
+              "kind": "op",
+              "op": "fs.name",
+              "args": [
+                {
+                  "id": "nc",
+                  "kind": "var",
+                  "name": "file"
+                }
+              ]
+            },
+            {
+              "id": "ne",
+              "kind": "lit",
+              "value": "*.txt"
+            }
+          ]
+        }
+      },
+      "bodies": {},
+      "binds": {
+        "file": "file"
+      }
+    }
+  ]
+}

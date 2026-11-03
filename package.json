@@ -22,7 +22,8 @@
     "smoke": "vite build && node scripts/browser-smoke.mjs",
     "e2e": "vite build && tsx e2e/run.ts",
     "gen:runtime": "tsx src/export/python/gen-runtime.ts",
-    "gen:starters": "tsx conformance/gen-starters.ts"
+    "gen:starters": "tsx conformance/gen-starters.ts",
+    "gen:actions": "tsx conformance/gen-actions.ts"
   },
   "dependencies": {
     "@blockly/keyboard-navigation": "3.0.5",

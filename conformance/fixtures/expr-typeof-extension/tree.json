@@ -1,0 +1,15 @@
+{
+  "root": {
+    "type": "folder",
+    "name": "",
+    "modified": 0,
+    "children": [
+      {
+        "type": "file",
+        "name": "data.CSV",
+        "modified": 10,
+        "content": "x"
+      }
+    ]
+  }
+}

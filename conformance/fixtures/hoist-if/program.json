@@ -1,0 +1,60 @@
+{
+  "format": "beepblocks-ir",
+  "version": 2,
+  "functions": [],
+  "body": [
+    {
+      "id": "if",
+      "kind": "if",
+      "cond": {
+        "id": "cmp",
+        "kind": "binary",
+        "op": ">",
+        "left": {
+          "id": "n4o",
+          "kind": "compositeExpr",
+          "name": "countFiles",
+          "fields": {
+            "includeSubfolders": false
+          },
+          "inputs": {
+            "folder": {
+              "id": "n4n",
+              "kind": "op",
+              "op": "fs.root",
+              "args": []
+            }
+          },
+          "binds": {}
+        },
+        "right": {
+          "id": "n4p",
+          "kind": "lit",
+          "value": 1
+        }
+      },
+      "then": [
+        {
+          "id": "n4r",
+          "kind": "print",
+          "value": {
+            "id": "n4q",
+            "kind": "lit",
+            "value": "many"
+          }
+        }
+      ],
+      "else": [
+        {
+          "id": "n4t",
+          "kind": "print",
+          "value": {
+            "id": "n4s",
+            "kind": "lit",
+            "value": "few"
+          }
+        }
+      ]
+    }
+  ]
+}

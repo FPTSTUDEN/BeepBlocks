@@ -1,0 +1,59 @@
+{
+  "format": "beepblocks-ir",
+  "version": 2,
+  "functions": [],
+  "body": [
+    {
+      "id": "n27",
+      "kind": "composite",
+      "name": "findFile",
+      "fields": {
+        "which": "newest",
+        "includeSubfolders": false
+      },
+      "inputs": {
+        "folder": {
+          "id": "n21",
+          "kind": "op",
+          "op": "fs.root",
+          "args": []
+        }
+      },
+      "bodies": {
+        "found": [
+          {
+            "id": "n24",
+            "kind": "print",
+            "value": {
+              "id": "n23",
+              "kind": "op",
+              "op": "fs.name",
+              "args": [
+                {
+                  "id": "n22",
+                  "kind": "var",
+                  "name": "found"
+                }
+              ]
+            }
+          }
+        ],
+        "notFound": [
+          {
+            "id": "n26",
+            "kind": "print",
+            "value": {
+              "id": "n25",
+              "kind": "lit",
+              "value": "none"
+            }
+          }
+        ]
+      },
+      "binds": {
+        "file": "file",
+        "found": "found"
+      }
+    }
+  ]
+}

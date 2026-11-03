@@ -1,0 +1,58 @@
+{
+  "format": "beepblocks-ir",
+  "version": 2,
+  "functions": [],
+  "body": [
+    {
+      "id": "files",
+      "kind": "assign",
+      "name": "files",
+      "value": {
+        "id": "n2r",
+        "kind": "compositeExpr",
+        "name": "filesIn",
+        "fields": {
+          "includeSubfolders": false,
+          "order": "name"
+        },
+        "inputs": {
+          "folder": {
+            "id": "n2q",
+            "kind": "op",
+            "op": "fs.root",
+            "args": []
+          }
+        },
+        "binds": {}
+      }
+    },
+    {
+      "id": "loop",
+      "kind": "forEach",
+      "name": "p",
+      "list": {
+        "id": "n2s",
+        "kind": "var",
+        "name": "files"
+      },
+      "body": [
+        {
+          "id": "n2v",
+          "kind": "print",
+          "value": {
+            "id": "n2u",
+            "kind": "op",
+            "op": "fs.name",
+            "args": [
+              {
+                "id": "n2t",
+                "kind": "var",
+                "name": "p"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,104 @@
+{
+  "format": "beepblocks-ir",
+  "version": 2,
+  "functions": [],
+  "body": [
+    {
+      "id": "names0",
+      "kind": "assign",
+      "name": "names",
+      "value": {
+        "id": "n4v",
+        "kind": "op",
+        "op": "fs.list",
+        "args": [
+          {
+            "id": "n4u",
+            "kind": "op",
+            "op": "fs.root",
+            "args": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "while",
+      "kind": "while",
+      "cond": {
+        "id": "cmp",
+        "kind": "binary",
+        "op": ">",
+        "left": {
+          "id": "n4x",
+          "kind": "compositeExpr",
+          "name": "countFiles",
+          "fields": {
+            "includeSubfolders": false
+          },
+          "inputs": {
+            "folder": {
+              "id": "n4w",
+              "kind": "op",
+              "op": "fs.root",
+              "args": []
+            }
+          },
+          "binds": {}
+        },
+        "right": {
+          "id": "n4y",
+          "kind": "lit",
+          "value": 0
+        }
+      },
+      "body": [
+        {
+          "id": "first",
+          "kind": "assign",
+          "name": "first",
+          "value": {
+            "id": "n52",
+            "kind": "op",
+            "op": "list.get",
+            "args": [
+              {
+                "id": "n50",
+                "kind": "op",
+                "op": "fs.list",
+                "args": [
+                  {
+                    "id": "n4z",
+                    "kind": "op",
+                    "op": "fs.root",
+                    "args": []
+                  }
+                ]
+              },
+              {
+                "id": "n51",
+                "kind": "lit",
+                "value": 0
+              }
+            ]
+          }
+        },
+        {
+          "id": "del",
+          "kind": "do",
+          "expr": {
+            "id": "n54",
+            "kind": "op",
+            "op": "fs.delete",
+            "args": [
+              {
+                "id": "n53",
+                "kind": "var",
+                "name": "first"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

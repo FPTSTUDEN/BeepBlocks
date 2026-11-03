@@ -1,0 +1,47 @@
+{
+  "format": "beepblocks-ir",
+  "version": 2,
+  "functions": [],
+  "body": [
+    {
+      "id": "na",
+      "kind": "composite",
+      "name": "everyFile",
+      "fields": {
+        "action": "copy",
+        "includeSubfolders": true,
+        "makeFolder": false
+      },
+      "inputs": {
+        "folder": {
+          "id": "n6",
+          "kind": "op",
+          "op": "fs.root",
+          "args": []
+        },
+        "destination": {
+          "id": "n9",
+          "kind": "op",
+          "op": "fs.join",
+          "args": [
+            {
+              "id": "n7",
+              "kind": "op",
+              "op": "fs.root",
+              "args": []
+            },
+            {
+              "id": "n8",
+              "kind": "lit",
+              "value": "dest"
+            }
+          ]
+        }
+      },
+      "bodies": {},
+      "binds": {
+        "file": "file"
+      }
+    }
+  ]
+}

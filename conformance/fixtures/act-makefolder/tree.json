@@ -1,0 +1,15 @@
+{
+  "root": {
+    "type": "folder",
+    "name": "",
+    "modified": 0,
+    "children": [
+      {
+        "type": "folder",
+        "name": "old",
+        "modified": 1,
+        "children": []
+      }
+    ]
+  }
+}

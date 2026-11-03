@@ -1,0 +1,50 @@
+{
+  "format": "beepblocks-ir",
+  "version": 2,
+  "functions": [],
+  "body": [
+    {
+      "id": "t",
+      "kind": "assign",
+      "name": "t",
+      "value": {
+        "id": "n3m",
+        "kind": "compositeExpr",
+        "name": "typeOf",
+        "fields": {
+          "by": "category"
+        },
+        "inputs": {
+          "file": {
+            "id": "n3l",
+            "kind": "op",
+            "op": "fs.join",
+            "args": [
+              {
+                "id": "n3j",
+                "kind": "op",
+                "op": "fs.root",
+                "args": []
+              },
+              {
+                "id": "n3k",
+                "kind": "lit",
+                "value": "photo.JPG"
+              }
+            ]
+          }
+        },
+        "binds": {}
+      }
+    },
+    {
+      "id": "n3o",
+      "kind": "print",
+      "value": {
+        "id": "n3n",
+        "kind": "var",
+        "name": "t"
+      }
+    }
+  ]
+}

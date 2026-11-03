@@ -1,0 +1,27 @@
+{
+  "root": {
+    "type": "folder",
+    "name": "",
+    "modified": 0,
+    "children": [
+      {
+        "type": "file",
+        "name": "a.txt",
+        "modified": 10,
+        "binarySize": 1
+      },
+      {
+        "type": "file",
+        "name": "b.txt",
+        "modified": 20,
+        "binarySize": 9
+      },
+      {
+        "type": "file",
+        "name": "c.txt",
+        "modified": 30,
+        "binarySize": 5
+      }
+    ]
+  }
+}

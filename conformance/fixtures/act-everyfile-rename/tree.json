@@ -1,0 +1,40 @@
+{
+  "root": {
+    "type": "folder",
+    "name": "",
+    "modified": 0,
+    "children": [
+      {
+        "type": "file",
+        "name": "a.txt",
+        "modified": 10,
+        "content": "x"
+      },
+      {
+        "type": "file",
+        "name": "big.txt",
+        "modified": 40,
+        "binarySize": 10
+      },
+      {
+        "type": "file",
+        "name": "mid.TXT",
+        "modified": 20,
+        "content": "xyz"
+      },
+      {
+        "type": "folder",
+        "name": "sub",
+        "modified": 5,
+        "children": [
+          {
+            "type": "file",
+            "name": "deep.txt",
+            "modified": 30,
+            "content": "hello"
+          }
+        ]
+      }
+    ]
+  }
+}

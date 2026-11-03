@@ -1,0 +1,83 @@
+{
+  "format": "beepblocks-ir",
+  "version": 2,
+  "functions": [],
+  "body": [
+    {
+      "id": "n2p",
+      "kind": "composite",
+      "name": "findFile",
+      "fields": {
+        "which": "first",
+        "includeSubfolders": false
+      },
+      "inputs": {
+        "folder": {
+          "id": "n2f",
+          "kind": "op",
+          "op": "fs.root",
+          "args": []
+        },
+        "condition": {
+          "id": "n2j",
+          "kind": "op",
+          "op": "text.wildcard",
+          "args": [
+            {
+              "id": "n2h",
+              "kind": "op",
+              "op": "fs.name",
+              "args": [
+                {
+                  "id": "n2g",
+                  "kind": "var",
+                  "name": "file"
+                }
+              ]
+            },
+            {
+              "id": "n2i",
+              "kind": "lit",
+              "value": "*.zip"
+            }
+          ]
+        }
+      },
+      "bodies": {
+        "found": [
+          {
+            "id": "n2m",
+            "kind": "print",
+            "value": {
+              "id": "n2l",
+              "kind": "op",
+              "op": "fs.name",
+              "args": [
+                {
+                  "id": "n2k",
+                  "kind": "var",
+                  "name": "found"
+                }
+              ]
+            }
+          }
+        ],
+        "notFound": [
+          {
+            "id": "n2o",
+            "kind": "print",
+            "value": {
+              "id": "n2n",
+              "kind": "lit",
+              "value": "none"
+            }
+          }
+        ]
+      },
+      "binds": {
+        "file": "file",
+        "found": "found"
+      }
+    }
+  ]
+}

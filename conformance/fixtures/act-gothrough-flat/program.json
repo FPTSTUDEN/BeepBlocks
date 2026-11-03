@@ -1,0 +1,46 @@
+{
+  "format": "beepblocks-ir",
+  "version": 2,
+  "functions": [],
+  "body": [
+    {
+      "id": "n10",
+      "kind": "composite",
+      "name": "goThrough",
+      "fields": {
+        "includeSubfolders": false
+      },
+      "inputs": {
+        "folder": {
+          "id": "nw",
+          "kind": "op",
+          "op": "fs.root",
+          "args": []
+        }
+      },
+      "bodies": {
+        "body": [
+          {
+            "id": "nz",
+            "kind": "print",
+            "value": {
+              "id": "ny",
+              "kind": "op",
+              "op": "fs.name",
+              "args": [
+                {
+                  "id": "nx",
+                  "kind": "var",
+                  "name": "file"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "binds": {
+        "file": "file"
+      }
+    }
+  ]
+}

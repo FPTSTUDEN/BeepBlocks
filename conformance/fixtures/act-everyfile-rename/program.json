@@ -1,0 +1,30 @@
+{
+  "format": "beepblocks-ir",
+  "version": 2,
+  "functions": [],
+  "body": [
+    {
+      "id": "ni",
+      "kind": "composite",
+      "name": "everyFile",
+      "fields": {
+        "action": "rename",
+        "includeSubfolders": true,
+        "makeFolder": false,
+        "renameTemplate": "renamed-{n}{ext}"
+      },
+      "inputs": {
+        "folder": {
+          "id": "nh",
+          "kind": "op",
+          "op": "fs.root",
+          "args": []
+        }
+      },
+      "bodies": {},
+      "binds": {
+        "file": "file"
+      }
+    }
+  ]
+}

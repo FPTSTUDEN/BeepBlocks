@@ -1,0 +1,1 @@
+{"output":["MKDIR  new/"],"error":null,"tree":{"root":{"type":"folder","name":"","modified":0,"children":[{"type":"folder","name":"new","modified":0,"children":[]},{"type":"folder","name":"old","modified":1,"children":[]}]}}}

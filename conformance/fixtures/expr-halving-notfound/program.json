@@ -1,0 +1,128 @@
+{
+  "format": "beepblocks-ir",
+  "version": 2,
+  "functions": [],
+  "body": [
+    {
+      "id": "line",
+      "kind": "assign",
+      "name": "line",
+      "value": {
+        "id": "n4a",
+        "kind": "compositeExpr",
+        "name": "filesIn",
+        "fields": {
+          "includeSubfolders": false,
+          "order": "name"
+        },
+        "inputs": {
+          "folder": {
+            "id": "n49",
+            "kind": "op",
+            "op": "fs.root",
+            "args": []
+          }
+        },
+        "binds": {}
+      }
+    },
+    {
+      "id": "n4m",
+      "kind": "composite",
+      "name": "halvingSearch",
+      "fields": {},
+      "inputs": {
+        "line": {
+          "id": "n4b",
+          "kind": "var",
+          "name": "line"
+        }
+      },
+      "bodies": {
+        "decide": [
+          {
+            "id": "decide-if",
+            "kind": "if",
+            "cond": {
+              "id": "cmp",
+              "kind": "binary",
+              "op": ">",
+              "left": {
+                "id": "n4d",
+                "kind": "op",
+                "op": "fs.name",
+                "args": [
+                  {
+                    "id": "n4c",
+                    "kind": "var",
+                    "name": "middle"
+                  }
+                ]
+              },
+              "right": {
+                "id": "n4e",
+                "kind": "lit",
+                "value": "zzz"
+              }
+            },
+            "then": [
+              {
+                "id": "n4f",
+                "kind": "composite",
+                "name": "keepLeftHalf",
+                "fields": {},
+                "inputs": {},
+                "bodies": {},
+                "binds": {}
+              }
+            ],
+            "else": [
+              {
+                "id": "n4g",
+                "kind": "composite",
+                "name": "keepRightHalf",
+                "fields": {},
+                "inputs": {},
+                "bodies": {},
+                "binds": {}
+              }
+            ]
+          }
+        ],
+        "found": [
+          {
+            "id": "n4j",
+            "kind": "print",
+            "value": {
+              "id": "n4i",
+              "kind": "op",
+              "op": "fs.name",
+              "args": [
+                {
+                  "id": "n4h",
+                  "kind": "var",
+                  "name": "answer"
+                }
+              ]
+            }
+          }
+        ],
+        "notFound": [
+          {
+            "id": "n4l",
+            "kind": "print",
+            "value": {
+              "id": "n4k",
+              "kind": "lit",
+              "value": "none"
+            }
+          }
+        ]
+      },
+      "binds": {
+        "middle": "middle",
+        "answer": "answer"
+      }
+    }
+  ]
+}

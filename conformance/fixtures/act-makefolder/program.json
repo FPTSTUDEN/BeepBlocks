@@ -1,0 +1,63 @@
+{
+  "format": "beepblocks-ir",
+  "version": 2,
+  "functions": [],
+  "body": [
+    {
+      "id": "nm",
+      "kind": "composite",
+      "name": "makeFolderIfMissing",
+      "fields": {},
+      "inputs": {
+        "path": {
+          "id": "nl",
+          "kind": "op",
+          "op": "fs.join",
+          "args": [
+            {
+              "id": "nj",
+              "kind": "op",
+              "op": "fs.root",
+              "args": []
+            },
+            {
+              "id": "nk",
+              "kind": "lit",
+              "value": "new"
+            }
+          ]
+        }
+      },
+      "bodies": {},
+      "binds": {}
+    },
+    {
+      "id": "nq",
+      "kind": "composite",
+      "name": "makeFolderIfMissing",
+      "fields": {},
+      "inputs": {
+        "path": {
+          "id": "np",
+          "kind": "op",
+          "op": "fs.join",
+          "args": [
+            {
+              "id": "nn",
+              "kind": "op",
+              "op": "fs.root",
+              "args": []
+            },
+            {
+              "id": "no",
+              "kind": "lit",
+              "value": "old"
+            }
+          ]
+        }
+      },
+      "bodies": {},
+      "binds": {}
+    }
+  ]
+}
