@@ -18,7 +18,7 @@ import type { Layout } from './layout.ts';
 import { registerBlocks } from './blocks/index.ts';
 import { irToWs } from './convert/irToWs.ts';
 import { wsToIr } from './convert/wsToIr.ts';
-import { expandComposite, setExpandHandler, setFullExpandHandler } from './expand.ts';
+import { expandComposite, setExpandHandler, setFullExpandHandler, setOneDesugarHandler } from './expand.ts';
 import { attachSync } from './sync.ts';
 import { buildBlocklyTheme, ensureEditorCss, readThemeVars, rebuildTheme } from './theme.ts';
 import { buildToolbox, registerDynamicCategories } from './toolbox.ts';
@@ -219,6 +219,7 @@ export function BlockEditor(props: BlockEditorProps) {
       const res = expandComposite(ws, id, propsRef.current.desugarOne);
       if (!res.ok) Blockly.dialog.alert(res.error);
     });
+    setOneDesugarHandler(ws, propsRef.current.desugarOne);
     setFullExpandHandler(ws, propsRef.current.desugarFully ?? null);
     const p = propsRef.current;
     ws.setIsReadOnly(p.readOnly === true);
@@ -230,6 +231,7 @@ export function BlockEditor(props: BlockEditorProps) {
       validatorRef.current = null;
       detachSync();
       setExpandHandler(ws, null);
+      setOneDesugarHandler(ws, null);
       setFullExpandHandler(ws, null);
       keyboardNav?.dispose();
       wsRef.current = null;
