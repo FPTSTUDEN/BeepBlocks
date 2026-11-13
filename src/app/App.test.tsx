@@ -66,6 +66,21 @@ describe('App shell', () => {
     expect(store.getState().runProblem).toBeNull();
   });
 
+  it('toggles between block and canvas view and persists the last-used mode per project', () => {
+    renderApp();
+
+    const blocks = screen.getByRole('button', { name: 'Blocks' });
+    const canvas = screen.getByRole('button', { name: 'Canvas' });
+    expect((blocks as HTMLButtonElement).getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(canvas);
+    expect(screen.getByRole('application', { name: 'Flow canvas' })).toBeTruthy();
+    expect(window.localStorage.getItem('beep-canvas-mode-Demo%20project')).toBe('canvas');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Blocks' }));
+    expect(screen.getByRole('region', { name: 'Block editor' })).toBeTruthy();
+    expect(window.localStorage.getItem('beep-canvas-mode-Demo%20project')).toBeNull();
+  });
+
   it('applies the theme variables to the document', () => {
     const store = renderApp();
     expect(document.documentElement.style.getPropertyValue('--bp-bg')).toBe('#ffffff');

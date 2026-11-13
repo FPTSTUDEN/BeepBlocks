@@ -15,6 +15,8 @@ import {
 import { useStore } from 'zustand';
 import type { NodeId } from '../ir/types.ts';
 import { BlockEditor } from '../editor/index.tsx';
+import { loadEditorMode, ModeToggle, saveEditorMode, type EditorMode } from '../editor/ModeToggle.tsx';
+import { CanvasEditor } from '../canvas/index.ts';
 import { Playground } from '../playground/index.tsx';
 import { SCENARIOS } from '../domains/fileExplorer/scenarios/index.ts';
 import { deepEqual } from './deepEqual.ts';
@@ -68,8 +70,14 @@ function Shell({ store }: { store: AppStore }) {
   const [exportOpen, setExportOpen] = useState(false);
   const [newOpen, setNewOpen] = useState(false);
   const [importErrors, setImportErrors] = useState<string[] | null>(null);
+  const [editorMode, setEditorMode] = useState<EditorMode>(() => loadEditorMode(project.title));
   const fileInput = useRef<HTMLInputElement>(null);
   const runHintId = useId();
+
+  const handleEditorMode = (next: EditorMode) => {
+    setEditorMode(next);
+    saveEditorMode(project.title, next);
+  };
 
   // Theme variables must be in place before the editor's effects read them.
   useLayoutEffect(() => applyTheme(settings), [settings]);
@@ -244,17 +252,27 @@ function Shell({ store }: { store: AppStore }) {
 
       <main className="workspace">
         <div className="pane editor" id="bp-editor-pane" tabIndex={-1}>
-          <BlockEditor
-            program={project.program}
-            layout={project.layout}
-            onChange={actions.editorChanged}
-            desugarOne={store.deps.desugarOne}
-            desugarFully={store.deps.desugarFully}
-            showAdvanced={settings.showAdvanced}
-            highlightIds={highlight}
-            markedIds={marked}
-            themeKey={`${settings.mode}:${settings.accent}`}
-          />
+          <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0.5rem 0.75rem 0' }}>
+            <ModeToggle mode={editorMode} onChange={handleEditorMode} />
+          </div>
+          {editorMode === 'canvas' ? (
+            <CanvasEditor
+              program={project.program}
+              dispatch={actions.editorChanged as (...args: unknown[]) => void}
+            />
+          ) : (
+            <BlockEditor
+              program={project.program}
+              layout={project.layout}
+              onChange={actions.editorChanged}
+              desugarOne={store.deps.desugarOne}
+              desugarFully={store.deps.desugarFully}
+              showAdvanced={settings.showAdvanced}
+              highlightIds={highlight}
+              markedIds={marked}
+              themeKey={`${settings.mode}:${settings.accent}`}
+            />
+          )}
         </div>
         <div className="pane" id="bp-playground-pane" tabIndex={-1}>
           <Playground
