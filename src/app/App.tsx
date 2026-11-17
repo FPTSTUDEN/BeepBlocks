@@ -151,6 +151,9 @@ function Shell({ store }: { store: AppStore }) {
           onChange={(e) => actions.setTitle(e.target.value)}
         />
         <div className="group">
+          <ModeToggle mode={editorMode} onChange={handleEditorMode} />
+        </div>
+        <div className="group">
           <label htmlFor="bp-scenario">Scenario</label>
           <select id="bp-scenario" value={builtin ? project.scenario.id : ''} onChange={pickScenario}>
             {!builtin && <option value="">{project.scenario.title} (imported)</option>}
@@ -252,9 +255,6 @@ function Shell({ store }: { store: AppStore }) {
 
       <main className="workspace">
         <div className="pane editor" id="bp-editor-pane" tabIndex={-1}>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0.5rem 0.75rem 0' }}>
-            <ModeToggle mode={editorMode} onChange={handleEditorMode} />
-          </div>
           {editorMode === 'canvas' ? (
             <CanvasEditor
               program={project.program}

@@ -203,6 +203,50 @@ async function checkStarter(page: Page, s: Starter): Promise<string[]> {
   return problems;
 }
 
+async function checkCanvasSmoke(browser: Browser): Promise<{ label: string; problem?: string }[]> {
+  const results: { label: string; problem?: string }[] = [];
+
+  const openPage = async () => {
+    const context = await browser.newContext({ viewport: { width: 1400, height: 900 } });
+    const page = await context.newPage();
+    await page.goto(`http://localhost:${PORT}/`);
+    await page.locator('.blocklySvg').waitFor();
+    return { context, page };
+  };
+
+  {
+    const label = 'Canvas mode toggle';
+    const { context, page } = await openPage();
+    try {
+      await page.getByRole('button', { name: 'Canvas' }).click();
+      await page.getByRole('application', { name: 'Flow canvas' }).waitFor();
+      await page.getByRole('button', { name: 'Blocks' }).click();
+      await page.locator('.blocklySvg').waitFor();
+      results.push({ label });
+    } catch (err) {
+      results.push({ label, problem: err instanceof Error ? err.message : String(err) });
+    } finally {
+      await context.close();
+    }
+  }
+
+  {
+    const label = 'Canvas graph renders nodes';
+    const { context, page } = await openPage();
+    try {
+      await page.getByRole('button', { name: 'Canvas' }).click();
+      await page.waitForFunction(() => document.querySelectorAll('.react-flow__node').length > 0);
+      results.push({ label });
+    } catch (err) {
+      results.push({ label, problem: err instanceof Error ? err.message : String(err) });
+    } finally {
+      await context.close();
+    }
+  }
+
+  return results;
+}
+
 async function main(): Promise<void> {
   const selected = process.argv.slice(2) as Engine[];
   const unknown = selected.filter((e) => !ENGINES.includes(e));
@@ -241,6 +285,17 @@ async function main(): Promise<void> {
             failed++;
             console.log(`  FAIL  ${s.title}`);
             for (const p of problems) console.log(`          ${p}`);
+          }
+        }
+        if (engine === 'chromium') {
+          for (const result of await checkCanvasSmoke(browser)) {
+            if (result.problem) {
+              failed++;
+              console.log(`  FAIL  ${result.label}`);
+              console.log(`          ${result.problem}`);
+            } else {
+              console.log(`  PASS  ${result.label}`);
+            }
           }
         }
       } finally {

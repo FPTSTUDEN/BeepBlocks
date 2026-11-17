@@ -20,6 +20,11 @@ beforeAll(() => {
   HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement) {
     this.removeAttribute('open');
   };
+  globalThis.ResizeObserver ??= class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
 });
 
 function memoryStorage(initial: Record<string, string> = {}): Storage {
