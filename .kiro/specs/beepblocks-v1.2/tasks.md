@@ -299,39 +299,43 @@ Implementation note: This repository has no `src/editor/Palette.tsx` or shared m
 
 ## Phase 4 — Block-mode Switch annotation and Polish [SEQ]
 
-- [ ] 4.1 Block mode Switch annotation (§4.3, Req 5.4)
+- [x] 4.1 Block mode Switch annotation (§4.3, Req 5.4)
   - In Block mode, an `if/elif/else` chain whose condition is `switch on
     [variable]` gains a small "Switch" badge in the block header (read-only
     visual hint; the block itself is unchanged).
   - Test: a 3-branch if/elif/else renders the badge; a simple if/else does not.
 
-- [ ] 4.2 Responsive nodes at small zoom
+- [x] 4.2 Responsive nodes at small zoom
   - At zoom < 50 %, SequenceNode and ConditionNode shrink to icon-only
     representation (drop label text, keep colour and shape).
-  - Test: snapshot at 40 % zoom matches icon-only style.
+  - Test: Chromium checks computed styles at approximately 40 % zoom and
+    verifies labels are hidden while node shapes remain.
   - _Req: 2.6_
 
-- [ ] 4.3 Accessibility pass
+- [x] 4.3 Accessibility pass
   - Audit canvas mode with axe-core (via `pnpm e2e`): no critical violations.
   - Each node has `role="group"` and a unique `aria-label`.
   - ModeToggle has `aria-pressed`; canvas root has `role="application"` with
     `aria-label="Flow canvas"`.
   - _Req: 1.4_
 
-- [ ] 4.4 `.beep.json` compatibility
+- [x] 4.4 `.beep.json` compatibility
   - Open a v1 file (no `canvas` key) in canvas mode: auto-layout runs, no
     error thrown.
   - Save and reload: `canvas` key present but IR unchanged.
   - Run existing conformance suite on the saved file: 56/56 pass.
   - _Req: 10.1–10.5_
 
-- [ ] 4.5 Final requirements review (Phase 4 checkpoint)
+- [!] 4.5 Final requirements review (review completed; checkpoint blocked)
   - Walk all acceptance criteria in `requirements.md` (Req 1–10) and verify
-    each with a concrete observable check (manual smoke or automated test).
+    each with a concrete observable check (manual smoke or automated test);
+    see `requirements-review.md` for evidence and remaining gaps.
   - `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:py`,
     `pnpm conformance --strict`, `pnpm smoke`, `pnpm e2e`.
-  - Write a brief review document and commit it.
-  - Commit: `docs(v1.2): final requirements review — all criteria met`.
+  - Review document written. Python tests were not run because Python
+    environment setup was declined; the full checkpoint is therefore blocked.
+  - Existing acceptance gaps from prior phases are recorded in the review;
+    this is not an “all criteria met” sign-off.
 
 ---
 

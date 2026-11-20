@@ -14,7 +14,9 @@
 .beep-canvas-node {
   box-sizing: border-box;
   color: var(--canvas-node-text);
-  font: 500 13px/1.35 system-ui, sans-serif;
+  font:
+    500 13px/1.35 system-ui,
+    sans-serif;
 }
 
 .beep-canvas-node__handle {
@@ -176,4 +178,27 @@
 
 .merge-node .beep-canvas-node__handle {
   transform: rotate(-45deg);
+}
+
+.beep-canvas-root[data-zoom='small'] .sequence-node {
+  width: 34px;
+  min-width: 34px;
+  max-width: 34px;
+  height: 34px;
+  padding: 0;
+}
+
+.beep-canvas-root[data-zoom='small'] .sequence-node__label,
+.beep-canvas-root[data-zoom='small'] .sequence-node__binds,
+.beep-canvas-root[data-zoom='small'] .condition-node__label {
+  display: none;
+}
+
+.beep-canvas-root[data-zoom='small'] .condition-node {
+  width: 48px;
+  height: 48px;
+}
+
+.beep-canvas-root[data-zoom='small'] .condition-node__shape {
+  inset: 4px 10px;
 }

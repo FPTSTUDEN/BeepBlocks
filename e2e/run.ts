@@ -24,8 +24,12 @@ import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { chromium, firefox, type Browser, type Page } from 'playwright';
+import axe from 'axe-core';
 import { preview } from 'vite';
 import { STARTERS, type Starter } from '../src/app/starters.ts';
+import { newProject } from '../src/app/project.ts';
+import { SCENARIOS } from '../src/domains/fileExplorer/scenarios/index.ts';
+import { b } from '../src/ir/build.ts';
 import { desugarProgram } from '../src/composites/index.ts';
 import { getScenario } from '../src/domains/fileExplorer/scenarios/index.ts';
 import type { SandboxFS } from '../src/domains/fileExplorer/fsTypes.ts';
@@ -48,7 +52,10 @@ function launch(engine: Engine): Promise<Browser> {
 const golden = (s: Starter): string[] =>
   (
     JSON.parse(
-      readFileSync(join(ROOT, 'conformance', 'fixtures', `starter-${s.scenarioId}`, 'expected.json'), 'utf8'),
+      readFileSync(
+        join(ROOT, 'conformance', 'fixtures', `starter-${s.scenarioId}`, 'expected.json'),
+        'utf8',
+      ),
     ) as { output: string[] }
   ).output;
 
@@ -87,7 +94,9 @@ async function runAndScrub(page: Page, problems: string[], label: string): Promi
   // Wait for a NEW playback (Pause enabled) and pause it in the same page task. Checking the
   // status instead would pass at once on the previous, stale timeline after Expand.
   await page.waitForFunction(() => {
-    const b = [...document.querySelectorAll('button')].find((x) => x.textContent?.trim().endsWith('Pause'));
+    const b = [...document.querySelectorAll('button')].find((x) =>
+      x.textContent?.trim().endsWith('Pause'),
+    );
     if (!(b instanceof HTMLButtonElement) || b.disabled) return false;
     b.click();
     return true;
@@ -99,13 +108,17 @@ async function runAndScrub(page: Page, problems: string[], label: string): Promi
   const mid = Math.floor(max / 2);
   await scrubTo(page, mid);
   const midStatus = await status(page);
-  if (midStatus !== `Step ${mid + 1} of ${max + 1}`) problems.push(`${label}: scrub to middle shows "${midStatus}"`);
+  if (midStatus !== `Step ${mid + 1} of ${max + 1}`)
+    problems.push(`${label}: scrub to middle shows "${midStatus}"`);
   await scrubTo(page, 'end');
-  if ((await status(page)) !== 'Done') problems.push(`${label}: scrub to end shows "${await status(page)}"`);
+  if ((await status(page)) !== 'Done')
+    problems.push(`${label}: scrub to end shows "${await status(page)}"`);
   await page.getByRole('button', { name: /Step back/ }).click();
-  if ((await status(page)) !== `Step ${max} of ${max + 1}`) problems.push(`${label}: step back shows "${await status(page)}"`);
+  if ((await status(page)) !== `Step ${max} of ${max + 1}`)
+    problems.push(`${label}: step back shows "${await status(page)}"`);
   await page.getByRole('button', { name: /Step forward/ }).click();
-  if ((await status(page)) !== 'Done') problems.push(`${label}: step forward shows "${await status(page)}"`);
+  if ((await status(page)) !== 'Done')
+    problems.push(`${label}: step forward shows "${await status(page)}"`);
   return outputLines(page);
 }
 
@@ -123,7 +136,9 @@ function compare(label: string, expected: string[], actual: string[], problems: 
   let shown = 0;
   for (let i = 0; i < n && shown < 5; i++) {
     if (expected[i] !== actual[i]) {
-      problems.push(`${label} line ${i + 1}: expected ${JSON.stringify(expected[i])}, got ${JSON.stringify(actual[i])}`);
+      problems.push(
+        `${label} line ${i + 1}: expected ${JSON.stringify(expected[i])}, got ${JSON.stringify(actual[i])}`,
+      );
       shown++;
     }
   }
@@ -142,13 +157,21 @@ function runPython(script: string, dir: string, apply: boolean): string[] {
   });
   if (res.error) throw new Error(`Could not run ${PYTHON}: ${res.error.message}`);
   if (res.status !== 0) throw new Error(`Python exited with ${res.status}:\n${res.stderr}`);
-  const out = (process.platform === 'win32' ? res.stdout.replace(/\r\n/g, '\n') : res.stdout).split('\n');
+  const out = (process.platform === 'win32' ? res.stdout.replace(/\r\n/g, '\n') : res.stdout).split(
+    '\n',
+  );
   if (out.at(-1) === '') out.pop();
   return out;
 }
 
 /** Dry run + apply on fresh copies of `tree`; returns problems (cached per script). */
-function checkScript(s: Starter, source: string, expected: string[], expectedDry: string[], finalTree: SandboxFS): string[] {
+function checkScript(
+  s: Starter,
+  source: string,
+  expected: string[],
+  expectedDry: string[],
+  finalTree: SandboxFS,
+): string[] {
   const hash = createHash('sha256').update(source).digest('hex').slice(0, 12);
   const cached = pythonCache.get(hash);
   if (cached) return cached;
@@ -162,7 +185,11 @@ function checkScript(s: Starter, source: string, expected: string[], expectedDry
   const dry = join(work, 'dry');
   materialize(tree, dry);
   compare('dry-run output', expectedDry, runPython(file, dry, false), problems);
-  problems.push(...diffTrees(tree, readTree(dry), { compareMtimes: { except: new Set() } }).map((d) => `dry run changed the folder: ${d}`));
+  problems.push(
+    ...diffTrees(tree, readTree(dry), { compareMtimes: { except: new Set() } }).map(
+      (d) => `dry run changed the folder: ${d}`,
+    ),
+  );
 
   const apply = join(work, 'apply');
   materialize(tree, apply);
@@ -181,25 +208,46 @@ async function checkStarter(page: Page, s: Starter): Promise<string[]> {
   const expected = golden(s);
   await page.getByRole('button', { name: 'New…' }).click();
   await page.getByRole('button', { name: `Open example “${s.title}”` }).click();
-  await page.locator(`[data-id="${compositeId(s)}"]`).first().waitFor();
+  await page
+    .locator(`[data-id="${compositeId(s)}"]`)
+    .first()
+    .waitFor();
 
   compare('run output', expected, await runAndScrub(page, problems, 'run'), problems);
   const original = await exportScript(page);
 
   // Expand with the mouse (the keyboard path is covered by `pnpm smoke`).
-  await page.locator(`[data-id="${compositeId(s)}"] > .blocklyPath`).first().click({ button: 'right', position: { x: 6, y: 6 }, force: true }); // its own labels sit on top
-  await page.locator('.blocklyContextMenu .blocklyMenuItem', { hasText: 'Expand into basic blocks' }).click();
+  await page
+    .locator(`[data-id="${compositeId(s)}"] > .blocklyPath`)
+    .first()
+    .click({ button: 'right', position: { x: 6, y: 6 }, force: true }); // its own labels sit on top
+  await page
+    .locator('.blocklyContextMenu .blocklyMenuItem', { hasText: 'Expand into basic blocks' })
+    .click();
   await page.locator(`[data-id="${compositeId(s)}"]`).waitFor({ state: 'detached' });
   await page.getByRole('button', { name: /Run$/ }).waitFor();
-  compare('expanded run output', expected, await runAndScrub(page, problems, 'expanded run'), problems);
+  compare(
+    'expanded run output',
+    expected,
+    await runAndScrub(page, problems, 'expanded run'),
+    problems,
+  );
   const expanded = await exportScript(page);
 
   const sim = simulateSync(desugarProgram(s.program), getScenario(s.scenarioId)!.tree);
   if (!sim.ok) throw new Error('starter does not simulate');
   const finalTree = sim.timeline.snapshots.at(-1)!.state;
-  const expectedDry = sim.timeline.output.map((l) => (l.kind === 'action' ? DRY_RUN_PREFIX : '') + l.text);
-  problems.push(...checkScript(s, original, expected, expectedDry, finalTree).map((p) => `script: ${p}`));
-  problems.push(...checkScript(s, expanded, expected, expectedDry, finalTree).map((p) => `expanded script: ${p}`));
+  const expectedDry = sim.timeline.output.map(
+    (l) => (l.kind === 'action' ? DRY_RUN_PREFIX : '') + l.text,
+  );
+  problems.push(
+    ...checkScript(s, original, expected, expectedDry, finalTree).map((p) => `script: ${p}`),
+  );
+  problems.push(
+    ...checkScript(s, expanded, expected, expectedDry, finalTree).map(
+      (p) => `expanded script: ${p}`,
+    ),
+  );
   return problems;
 }
 
@@ -245,6 +293,149 @@ async function checkCanvasSmoke(browser: Browser): Promise<{ label: string; prob
   }
 
   {
+    const label = 'Canvas accessibility, compact zoom, and legacy compatibility';
+    const context = await browser.newContext({ viewport: { width: 1400, height: 900 } });
+    const page = await context.newPage();
+    const title = 'Legacy compatibility';
+    const sample = b.program([
+      b.assign('kind', b.lit('text'), 'legacy-kind'),
+      b.if(
+        b.bin('==', b.v('kind'), b.lit('text')),
+        [b.print(b.lit('text'), 'legacy-text')],
+        [
+          b.if(
+            b.bin('==', b.v('kind'), b.lit('image')),
+            [b.print(b.lit('image'), 'legacy-image')],
+            [b.print(b.lit('other'), 'legacy-other')],
+            'legacy-elif',
+          ),
+        ],
+        'legacy-switch',
+      ),
+    ]);
+    const legacy = {
+      ...newProject(SCENARIOS[0]!),
+      title,
+      program: { ...sample, version: 1 as const },
+    };
+    let stage = 'loading the legacy project in Canvas mode';
+    await context.addInitScript(
+      ({ raw, projectTitle }) => {
+        localStorage.setItem('beepblocks.project', raw);
+        localStorage.setItem(`beep-canvas-mode-${encodeURIComponent(projectTitle)}`, 'canvas');
+      },
+      { raw: JSON.stringify(legacy), projectTitle: title },
+    );
+    try {
+      await page.goto(`http://localhost:${PORT}/`);
+      const root = page.getByRole('application', { name: 'Flow canvas' });
+      await root.waitFor();
+      stage = 'waiting for projected legacy nodes';
+      await page.waitForFunction(
+        () => document.querySelectorAll('.beep-canvas-node[role="group"]').length > 0,
+      );
+
+      stage = 'checking accessible node labels';
+      const labels = await root
+        .locator('.beep-canvas-node[role="group"]')
+        .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('aria-label')));
+      if (labels.some((name) => !name) || new Set(labels).size !== labels.length)
+        throw new Error('Canvas nodes must have unique accessible names.');
+      if (
+        (await page.getByRole('button', { name: 'Canvas' }).getAttribute('aria-pressed')) !== 'true'
+      )
+        throw new Error('The Canvas mode toggle does not expose its pressed state.');
+
+      await page.addScriptTag({ content: axe.source });
+      stage = 'running axe-core';
+      const critical = await page.evaluate(async () => {
+        const canvas = document.querySelector('[data-testid="bp-canvas-editor"]');
+        if (!canvas) throw new Error('Canvas root is missing.');
+        const axeApi = (
+          window as Window & {
+            axe?: {
+              run: (context: Element) => Promise<{
+                violations: Array<{ id: string; impact: string | null; description: string }>;
+              }>;
+            };
+          }
+        ).axe;
+        if (!axeApi) throw new Error('axe-core did not load.');
+        const result = await axeApi.run(canvas);
+        return result.violations
+          .filter((violation) => violation.impact === 'critical')
+          .map(({ id, description }) => `${id}: ${description}`);
+      });
+      if (critical.length > 0) throw new Error(`Critical axe violations: ${critical.join('; ')}`);
+
+      stage = 'checking compact zoom';
+      let zoomScale = 1;
+      for (let i = 0; i < 10; i++) {
+        const transform = await page.locator('.react-flow__viewport').getAttribute('style');
+        zoomScale = Number(/scale\(([\d.]+)\)/.exec(transform ?? '')?.[1]);
+        if (zoomScale >= 0.35 && zoomScale <= 0.45) break;
+        await page.getByRole('button', { name: 'Zoom out' }).click();
+        await page.waitForTimeout(50);
+      }
+      if (zoomScale < 0.35 || zoomScale > 0.45)
+        throw new Error(`Expected approximately 40% zoom; got ${zoomScale}.`);
+      const zoomMode = await page
+        .locator('[data-testid="bp-canvas-editor"]')
+        .getAttribute('data-zoom');
+      if (zoomMode !== 'small') throw new Error(`Expected compact zoom mode; got ${zoomMode}.`);
+      const compact = await page.evaluate(() => {
+        const root = document.querySelector('[data-testid="bp-canvas-editor"]');
+        const sequence = root?.querySelector('.sequence-node');
+        const sequenceLabel = sequence?.querySelector('.sequence-node__label');
+        const condition = root?.querySelector('.condition-node');
+        const conditionLabel = condition?.querySelector('.condition-node__label');
+        return {
+          sequenceLabel: sequenceLabel ? getComputedStyle(sequenceLabel).display : null,
+          conditionLabel: conditionLabel ? getComputedStyle(conditionLabel).display : null,
+          hasCondition: Boolean(condition),
+        };
+      });
+      if (
+        compact.sequenceLabel !== 'none' ||
+        !compact.hasCondition ||
+        compact.conditionLabel !== 'none'
+      )
+        throw new Error(
+          'Sequence and condition nodes did not switch to compact icon-only styles below 50% zoom.',
+        );
+
+      stage = 'saving legacy canvas metadata';
+      await page.getByRole('button', { name: 'Re-layout' }).click();
+      await page.waitForFunction(() => {
+        const raw = localStorage.getItem('beepblocks.project');
+        return raw !== null && JSON.parse(raw).canvas !== undefined;
+      });
+      const savedProgram = await page.evaluate(
+        () => JSON.parse(localStorage.getItem('beepblocks.project')!).program,
+      );
+      if (JSON.stringify(savedProgram.body) !== JSON.stringify(sample.body))
+        throw new Error('Saving canvas metadata changed the legacy IR.');
+
+      stage = 'reloading the saved legacy project';
+      await page.reload();
+      await page.getByRole('application', { name: 'Flow canvas' }).waitFor();
+      const reloadedProgram = await page.evaluate(
+        () => JSON.parse(localStorage.getItem('beepblocks.project')!).program,
+      );
+      if (JSON.stringify(reloadedProgram.body) !== JSON.stringify(sample.body))
+        throw new Error('Reloading the legacy project changed its IR.');
+      results.push({ label });
+    } catch (err) {
+      results.push({
+        label,
+        problem: `${stage}: ${err instanceof Error ? err.message : String(err)}`,
+      });
+    } finally {
+      await context.close();
+    }
+  }
+
+  {
     const label = 'Canvas node deletion and undo';
     const { context, page } = await openPage();
     try {
@@ -277,21 +468,34 @@ async function checkCanvasSmoke(browser: Browser): Promise<{ label: string; prob
       const a = await source.boundingBox();
       const b = await target.boundingBox();
       if (!a || !b) throw new Error('Could not locate an execution edge for insertion.');
-      await page.evaluate(({ x, y }) => {
-        const root = document.querySelector('[data-testid="bp-canvas-editor"]');
-        if (!root) throw new Error('Canvas root is missing.');
-        const transfer = new DataTransfer();
-        transfer.setData('application/x-beepblocks-statement', 'move-file');
-        root.dispatchEvent(new DragEvent('drop', {
-          bubbles: true,
-          cancelable: true,
-          dataTransfer: transfer,
-          clientX: x,
-          clientY: y,
-        }));
-      }, { x: (a.x + a.width / 2 + b.x + b.width / 2) / 2, y: (a.y + a.height / 2 + b.y + b.height / 2) / 2 });
-      await page.waitForFunction((count) => document.querySelectorAll('.react-flow__node[data-id^="stmt-"]').length === count + 1, before);
-      if (!(await page.getByText('Move file', { exact: true }).count())) throw new Error('Inserted Move file node is missing.');
+      await page.evaluate(
+        ({ x, y }) => {
+          const root = document.querySelector('[data-testid="bp-canvas-editor"]');
+          if (!root) throw new Error('Canvas root is missing.');
+          const transfer = new DataTransfer();
+          transfer.setData('application/x-beepblocks-statement', 'move-file');
+          root.dispatchEvent(
+            new DragEvent('drop', {
+              bubbles: true,
+              cancelable: true,
+              dataTransfer: transfer,
+              clientX: x,
+              clientY: y,
+            }),
+          );
+        },
+        {
+          x: (a.x + a.width / 2 + b.x + b.width / 2) / 2,
+          y: (a.y + a.height / 2 + b.y + b.height / 2) / 2,
+        },
+      );
+      await page.waitForFunction(
+        (count) =>
+          document.querySelectorAll('.react-flow__node[data-id^="stmt-"]').length === count + 1,
+        before,
+      );
+      if (!(await page.getByText('Move file', { exact: true }).count()))
+        throw new Error('Inserted Move file node is missing.');
       results.push({ label });
     } catch (err) {
       results.push({ label, problem: err instanceof Error ? err.message : String(err) });
@@ -310,33 +514,51 @@ async function checkCanvasSmoke(browser: Browser): Promise<{ label: string; prob
       const a = await source.boundingBox();
       const b = await target.boundingBox();
       if (!a || !b) throw new Error('Could not locate an execution edge for insertion.');
-      await page.evaluate(({ x, y }) => {
-        const root = document.querySelector('[data-testid="bp-canvas-editor"]');
-        if (!root) throw new Error('Canvas root is missing.');
-        const transfer = new DataTransfer();
-        transfer.setData('application/x-beepblocks-statement', 'move-file');
-        root.dispatchEvent(new DragEvent('drop', {
-          bubbles: true,
-          cancelable: true,
-          dataTransfer: transfer,
-          clientX: x,
-          clientY: y,
-        }));
-      }, { x: (a.x + a.width / 2 + b.x + b.width / 2) / 2, y: (a.y + a.height / 2 + b.y + b.height / 2) / 2 });
-      await page.waitForFunction(() =>
-        [...document.querySelectorAll('.sequence-node__label')].some((node) => node.textContent === 'Move file'),
+      await page.evaluate(
+        ({ x, y }) => {
+          const root = document.querySelector('[data-testid="bp-canvas-editor"]');
+          if (!root) throw new Error('Canvas root is missing.');
+          const transfer = new DataTransfer();
+          transfer.setData('application/x-beepblocks-statement', 'move-file');
+          root.dispatchEvent(
+            new DragEvent('drop', {
+              bubbles: true,
+              cancelable: true,
+              dataTransfer: transfer,
+              clientX: x,
+              clientY: y,
+            }),
+          );
+        },
+        {
+          x: (a.x + a.width / 2 + b.x + b.width / 2) / 2,
+          y: (a.y + a.height / 2 + b.y + b.height / 2) / 2,
+        },
       );
-      const from = page.locator('.react-flow__node[data-id="stmt-program.1"] .react-flow__handle[data-handleid="out"]');
-      const to = page.locator('.react-flow__node[data-id="stmt-program.0"] .react-flow__handle[data-handleid="in"]');
+      await page.waitForFunction(() =>
+        [...document.querySelectorAll('.sequence-node__label')].some(
+          (node) => node.textContent === 'Move file',
+        ),
+      );
+      const from = page.locator(
+        '.react-flow__node[data-id="stmt-program.1"] .react-flow__handle[data-handleid="out"]',
+      );
+      const to = page.locator(
+        '.react-flow__node[data-id="stmt-program.0"] .react-flow__handle[data-handleid="in"]',
+      );
       const fromBox = await from.boundingBox();
       const toBox = await to.boundingBox();
-      if (!fromBox || !toBox) throw new Error('Could not locate execution handles for reconnection.');
+      if (!fromBox || !toBox)
+        throw new Error('Could not locate execution handles for reconnection.');
       await page.mouse.move(fromBox.x + fromBox.width / 2, fromBox.y + fromBox.height / 2);
       await page.mouse.down();
       await page.mouse.move(toBox.x + toBox.width / 2, toBox.y + toBox.height / 2, { steps: 12 });
       await page.mouse.up();
-      await page.waitForFunction(() =>
-        document.querySelector('.react-flow__node[data-id="stmt-program.0"] .sequence-node__label')?.textContent === 'composite',
+      await page.waitForFunction(
+        () =>
+          document.querySelector(
+            '.react-flow__node[data-id="stmt-program.0"] .sequence-node__label',
+          )?.textContent === 'composite',
       );
       results.push({ label });
     } catch (err) {
@@ -368,10 +590,13 @@ async function checkCanvasSmoke(browser: Browser): Promise<{ label: string; prob
       const position = await node.evaluate((element) => (element as HTMLElement).style.transform);
       await page.reload();
       await page.getByRole('application', { name: 'Flow canvas' }).waitFor();
-      await page.waitForFunction(({ nodeId, transform }) => {
-        const current = document.querySelector(`.react-flow__node[data-id="${nodeId}"]`);
-        return current instanceof HTMLElement && current.style.transform === transform;
-      }, { nodeId: id, transform: position });
+      await page.waitForFunction(
+        ({ nodeId, transform }) => {
+          const current = document.querySelector(`.react-flow__node[data-id="${nodeId}"]`);
+          return current instanceof HTMLElement && current.style.transform === transform;
+        },
+        { nodeId: id, transform: position },
+      );
       results.push({ label });
     } catch (err) {
       results.push({ label, problem: err instanceof Error ? err.message : String(err) });

@@ -39,8 +39,9 @@ function renderNode(
 }
 
 function expectHandleIds(container: HTMLElement, ids: string[]) {
-  const actual = Array.from(container.querySelectorAll<HTMLElement>('.react-flow__handle'))
-    .map((handle) => handle.dataset.handleid);
+  const actual = Array.from(container.querySelectorAll<HTMLElement>('.react-flow__handle')).map(
+    (handle) => handle.dataset.handleid,
+  );
   for (const id of ids) expect(actual).toContain(id);
 }
 
@@ -52,7 +53,7 @@ describe('canvas node renderers', () => {
       category: 'math',
     });
 
-    const node = screen.getByRole('group', { name: 'Assign score' });
+    const node = screen.getByRole('group', { name: 'Assign score (assign-1)' });
     expect(within(node).getByText('score')).toBeTruthy();
     expect(node.className).toContain('sequence-node--math');
     expectHandleIds(container, ['in', 'out']);
@@ -60,7 +61,7 @@ describe('canvas node renderers', () => {
 
   it('renders condition and switch branch handles accessibly', () => {
     const condition = renderNode(ConditionNode, 'condition-1', { label: 'is ready' });
-    expect(screen.getByRole('group', { name: 'Condition: is ready' })).toBeTruthy();
+    expect(screen.getByRole('group', { name: 'Condition: is ready (condition-1)' })).toBeTruthy();
     expectHandleIds(condition.container, ['in', 'true', 'false']);
 
     condition.unmount();
@@ -68,14 +69,14 @@ describe('canvas node renderers', () => {
       label: 'choose mode',
       branches: ['fast', 'safe', 'default'],
     });
-    expect(screen.getByRole('group', { name: 'Condition: choose mode' })).toBeTruthy();
+    expect(screen.getByRole('group', { name: 'Condition: choose mode (switch-1)' })).toBeTruthy();
     expect(screen.getByText('fast')).toBeTruthy();
     expectHandleIds(switched.container, ['in', 'false', 'branch-0', 'branch-1', 'branch-2']);
   });
 
   it('toggles loop collapse and renders its loop handles', () => {
     const { container } = renderNode(LoopNode, 'loop-1', { label: 'while ready', bodyCount: 3 });
-    const node = screen.getByRole('group', { name: 'Loop: while ready' });
+    const node = screen.getByRole('group', { name: 'Loop: while ready (loop-1)' });
 
     expect(node.getAttribute('aria-expanded')).toBe('true');
     fireEvent.doubleClick(node);
@@ -91,7 +92,7 @@ describe('canvas node renderers', () => {
 
     frame.unmount();
     const terminal = renderNode(TerminalNode, 'return-1', { label: 'Return' });
-    expect(screen.getByRole('group', { name: 'Return' })).toBeTruthy();
+    expect(screen.getByRole('group', { name: 'Return (return-1)' })).toBeTruthy();
     expectHandleIds(terminal.container, ['in', 'out']);
 
     terminal.unmount();

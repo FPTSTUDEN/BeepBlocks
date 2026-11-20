@@ -88,7 +88,10 @@ export function defineStatementBlocks(): void {
 
   defineBlock(B.if, {
     init(b) {
-      b.appendValueInput('COND').setCheck(['bool']).appendField('if');
+      b.appendValueInput('COND')
+        .setCheck(['bool'])
+        .appendField('if')
+        .appendField(new Blockly.FieldLabel('', 'bp-switch-badge'), 'SWITCH_BADGE');
       b.appendStatementInput('THEN').appendField('then');
       hasElse.set(b, false);
       statement(

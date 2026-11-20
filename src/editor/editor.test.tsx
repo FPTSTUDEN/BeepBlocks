@@ -66,6 +66,37 @@ const hasWarning = (ws: Blockly.WorkspaceSvg, id: string) =>
   ws.getBlockById(id)?.getIcon(Blockly.icons.IconType.WARNING) !== undefined;
 
 describe('<BlockEditor>', () => {
+  test('annotates switch-style if chains but not a simple if/else', async () => {
+    const program = b.program([
+      b.assign('kind', b.lit('text'), 'kind-set'),
+      b.if(
+        b.bin('==', b.v('kind'), b.lit('text')),
+        [b.print(b.lit('text'), 'text-branch')],
+        [
+          b.if(
+            b.bin('==', b.v('kind'), b.lit('image')),
+            [b.print(b.lit('image'), 'image-branch')],
+            [b.print(b.lit('other'), 'other-branch')],
+            'switch-elif',
+          ),
+        ],
+        'switch-if',
+      ),
+      b.if(
+        b.v('ready'),
+        [b.print(b.lit('yes'), 'yes-branch')],
+        [b.print(b.lit('no'), 'no-branch')],
+        'plain-if',
+      ),
+    ]);
+    const { onChange, getWs } = setup({ program });
+    await waitFor(() => expect(onChange).toHaveBeenCalled());
+
+    const ws = getWs();
+    expect(ws.getBlockById('switch-if')?.getFieldValue('SWITCH_BADGE')).toBe('Switch on: kind');
+    expect(ws.getBlockById('plain-if')?.getFieldValue('SWITCH_BADGE')).toBe('');
+  });
+
   test('renders an accessible region and loads the program with the same ids', async () => {
     const { onChange, getWs } = setup();
     expect(screen.getByRole('region', { name: 'Block editor' })).toBeTruthy();

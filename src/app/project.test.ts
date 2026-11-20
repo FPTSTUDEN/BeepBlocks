@@ -31,11 +31,34 @@ describe('project files', () => {
     expect(result.ok && result.project.program).toEqual(p.program);
   });
 
+  it('opens a version 1 project without canvas data and preserves its IR when canvas data is saved', () => {
+    const program = {
+      ...b.program([b.print(b.lit('legacy'), 'legacy-print')]),
+      version: 1 as const,
+    };
+    const legacyProject = { ...newProject(), program };
+    const opened = parseProject(serializeProject(legacyProject));
+    expect(opened.ok).toBe(true);
+    if (!opened.ok) return;
+    expect(opened.project.canvas).toBeUndefined();
+
+    const saved = { ...opened.project, canvas: { nodes: {} } };
+    const reloaded = parseProject(serializeProject(saved));
+    expect(reloaded.ok).toBe(true);
+    if (!reloaded.ok) return;
+    expect(reloaded.project.canvas).toEqual({ nodes: {} });
+    expect(reloaded.project.program).toEqual(opened.project.program);
+  });
+
   it.each([
     ['not JSON', '{nope', /not valid JSON/],
     ['wrong format', { format: 'something-else' }, /not a BeepBlocks project/],
     ['newer version', { ...newProject(), version: 2 }, /version 2/],
-    ['malformed program', withProgram({ format: 'beepblocks-ir', version: 1, body: 'x' }), /Program/],
+    [
+      'malformed program',
+      withProgram({ format: 'beepblocks-ir', version: 1, body: 'x' }),
+      /Program/,
+    ],
     [
       'unknown node kind',
       withProgram(b.program([{ id: 'q', kind: 'teleport' } as never])),
@@ -51,8 +74,16 @@ describe('project files', () => {
   it('rejects invalid scenario trees', () => {
     const p = newProject();
     const bad = (children: unknown[]) =>
-      parseProject({ ...p, scenario: { ...p.scenario, tree: { root: { ...p.scenario.tree.root, children } } } });
-    const file = (name: string, extra: object = { content: '' }) => ({ type: 'file', name, modified: 0, ...extra });
+      parseProject({
+        ...p,
+        scenario: { ...p.scenario, tree: { root: { ...p.scenario.tree.root, children } } },
+      });
+    const file = (name: string, extra: object = { content: '' }) => ({
+      type: 'file',
+      name,
+      modified: 0,
+      ...extra,
+    });
     for (const children of [
       [file('CON')],
       [file('a.txt'), file('A.TXT')],
@@ -76,7 +107,10 @@ describe('project files', () => {
       ...p,
       scenario: { ...p.scenario, tree: { root: { ...p.scenario.tree.root, children } } },
     });
-    expect(res.ok && res.project.scenario.tree.root.children.map((c) => c.name)).toEqual(['A.txt', 'b.txt']);
+    expect(res.ok && res.project.scenario.tree.root.children.map((c) => c.name)).toEqual([
+      'A.txt',
+      'b.txt',
+    ]);
   });
 
   it('makes safe file names', () => {

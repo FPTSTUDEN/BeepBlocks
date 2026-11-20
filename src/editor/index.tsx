@@ -16,9 +16,15 @@ import type { ValidationError } from '../ir/errors.ts';
 import { resolveToExisting } from '../ir/ids.ts';
 import type { Layout } from './layout.ts';
 import { registerBlocks } from './blocks/index.ts';
+import { updateSwitchAnnotations } from './blocks/switchAnnotation.ts';
 import { irToWs } from './convert/irToWs.ts';
 import { wsToIr } from './convert/wsToIr.ts';
-import { expandComposite, setExpandHandler, setFullExpandHandler, setOneDesugarHandler } from './expand.ts';
+import {
+  expandComposite,
+  setExpandHandler,
+  setFullExpandHandler,
+  setOneDesugarHandler,
+} from './expand.ts';
 import { attachSync } from './sync.ts';
 import { buildBlocklyTheme, ensureEditorCss, readThemeVars, rebuildTheme } from './theme.ts';
 import { buildToolbox, registerDynamicCategories } from './toolbox.ts';
@@ -160,6 +166,7 @@ export function BlockEditor(props: BlockEditorProps) {
     knownRef.current = r.program;
     const ws = wsRef.current;
     if (ws) {
+      updateSwitchAnnotations(ws, r.program);
       setCanUndo(ws.getUndoStack().length > 0);
       setCanRedo(ws.getRedoStack().length > 0);
     }
@@ -176,6 +183,7 @@ export function BlockEditor(props: BlockEditorProps) {
       const ws = wsRef.current;
       if (!ws) return;
       const { warnings } = irToWs(p, l, ws);
+      updateSwitchAnnotations(ws, p);
       if (warnings.length > 0)
         console.warn('Block editor: some blocks could not be loaded', warnings);
       knownRef.current = p;

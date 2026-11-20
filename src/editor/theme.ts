@@ -123,6 +123,7 @@ const EDITOR_CSS = `
   stroke-dasharray: none !important; stroke-width: 5px !important;
 }
 .blocklyText, .blocklyFlyoutLabelText { font-family: var(--bp-font, system-ui, sans-serif); }
+.bp-switch-badge { fill: #fef3c7; font-size: 9px; font-weight: 700; }
 `;
 
 /** Injects the editor stylesheet once per document. */

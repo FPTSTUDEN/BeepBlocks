@@ -94,13 +94,27 @@ describe('CanvasEditor', () => {
     expect(root.querySelector('.react-flow__node[data-id="term-start"]')).toBeTruthy();
     expect(root.querySelector('.react-flow__node[data-id="stmt-program.1"]')).toBeTruthy();
     expect(root.classList.contains('hide-data-edges')).toBe(false);
-    expect(root.querySelector('style')?.textContent).toContain('.hide-data-edges .data-edge { display: none; }');
+    expect(root.querySelector('style')?.textContent).toContain(
+      '.hide-data-edges .data-edge { display: none; }',
+    );
 
     fireEvent.click(screen.getByRole('button', { name: '~ Data flow' }));
     expect(root.classList.contains('hide-data-edges')).toBe(true);
 
     fireEvent.click(screen.getByRole('button', { name: 'Minimap' }));
     await waitFor(() => expect(root.querySelector('.react-flow__minimap')).toBeTruthy());
+  });
+
+  it('auto-lays out a legacy program without saved canvas positions', async () => {
+    const program = b.program([b.print(b.lit('legacy'))]);
+    render(<CanvasEditor program={program} />);
+
+    const root = screen.getByRole('application', { name: 'Flow canvas' });
+    await waitFor(() =>
+      expect(root.querySelector('.react-flow__node[data-id^="stmt-"]')).toBeTruthy(),
+    );
+    expect(root.querySelectorAll('.react-flow__node').length).toBeGreaterThan(0);
+    expect(root.querySelector('.react-flow__node[data-id="stmt-program.0"]')).toBeTruthy();
   });
 
   it('collapses loop body nodes and their edges on double click', async () => {
