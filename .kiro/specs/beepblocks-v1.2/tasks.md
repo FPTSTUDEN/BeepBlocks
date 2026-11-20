@@ -244,14 +244,14 @@ No editing yet — read-only canvas.
 Goal: wire canvas interactions back to IR mutations so users can edit in canvas
 mode.
 
-- [ ] 3.1 Node deletion
+- [x] 3.1 Node deletion
   - `onNodesDelete` callback: dispatch `REMOVE_STATEMENT` action with the
     deleted node's `irPath`.
   - Test: deleting a sequence node removes the correct statement from the IR;
     undo restores it.
   - _Req: 8.3, 8.6_
 
-- [ ] 3.2 Node insertion from palette
+- [x] 3.2 Node insertion from palette
   - Palette component (existing `src/editor/Palette.tsx`) gains a
     `draggable` mode active when in canvas mode.
   - `onDrop` on the canvas root: compute target IR position from drop
@@ -260,7 +260,7 @@ mode.
     correct IR position.
   - _Req: 8.4, 8.6_
 
-- [ ] 3.3 Edge reconnection
+- [x] 3.3 Edge reconnection
   - `onConnect` callback: when user drags an edge arrowhead to a new target,
     compute old and new IR positions, dispatch `MOVE_STATEMENT`.
   - Invalid connections (cross-scope, connecting into a closed frame):
@@ -269,15 +269,16 @@ mode.
     statements; invalid connection is rejected with error.
   - _Req: 8.5, 8.7_
 
-- [ ] 3.4 Switch branch add/remove
+- [!] 3.4 Switch branch add/remove
   - Right-click context menu on Switch node: "Add branch" / "Remove branch".
   - "Add branch": dispatch `INSERT_ELIF` (new action); default branch value
     is an empty string placeholder.
   - "Remove branch": dispatch `REMOVE_ELIF` on the clicked branch port.
   - Test: adding a branch increases elif count in IR; removing decreases it.
   - _Req: 5.3_
+  - Blocked: the current IR `If` has only `then` and `else`; adding `elif` would change the existing IR contract, which this phase must preserve.
 
-- [ ] 3.5 Drag-to-reposition (layout override)
+- [x] 3.5 Drag-to-reposition (layout override)
   - `onNodeDragStop` callback: write updated `{x,y}` into `program.canvas.nodes`
     via a new `UPDATE_CANVAS_LAYOUT` dispatch action (does not affect IR tree).
   - Dispatch is not added to the undo stack (position changes are cosmetic).
@@ -285,12 +286,14 @@ mode.
     restores the position.
   - _Req: 8.1–8.2_
 
-- [ ] 3.6 Checkpoint 3
+- [x] 3.6 Checkpoint 3 (except blocked 3.4)
   - `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm conformance --strict`.
   - `pnpm e2e`: 4 canvas editing tests (Chromium): delete a node; insert from
     palette; drag a node and confirm position survives reload; undo restores
     deleted node.
   - Commit: `feat(canvas): canvas editing (phase 3)`.
+
+Implementation note: This repository has no `src/editor/Palette.tsx` or shared mutation-action reducer. Canvas edits use the existing `editorChanged` store path, node positions persist in optional `ProjectFile.canvas` (outside the IR), and the new canvas-only palette currently exposes the requested “Move file” template.
 
 ---
 

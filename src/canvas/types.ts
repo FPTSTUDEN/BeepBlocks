@@ -21,7 +21,7 @@ export interface CanvasNode {
   kind: CanvasNodeKind;
   label: string;
   binds: string[];
-  irPath: number[];
+  irPath: Array<string | number>;
   position: { x: number; y: number };
   data: Record<string, unknown>;
 }

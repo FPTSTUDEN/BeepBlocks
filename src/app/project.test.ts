@@ -20,6 +20,17 @@ describe('project files', () => {
     expect(res.ok).toBe(true);
   });
 
+  it('round-trips canvas positions without changing the IR', () => {
+    const p = {
+      ...newProject(),
+      program: b.program([b.print(b.lit('kept'), 'print')]),
+      canvas: { nodes: { 'stmt-program.0': { x: 70, y: 120 } } },
+    };
+    const result = parseProject(serializeProject(p));
+    expect(result.ok && result.project.canvas).toEqual(p.canvas);
+    expect(result.ok && result.project.program).toEqual(p.program);
+  });
+
   it.each([
     ['not JSON', '{nope', /not valid JSON/],
     ['wrong format', { format: 'something-else' }, /not a BeepBlocks project/],

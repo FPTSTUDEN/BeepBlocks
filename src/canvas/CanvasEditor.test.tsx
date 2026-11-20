@@ -38,6 +38,8 @@ describe('CanvasToolbar', () => {
       zoomOut: vi.fn(),
       minimap: vi.fn(),
       dataFlow: vi.fn(),
+      undo: vi.fn(),
+      redo: vi.fn(),
     };
     render(
       <CanvasToolbar
@@ -50,6 +52,10 @@ describe('CanvasToolbar', () => {
         showDataFlow={true}
         onToggleMinimap={actions.minimap}
         onToggleDataFlow={actions.dataFlow}
+        onUndo={actions.undo}
+        onRedo={actions.redo}
+        canUndo
+        canRedo
       />,
     );
 
@@ -60,6 +66,8 @@ describe('CanvasToolbar', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Zoom out' }));
     fireEvent.click(screen.getByRole('button', { name: 'Minimap' }));
     fireEvent.click(screen.getByRole('button', { name: '~ Data flow' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Redo' }));
 
     expect(actions.relayout).toHaveBeenCalledOnce();
     expect(actions.fit).toHaveBeenCalledOnce();
@@ -68,6 +76,8 @@ describe('CanvasToolbar', () => {
     expect(actions.zoomOut).toHaveBeenCalledOnce();
     expect(actions.minimap).toHaveBeenCalledOnce();
     expect(actions.dataFlow).toHaveBeenCalledOnce();
+    expect(actions.undo).toHaveBeenCalledOnce();
+    expect(actions.redo).toHaveBeenCalledOnce();
   });
 });
 

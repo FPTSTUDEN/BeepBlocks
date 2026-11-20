@@ -32,7 +32,7 @@ export function projectProgram(
       kind,
       label,
       binds,
-      irPath: path.filter((value) => typeof value === 'number'),
+      irPath: [...path],
       position: overrides.nodes[id] ?? { x: 0, y: 0 },
       data,
     };
@@ -133,7 +133,11 @@ export function projectProgram(
     }
 
     if (stmt.kind === 'do') {
-      const label = stmt.expr.kind === 'call' ? stmt.expr.fn : 'do';
+      const label = stmt.expr.kind === 'call'
+        ? stmt.expr.fn
+        : stmt.expr.op === 'fs.move'
+          ? 'Move file'
+          : stmt.expr.op;
       const node = addNode('sequence', label, path, [], { value: true });
       if (stmt.expr.kind === 'call') {
         for (const arg of stmt.expr.args) visitExpr(arg, node.id);

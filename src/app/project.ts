@@ -5,6 +5,7 @@
  * structure with `validateStructure`; the full validator still gates Run and Export.
  */
 import type { NodeId, Program } from '../ir/types.ts';
+import type { CanvasLayout } from '../canvas/types.ts';
 import { COMPOSITE_NAMES } from '../ir/composites.ts';
 import { RUN_BLOCK_ID } from '../ir/ids.ts';
 import { validateStructure } from '../ir/validate.ts';
@@ -28,6 +29,8 @@ export interface ProjectFile {
   program: Program;
   /** Top-level stacks only. */
   layout: Layout;
+  /** Optional Flow Canvas node positions; older project files remain compatible. */
+  canvas?: CanvasLayout;
   scenario: Scenario;
 }
 
@@ -155,6 +158,14 @@ function checkLayout(l: unknown): l is Layout {
   );
 }
 
+function checkCanvasLayout(value: unknown): value is CanvasLayout {
+  if (!isObj(value) || !isObj(value.nodes)) return false;
+  return Object.values(value.nodes).every(
+    (position) =>
+      isObj(position) && Number.isFinite(position.x as number) && Number.isFinite(position.y as number),
+  );
+}
+
 /**
  * Parses and validates a project (JSON text or parsed value). Never throws. On success the
  * result is a fresh object safe to store.
@@ -180,6 +191,7 @@ export function parseProject(input: string | unknown): ProjectParse {
   const errors: string[] = [];
   if (typeof v.title !== 'string') errors.push('The project has no title.');
   if (!checkLayout(v.layout)) errors.push('The block positions are not valid.');
+  if (v.canvas !== undefined && !checkCanvasLayout(v.canvas)) errors.push('The canvas positions are not valid.');
   const program = v.program;
   if (!isObj(program) || program.format !== 'beepblocks-ir' || (program.version !== 1 && program.version !== 2)) {
     errors.push('The project does not contain a valid BeepBlocks program.');

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { b } from '../ir/build.ts';
 import { autoLayout, routeBackEdges } from './layout.ts';
 import { projectProgram } from './project.ts';
+import { canReorderStatements, insertStatementBefore, moveStatementAfter, removeStatement } from './writeback.ts';
 
 describe('canvas projection', () => {
   it('projects a flat program into a start/sequence/end chain', () => {
@@ -95,6 +96,43 @@ describe('canvas projection', () => {
 
     const assignNode = result.nodes.find((node) => node.id === 'stmt-program.0');
     expect(assignNode?.position).toEqual({ x: 42, y: 99 });
+  });
+
+  it('preserves complete nested statement paths for canvas edits', () => {
+    const program = b.program([b.if(b.lit(true), [b.print(b.lit('inside'))])]);
+    const nested = projectProgram(program).nodes.find((node) => node.label === 'print');
+    expect(nested?.irPath).toEqual(['program', 0, 'then', 0]);
+    expect(removeStatement(program, nested!.irPath)?.body[0]).toMatchObject({ then: [] });
+  });
+});
+
+describe('canvas writeback', () => {
+  it('inserts and removes statements immutably at the requested path', () => {
+    const original = b.program([b.print(b.lit('first'), 'first'), b.print(b.lit('last'), 'last')]);
+    const inserted = b.print(b.lit('middle'), 'middle');
+    const next = insertStatementBefore(original, ['program', 1], inserted)!;
+
+    expect(next.body.map((statement) => statement.id)).toEqual(['first', 'middle', 'last']);
+    expect(original.body.map((statement) => statement.id)).toEqual(['first', 'last']);
+    expect(removeStatement(next, ['program', 1])?.body.map((statement) => statement.id)).toEqual([
+      'first',
+      'last',
+    ]);
+  });
+
+  it('reorders siblings but rejects connections across nested scopes', () => {
+    const program = b.program([
+      b.print(b.lit('first'), 'first'),
+      b.if(b.lit(true), [b.print(b.lit('nested'), 'nested')], [], 'conditional'),
+      b.print(b.lit('last'), 'last'),
+    ]);
+    expect(canReorderStatements(program, ['program', 0], ['program', 2])).toBe(true);
+    expect(canReorderStatements(program, ['program', 0], ['program', 1, 'then', 0])).toBe(false);
+    expect(moveStatementAfter(program, ['program', 0], ['program', 2])?.body.map((s) => s.id)).toEqual([
+      'first',
+      'last',
+      'conditional',
+    ]);
   });
 });
 

@@ -1,7 +1,7 @@
 import dagre from 'dagre';
 import type { CanvasEdge, CanvasLayout, CanvasNode } from './types.ts';
 
-function nodeSize(node: CanvasNode): { width: number; height: number } {
+export function nodeSize(node: CanvasNode): { width: number; height: number } {
   if (node.kind === 'frame') return { width: 220, height: 60 };
   if (node.kind === 'condition' || node.kind === 'merge') return { width: 120, height: 80 };
   return { width: 160, height: 60 };

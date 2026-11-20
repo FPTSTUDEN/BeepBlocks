@@ -244,6 +244,142 @@ async function checkCanvasSmoke(browser: Browser): Promise<{ label: string; prob
     }
   }
 
+  {
+    const label = 'Canvas node deletion and undo';
+    const { context, page } = await openPage();
+    try {
+      await page.getByRole('button', { name: 'Canvas' }).click();
+      const firstNode = page.locator('.react-flow__node[data-id^="stmt-"]').first();
+      const id = await firstNode.getAttribute('data-id');
+      if (!id) throw new Error('No editable statement node was rendered.');
+      await firstNode.click({ force: true });
+      await page.keyboard.press('Delete');
+      await page.locator(`.react-flow__node[data-id="${id}"]`).waitFor({ state: 'detached' });
+      results.push({ label: 'Canvas node deletion' });
+      await page.getByRole('button', { name: 'Undo' }).click();
+      await page.locator(`.react-flow__node[data-id="${id}"]`).waitFor();
+      results.push({ label: 'Canvas undo restores deleted node' });
+    } catch (err) {
+      results.push({ label, problem: err instanceof Error ? err.message : String(err) });
+    } finally {
+      await context.close();
+    }
+  }
+
+  {
+    const label = 'Canvas palette insertion';
+    const { context, page } = await openPage();
+    try {
+      await page.getByRole('button', { name: 'Canvas' }).click();
+      const before = await page.locator('.react-flow__node[data-id^="stmt-"]').count();
+      const target = page.locator('.react-flow__node[data-id^="stmt-"]').first();
+      const source = page.locator('.react-flow__node[data-id="term-start"]');
+      const a = await source.boundingBox();
+      const b = await target.boundingBox();
+      if (!a || !b) throw new Error('Could not locate an execution edge for insertion.');
+      await page.evaluate(({ x, y }) => {
+        const root = document.querySelector('[data-testid="bp-canvas-editor"]');
+        if (!root) throw new Error('Canvas root is missing.');
+        const transfer = new DataTransfer();
+        transfer.setData('application/x-beepblocks-statement', 'move-file');
+        root.dispatchEvent(new DragEvent('drop', {
+          bubbles: true,
+          cancelable: true,
+          dataTransfer: transfer,
+          clientX: x,
+          clientY: y,
+        }));
+      }, { x: (a.x + a.width / 2 + b.x + b.width / 2) / 2, y: (a.y + a.height / 2 + b.y + b.height / 2) / 2 });
+      await page.waitForFunction((count) => document.querySelectorAll('.react-flow__node[data-id^="stmt-"]').length === count + 1, before);
+      if (!(await page.getByText('Move file', { exact: true }).count())) throw new Error('Inserted Move file node is missing.');
+      results.push({ label });
+    } catch (err) {
+      results.push({ label, problem: err instanceof Error ? err.message : String(err) });
+    } finally {
+      await context.close();
+    }
+  }
+
+  {
+    const label = 'Canvas edge reconnection reorders statements';
+    const { context, page } = await openPage();
+    try {
+      await page.getByRole('button', { name: 'Canvas' }).click();
+      const target = page.locator('.react-flow__node[data-id^="stmt-"]').first();
+      const source = page.locator('.react-flow__node[data-id="term-start"]');
+      const a = await source.boundingBox();
+      const b = await target.boundingBox();
+      if (!a || !b) throw new Error('Could not locate an execution edge for insertion.');
+      await page.evaluate(({ x, y }) => {
+        const root = document.querySelector('[data-testid="bp-canvas-editor"]');
+        if (!root) throw new Error('Canvas root is missing.');
+        const transfer = new DataTransfer();
+        transfer.setData('application/x-beepblocks-statement', 'move-file');
+        root.dispatchEvent(new DragEvent('drop', {
+          bubbles: true,
+          cancelable: true,
+          dataTransfer: transfer,
+          clientX: x,
+          clientY: y,
+        }));
+      }, { x: (a.x + a.width / 2 + b.x + b.width / 2) / 2, y: (a.y + a.height / 2 + b.y + b.height / 2) / 2 });
+      await page.waitForFunction(() =>
+        [...document.querySelectorAll('.sequence-node__label')].some((node) => node.textContent === 'Move file'),
+      );
+      const from = page.locator('.react-flow__node[data-id="stmt-program.1"] .react-flow__handle[data-handleid="out"]');
+      const to = page.locator('.react-flow__node[data-id="stmt-program.0"] .react-flow__handle[data-handleid="in"]');
+      const fromBox = await from.boundingBox();
+      const toBox = await to.boundingBox();
+      if (!fromBox || !toBox) throw new Error('Could not locate execution handles for reconnection.');
+      await page.mouse.move(fromBox.x + fromBox.width / 2, fromBox.y + fromBox.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(toBox.x + toBox.width / 2, toBox.y + toBox.height / 2, { steps: 12 });
+      await page.mouse.up();
+      await page.waitForFunction(() =>
+        document.querySelector('.react-flow__node[data-id="stmt-program.0"] .sequence-node__label')?.textContent === 'composite',
+      );
+      results.push({ label });
+    } catch (err) {
+      results.push({ label, problem: err instanceof Error ? err.message : String(err) });
+    } finally {
+      await context.close();
+    }
+  }
+
+  {
+    const label = 'Canvas position survives reload';
+    const { context, page } = await openPage();
+    try {
+      await page.getByRole('button', { name: 'Canvas' }).click();
+      const node = page.locator('.react-flow__node[data-id^="stmt-"]').first();
+      const id = await node.getAttribute('data-id');
+      const box = await node.boundingBox();
+      if (!id || !box) throw new Error('Could not locate a draggable statement node.');
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(box.x + box.width / 2 + 90, box.y + box.height / 2 + 70, { steps: 8 });
+      await page.mouse.up();
+      await page.waitForFunction((nodeId) => {
+        const raw = localStorage.getItem('beepblocks.project');
+        if (!raw) return false;
+        const project = JSON.parse(raw);
+        return Number.isFinite(project.canvas?.nodes?.[nodeId]?.x);
+      }, id);
+      const position = await node.evaluate((element) => (element as HTMLElement).style.transform);
+      await page.reload();
+      await page.getByRole('application', { name: 'Flow canvas' }).waitFor();
+      await page.waitForFunction(({ nodeId, transform }) => {
+        const current = document.querySelector(`.react-flow__node[data-id="${nodeId}"]`);
+        return current instanceof HTMLElement && current.style.transform === transform;
+      }, { nodeId: id, transform: position });
+      results.push({ label });
+    } catch (err) {
+      results.push({ label, problem: err instanceof Error ? err.message : String(err) });
+    } finally {
+      await context.close();
+    }
+  }
+
   return results;
 }
 

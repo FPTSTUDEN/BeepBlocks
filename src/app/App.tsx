@@ -14,6 +14,7 @@ import {
 } from 'react';
 import { useStore } from 'zustand';
 import type { NodeId } from '../ir/types.ts';
+import { validateProgram } from '../ir/validate.ts';
 import { BlockEditor } from '../editor/index.tsx';
 import { loadEditorMode, ModeToggle, saveEditorMode, type EditorMode } from '../editor/ModeToggle.tsx';
 import { CanvasEditor } from '../canvas/index.ts';
@@ -258,7 +259,9 @@ function Shell({ store }: { store: AppStore }) {
           {editorMode === 'canvas' ? (
             <CanvasEditor
               program={project.program}
-              dispatch={actions.editorChanged as (...args: unknown[]) => void}
+              dispatch={(program) => actions.editorChanged(program, project.layout, validateProgram(program))}
+              canvasLayout={project.canvas}
+              onCanvasLayoutChange={actions.canvasLayoutChanged}
             />
           ) : (
             <BlockEditor

@@ -4,6 +4,7 @@
  */
 import { createStore, type StoreApi } from 'zustand/vanilla';
 import type { NodeId, Program } from '../ir/types.ts';
+import type { CanvasLayout } from '../canvas/types.ts';
 import type { DesugarFully, DesugarOne, DesugarProgram } from '../ir/composites.ts';
 import type { ValidationError } from '../ir/errors.ts';
 import type { SimulateOptions, Timeline } from '../ir/timeline.ts';
@@ -60,6 +61,7 @@ export interface AppState {
   saveFailed: boolean;
 
   editorChanged(program: Program, layout: Layout, issues: ValidationError[]): void;
+  canvasLayoutChanged(layout: CanvasLayout): void;
   setTitle(title: string): void;
   pickScenario(scenario: Scenario): void;
   setScenarioTree(tree: SandboxFS): void;
@@ -124,6 +126,12 @@ export function createAppStore(deps: AppDeps): AppStore {
         project: { ...project, program: same ? project.program : normalized, layout },
         issues,
       });
+    },
+
+    canvasLayoutChanged(canvas) {
+      const { project } = get();
+      if (deepEqual(project.canvas, canvas)) return;
+      set({ project: { ...project, canvas } });
     },
 
     setTitle(title) {

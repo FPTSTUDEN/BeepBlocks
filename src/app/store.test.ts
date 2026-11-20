@@ -157,6 +157,16 @@ describe('app store', () => {
     expect(JSON.parse(storage.getItem(PROJECT_KEY)!).title).toBe('Now');
   });
 
+  it('persists canvas layout without changing the program', () => {
+    const { s, store } = setup();
+    const program = s().project.program;
+    const canvas = { nodes: { 'stmt-program.0': { x: 20, y: 40 } } };
+    s().canvasLayoutChanged(canvas);
+    expect(s().project.canvas).toEqual(canvas);
+    expect(s().project.program).toBe(program);
+    store.dispose();
+  });
+
   it('flags a failed autosave', async () => {
     const storage = memoryStorage();
     storage.setItem = () => {
